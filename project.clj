@@ -12,7 +12,7 @@
                  [cljsjs/react-transition-group "2.4.0-0"]
                  [clojure.java-time "0.3.2"]
                  [com.cognitect/transit-clj "0.8.313"]
-                 [com.datomic/datomic-free "0.9.5697" :exclusions [org.slf4j/log4j-over-slf4j org.slf4j/slf4j-nop com.google.guava/guava]]
+                 [com.datomic/datomic-free "0.9.5656" :exclusions [org.slf4j/log4j-over-slf4j org.slf4j/slf4j-nop com.google.guava/guava]]
                  [com.google.guava/guava "25.1-jre"]
                  [compojure "1.6.1"]
                  [cprop "0.1.13"]

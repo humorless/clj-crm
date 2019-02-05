@@ -3,8 +3,9 @@
             [mount.core :refer [defstate]]
             [clj-crm.config :refer [env]]))
 
+;; create datomic database is idempotent operation
 (defstate conn
-  :start (-> env :database-url d/connect)
+  :start (do (-> env :database-url d/create-database) (-> env :database-url d/connect))
   :stop (-> conn .release))
 
 (defn create-schema []
@@ -36,7 +37,7 @@
     (map #(-> % first e d/touch) results)))
 
 (defn add-user [conn {:keys [id first-name last-name email]}]
-  @(d/transact conn [{:db/id           id
+  @(d/transact conn [{:user/id         id
                       :user/first-name first-name
                       :user/last-name  last-name
                       :user/email      email}]))

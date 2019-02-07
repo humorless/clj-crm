@@ -40,7 +40,8 @@
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.7.1"]
                  [ring/ring-defaults "0.3.2"]
-                 [selmer "1.12.6"]]
+                 [selmer "1.12.6"]
+                 [datomic-schema "1.3.0"]]
 
   :min-lein-version "2.0.0"
   
@@ -100,7 +101,8 @@
                                  [prone "1.6.1"]
                                  [re-frisk "0.5.4"]
                                  [ring/ring-devel "1.7.1"]
-                                 [ring/ring-mock "0.3.2"]]
+                                 [ring/ring-mock "0.3.2"]
+                                 [cljfmt "0.6.4"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.23.0"]
                                  [lein-doo "0.1.11"]
                                  [lein-figwheel "0.5.18"]]

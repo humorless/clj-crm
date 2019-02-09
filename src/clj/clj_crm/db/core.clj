@@ -45,6 +45,35 @@
            [((comp not contains?) ?system-ns ?ns)]]
          (d/db conn) system-ns)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Utility function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn only
+  "Return the only item from a query result"
+  [query-result]
+  (assert (= 1 (count query-result)))
+  (assert (= 1 (count (first query-result))))
+  (ffirst query-result))
+
+(defn qe
+  "Returns the single entity returned by a query."
+  [query db & args]
+  (let [res (apply d/q query db args)]
+    (d/entity db (only res))))
+
+(defn qes
+  "Returns the entities returned by a query, assuming that
+   all :find results are entity ids."
+  [query db & args]
+  (->> (apply d/q query db args)
+       (mapv (fn [items]
+               (mapv (partial d/entity db) items)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Public Api
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn add-group [conn {:keys [grp-name users]}]
   @(d/transact conn [{:group/name  grp-name
                       :group/users users}]))
@@ -58,16 +87,31 @@
                       :user/status    status
                       :user/role      role}]))
 
+;; Given that A.attr is primary key
+;; Similar usage pattern to SQL expression: `SELECT * FROM A WHERE A.attr = val`
+(defn find-by
+  "Returns the unique entity identified by attr and val."
+  [db attr val]
+  (qe '[:find ?e
+        :in $ ?attr ?val
+        :where [?e ?attr ?val]]
+      db attr val))
+
+;; Similar usage pattern to SQL expression: `SELECT * FROM A`
+(defn find-all-by
+  "Returns all entities possessing attr."
+  [db attr]
+  (qes '[:find ?e
+         :in $ ?attr
+         :where [?e ?attr]]
+       db attr))
+
 ;; example:
 ;;   (d/touch (get-user-by-email (d/db conn) "humorless@gmail.com"))
 (defn get-user-by-email
   "Given db value and an email, return the user as Entity (datomic.query.EntityMap)"
   [db email]
-  ;; find specification using single scalar form
-  (->> (d/q '[:find ?e . :in $ ?m
-              :where [?e :user/email ?m]]
-            db email)
-       (d/entity db)))
+  (find-by db :user/email email))
 
 (comment
   ;; example of add-user
@@ -78,6 +122,16 @@
                   :role :user.role/root}))
 
 (comment
+  ;; traditional way to create module public read API
+  (defn get-user-by-email
+    "Given db value and an email, return the user as Entity (datomic.query.EntityMap)"
+    [db email]
+    ;; find specification using single scalar form
+    (->> (d/q '[:find ?e . :in $ ?m
+                :where [?e :user/email ?m]]
+              db email)
+         (d/entity db)))
+
   ;; traditional way to create schema
   (defn create-schema []
     (let [schema [{:db/ident              :user/id

@@ -1,6 +1,6 @@
 (ns clj-crm.db.core
   (:require [datomic.api :as d]
-            [datomic-schema.schema :as s]
+            [io.rkn.conformity :as c]
             [mount.core :refer [defstate]]
             [clj-crm.config :refer [env]]))
 
@@ -9,28 +9,12 @@
   :start (do (-> env :database-url d/create-database) (-> env :database-url d/connect))
   :stop (-> conn .release))
 
-(defn dbparts []
-  [(s/part "app")])
+(def norms-map (c/read-resource "schema.edn"))
 
-(defn dbschema []
-  [(s/schema user
-             (s/fields
-              [email :string :unique-identity :indexed "User email address"]
-              [name  :string :indexed :fulltext "User name"]
-              [pwd   :string "Hashed password string"]
-              [status :enum [:pending :active :inactive :cancelled]]
-              [role :enum [:root :manager :employee] "User roles"]))
-
-   (s/schema group
-             (s/fields
-              [name :string :unique-identity :indexed]
-              [users :ref :many]))])
-
+;; verification
+;; (d/touch (ffirst (find-all-by (d/db conn) :conformity/conformed-norms))))
 (defn setup-app-schema [conn]
-  @(d/transact conn
-               (concat
-                (s/generate-parts (dbparts))
-                (s/generate-schema (dbschema)))))
+  (c/ensure-conforms conn norms-map [:clj-crm/norm1]))
 
 (defn show-app-schema [conn]
   (let [system-ns #{"db" "db.type" "db.install" "db.part"
@@ -74,18 +58,14 @@
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn add-group [conn {:keys [grp-name users]}]
-  @(d/transact conn [{:group/name  grp-name
-                      :group/users users}]))
-
 (defn upsert-user!
   "Given the user entity has :db.unique/identity attribute, Datomic will upsert"
-  [conn {:keys [user-name pwd email status role]}]
+    [conn {:keys [user-name pwd email status roles]}]
   @(d/transact conn [{:user/name      user-name
                       :user/pwd       pwd
                       :user/email     email
                       :user/status    status
-                      :user/role      role}]))
+                      :user/roles     roles}]))
 
 ;; Given that A.attr is primary key
 ;; Similar usage pattern to SQL expression: `SELECT * FROM A WHERE A.attr = val`
@@ -114,12 +94,12 @@
   (find-by db :user/email email))
 
 (comment
-  ;; example of add-user
-  (add-user conn {:user-name "Laurence Chen"
-                  :pwd "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
-                  :email "humorless@gmail.com"
-                  :status :user.status/active
-                  :role :user.role/root}))
+  ;; example of upsert-user!
+  (upsert-user! conn {:user-name "Laurence Chen"
+                      :pwd "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
+                      :email "humorless@gmail.com"
+                      :status :user.status/active
+                      :roles  [:user.roles/sales :user.roles/read-only]}))
 
 (comment
   ;; traditional way to create module public read API

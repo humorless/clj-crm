@@ -1,0 +1,48 @@
+{:clj-crm/norm1 {:txes [[
+   {:db/doc "User email address"
+    :db/ident :user/email
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "User name"
+    :db/ident :user/name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/index true
+    :db/fulltext true
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "User password hash"
+    :db/ident :user/pwd
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "User status"
+    :db/ident :user/status
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "User roles - determine access permission. A user may have several roles"
+    :db/ident :user/roles
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   [:db/add #db/id [:db.part/user] :db/ident :user.status/pending]
+   [:db/add #db/id [:db.part/user] :db/ident :user.status/active]
+   [:db/add #db/id [:db.part/user] :db/ident :user.status/inactive]
+   [:db/add #db/id [:db.part/user] :db/ident :user.status/cancelled]
+
+   [:db/add #db/id [:db.part/user] :db/ident :user.roles/manager]
+   [:db/add #db/id [:db.part/user] :db/ident :user.roles/sales]
+   [:db/add #db/id [:db.part/user] :db/ident :user.roles/read-only]]]}}
+  

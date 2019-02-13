@@ -87,11 +87,18 @@
        db attr))
 
 ;; example:
-;;   (d/touch (get-user-by-email (d/db conn) "humorless@gmail.com"))
-(defn get-user-by-email
-  "Given db value and an email, return the user as Entity (datomic.query.EntityMap)"
-  [db email]
-  (find-by db :user/email email))
+;;   (d/touch (find-by-allow-nil (d/db conn) :user/email  "humorless@gmail.co"))
+;;   => NPE
+;;   (:user/pwd (find-by-allow-nil (d/db conn) :user/email "humorless@gmail.com"))
+;;   => $pwd
+(defn find-by-allow-nil
+  "Given db value and an email, return the user as EntityMap (datomic.query.EntityMap)"
+  [db attr val]
+  (d/entity db
+    (d/q '[:find ?e .
+           :in $ ?attr ?val
+           :where [?e ?attr ?val]]
+     db attr val)))
 
 (comment
   ;; example of upsert-user!

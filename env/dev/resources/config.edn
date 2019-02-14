@@ -1,4 +1,5 @@
 {:dev true
  :port 3000
  :nrepl-port 7000
- :database-url "datomic:free://localhost:4334/clj_crm_dev"}
+ ;; :database-url "datomic:free://localhost:4334/clj_crm_dev"
+ :database-url "datomic:mem://tmp_datomic_dev"}

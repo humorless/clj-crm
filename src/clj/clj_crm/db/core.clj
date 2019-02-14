@@ -87,12 +87,12 @@
        db attr))
 
 ;; example:
-;;   (d/touch (find-by-allow-nil (d/db conn) :user/email  "humorless@gmail.co"))
+;;   (d/touch (find-one-by (d/db conn) :user/email  "humorless@gmail.co"))
 ;;   => NPE
-;;   (:user/pwd (find-by-allow-nil (d/db conn) :user/email "humorless@gmail.com"))
+;;   (:user/pwd (find-one-by (d/db conn) :user/email "humorless@gmail.com"))
 ;;   => $pwd
-(defn find-by-allow-nil
-  "Given db value and an email, return the user as EntityMap (datomic.query.EntityMap)"
+(defn find-one-by
+  "Given db value and an (attr/val), return the user as EntityMap (datomic.query.EntityMap)"
   [db attr val]
   (d/entity db
     (d/q '[:find ?e .

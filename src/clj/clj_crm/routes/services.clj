@@ -2,7 +2,7 @@
   (:require [ring.util.http-response :refer :all]
             [compojure.api.sweet :refer :all]
             [schema.core :as s]
-            [clj-crm.domain.auth :refer [user-auth]]
+            [clj-crm.domain.auth :refer [user-auth user-register!]]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]))
@@ -40,6 +40,13 @@
      (ok {:user user}))
    (context "/api" []
      :tags ["thingie"]
+     (POST "/register" req
+       :body-params [email :- s/Str, pass :- s/Str, screenname :- s/Str]
+       :summary     "User uses email/pass to register, default role is sales"
+       (if (user-register! screenname email pass)
+         (ok)
+         (bad-request)))
+
      (POST "/login" req
        :return      loginResp
        :body-params [email :- s/Str, pass :- s/Str]

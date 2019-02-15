@@ -9,6 +9,14 @@
   :start (do (-> env :database-url d/create-database) (-> env :database-url d/connect))
   :stop (-> conn .release))
 
+;; fresh-conn is for testing purpose db connection
+(comment
+  (def fresh-conn
+    (let [uri "datomic:mem://test"]
+      (d/delete-database uri)
+      (d/create-database uri)
+      (d/connect uri))))
+
 (def norms-map (c/read-resource "schema.edn"))
 
 ;; verification

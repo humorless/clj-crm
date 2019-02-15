@@ -14,7 +14,7 @@
 ;; verification
 ;; (d/touch (ffirst (find-all-by (d/db conn) :conformity/conformed-norms))))
 (defn setup-app-schema [conn]
-  (c/ensure-conforms conn norms-map [:clj-crm/norm1]))
+  (c/ensure-conforms conn norms-map (keys norms-map)))
 
 (defn show-app-schema [conn]
   (let [system-ns #{"db" "db.type" "db.install" "db.part"
@@ -29,6 +29,11 @@
            [((comp not contains?) ?system-ns ?ns)]]
          (d/db conn) system-ns)))
 
+;; (-> conn show-transaction count) to show the number of transaction
+(defn show-transaction
+  "show all the transaction data"
+  [conn]
+  (seq (d/tx-range (d/log conn) nil nil)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utility function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -60,7 +65,7 @@
 
 (defn upsert-user!
   "Given the user entity has :db.unique/identity attribute, Datomic will upsert"
-    [conn {:keys [user-name pwd email status roles]}]
+  [conn {:keys [user-name pwd email status roles]}]
   @(d/transact conn [{:user/name      user-name
                       :user/pwd       pwd
                       :user/email     email
@@ -87,18 +92,18 @@
        db attr))
 
 ;; example:
-;;   (d/touch (find-one-by (d/db conn) :user/email  "humorless@gmail.co"))
+;;   (d/touch (find-one-by (d/db conn) :user/email  "ggyy8@gmail.co"))
 ;;   => NPE
-;;   (:user/pwd (find-one-by (d/db conn) :user/email "humorless@gmail.com"))
+;;   (:user/pwd (find-one-by (d/db conn) :user/email "ggyy8@gmail.com"))
 ;;   => $pwd
 (defn find-one-by
   "Given db value and an (attr/val), return the user as EntityMap (datomic.query.EntityMap)"
   [db attr val]
   (d/entity db
-    (d/q '[:find ?e .
-           :in $ ?attr ?val
-           :where [?e ?attr ?val]]
-     db attr val)))
+            (d/q '[:find ?e .
+                   :in $ ?attr ?val
+                   :where [?e ?attr ?val]]
+                 db attr val)))
 
 (comment
   ;; example of upsert-user!

@@ -1,4 +1,5 @@
-{:clj-crm/norm1 {:txes [[
+{;; norm1 install the user table schema into Datomic
+ :clj-crm/norm1 {:txes [[
    {:db/doc "User email address"
     :db/ident :user/email
     :db/valueType :db.type/string
@@ -44,5 +45,15 @@
 
    [:db/add #db/id [:db.part/user] :db/ident :user.roles/manager]
    [:db/add #db/id [:db.part/user] :db/ident :user.roles/sales]
-   [:db/add #db/id [:db.part/user] :db/ident :user.roles/read-only]]]}}
+   [:db/add #db/id [:db.part/user] :db/ident :user.roles/read-only]]]}
+
+;; norm2 install certain user init data into Datomic for testing purpose
+:clj-crm/norm2 {:txes [[
+   {:user/name "Test screen name"
+    :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
+    :user/email "ggyy8@gmail.com"
+    :user/status :user.status/active
+    :user/roles  [:user.roles/sales :user.roles/read-only]}]]}
+
+}
   

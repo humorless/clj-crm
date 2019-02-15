@@ -1,4 +1,4 @@
-{;; norm1 install the user table schema into Datomic
+{;; norm1 installs the user table schema into Datomic
  :clj-crm/norm1 {:txes [[
    {:db/doc "User email address"
     :db/ident :user/email
@@ -34,7 +34,7 @@
    {:db/doc "User roles - determine access permission. A user may have several roles"
     :db/ident :user/roles
     :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/many
+    :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
@@ -47,13 +47,70 @@
    [:db/add #db/id [:db.part/user] :db/ident :user.roles/sales]
    [:db/add #db/id [:db.part/user] :db/ident :user.roles/read-only]]]}
 
-;; norm2 install certain user init data into Datomic for testing purpose
+;; norm2 installs certain user init data into Datomic for testing purpose
 :clj-crm/norm2 {:txes [[
    {:user/name "Test screen name"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "ggyy8@gmail.com"
     :user/status :user.status/active
-    :user/roles  [:user.roles/sales :user.roles/read-only]}]]}
+    :user/roles  :user.roles/sales}]]}
 
+;; norm3 installs customer, request, allocation table schema into Datomic
+:clj-crm/norm3 {:txes [[
+   {:db/doc "Customer id from LAMP, data type long"
+    :db/ident :customer/id
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one
+    :db/index true
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Customer Chinese name"
+    :db/ident :customer/name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/fulltext true
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Customer English name"
+    :db/ident :customer/name-en
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/fulltext true
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Customer Tax ID from government"
+    :db/ident :customer/tax-id
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/index true
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Customer business type: for business intelligence team usage"
+    :db/ident :customer/business-type
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Customer inventory type: currently only account and display"
+    :db/ident :customer/inventory-type
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Customer replacement ID. When there is no LAMP id, use this one"
+    :db/ident :customer/rp-id
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/index true
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+]]}
 }
   

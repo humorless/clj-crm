@@ -15,7 +15,7 @@
                           :pwd (hs/derive pass)
                           :email email
                           :status :user.status/active
-                          :roles [:user.roles/sales :user.roles/read-only]}))))
+                          :roles  :user.roles/sales}))))
 
 (defn user-auth
   "return 'jwe token' when email/pass pair correct, otherwise return nil"

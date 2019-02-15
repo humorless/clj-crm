@@ -119,7 +119,7 @@
                       :pwd "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
                       :email "humorless@gmail.com"
                       :status :user.status/active
-                      :roles  [:user.roles/sales :user.roles/read-only]}))
+                      :roles  :user.roles/sales}))
 
 (comment
   ;; traditional way to create module public read API

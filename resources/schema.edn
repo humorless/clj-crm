@@ -8,12 +8,11 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "User name"
+   {:db/doc "User screen name"
     :db/ident :user/name
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db/index true
-    :db/fulltext true
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
@@ -69,7 +68,7 @@
     :db/ident :customer/name
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
-    :db/fulltext true
+    :db/index true
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 

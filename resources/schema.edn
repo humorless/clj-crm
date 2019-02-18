@@ -54,7 +54,7 @@
     :user/status :user.status/active
     :user/roles  :user.roles/sales}]]}
 
-;; norm3 installs customer, request, allocation table schema into Datomic
+;; norm3 installs customer table schema into Datomic
 :clj-crm/norm3 {:txes [[
    {:db/doc "Customer id from LAMP, data type long"
     :db/ident :customer/id
@@ -110,6 +110,86 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
+   ;; enumeration for customer/inventory-type
+   [:db/add #db/id [:db.part/user] :db/ident :customer.inv/account]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.inv/display]
+
+   ;; enumeration for customer/business-type
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/arts]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/automotive]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/computer]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/construction]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/cosmetics]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/education]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/fashion]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/finance]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/food]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/games]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/government]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/health]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/marketing]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/e-commerce]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/media]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/travel]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/retail]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/miscellaneous]
+]]}
+;; norm4 installs request table schema into Datomic
+:clj-crm/norm4 {:txes [[
+   {:db/doc "reference points to user. The user should be sales"
+    :db/ident :req/sales
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "list of reference points to customer."
+    :db/ident :req/add-customer-list
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "list of reference points to customer."
+    :db/ident :req/remove-customer-list
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "the status of this request: open, approved, rejected"
+    :db/ident :req/status
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   ;; enumeration for request status
+   [:db/add #db/id [:db.part/user] :db/ident :req.status/open]
+   [:db/add #db/id [:db.part/user] :db/ident :req.status/approved]
+   [:db/add #db/id [:db.part/user] :db/ident :req.status/rejected]
+]]}
+;; norm5 installs allocation table schema into Datomic
+:clj-crm/norm5 {:txes [[
+   {:db/doc "reference points to user. The user should be sales"
+    :db/ident :allo/sales
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "reference points to customer"
+    :db/ident :allo/customer
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "reference points to request"
+    :db/ident :allo/request
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
 ]]}
 }
-  

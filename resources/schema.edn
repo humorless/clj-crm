@@ -48,11 +48,18 @@
 
 ;; norm2 installs certain user init data into Datomic for testing purpose
 :clj-crm/norm2 {:txes [[
-   {:user/name "Test screen name"
+   {:user/name "Test screen name 1"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "ggyy8@gmail.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales}]]}
+    :user/roles  :user.roles/sales}
+
+   {:user/name "Test screen name 2"
+    :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
+    :user/email "yygg9@gmail.com"
+    :user/status :user.status/active
+    :user/roles  :user.roles/sales}
+   ]]}
 
 ;; norm3 installs customer table schema into Datomic
 :clj-crm/norm3 {:txes [[
@@ -102,11 +109,11 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "Customer replacement ID. When there is no LAMP id, use this one"
+   {:db/doc "Customer replacement ID. The example of rp-id is a-1234gh or d-1234gh. The account type will begins with a-. The display type will begins with d-"
     :db/ident :customer/rp-id
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
-    :db/index true
+    :db/unique :db.unique/identity
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
@@ -192,4 +199,79 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 ]]}
+;; norm6 installs certain fake customer/request/allocation data into Datomic for testing purpose
+:clj-crm/norm6 {:txes [[
+   {:db/id "a-1234"
+    :customer/id 99
+    :customer/name "蔡英文"
+    :customer/name-en "English Tsai"
+    :customer/tax-id "年金改革"
+    :customer/business-type :customer.bus/arts
+    :customer/inventory-type :customer.inv/account
+    :customer/rp-id "a-1234"}
+
+   {:db/id "d-1234"
+    :customer/id 99
+    :customer/name "蔡英文"
+    :customer/name-en "English Tsai"
+    :customer/tax-id "年金改革"
+    :customer/business-type :customer.bus/arts
+    :customer/inventory-type :customer.inv/display
+    :customer/rp-id "d-1234"}
+
+   {:db/id "a-3214"
+    :customer/id 101
+    :customer/name "陳水扁"
+    :customer/name-en "Mr. Chen"
+    :customer/tax-id "一邊一國"
+    :customer/business-type :customer.bus/fashion
+    :customer/inventory-type :customer.inv/account
+    :customer/rp-id "a-3214"}
+
+   {:db/id "a-6789"
+    :customer/id 102
+    :customer/name "李登輝"
+    :customer/name-en "Mr. Lee"
+    :customer/tax-id "特殊國與國關系"
+    :customer/business-type :customer.bus/food
+    :customer/inventory-type :customer.inv/account
+    :customer/rp-id "a-6789"}
+
+   {:db/id "d-9876"
+    :customer/id 103
+    :customer/name "蔣經國"
+    :customer/name-en "Mr. Chiang"
+    :customer/tax-id "漢賊不兩立"
+    :customer/business-type :customer.bus/games
+    :customer/inventory-type :customer.inv/display
+    :customer/rp-id "d-9876"}
+
+   {:req/sales [:user/email "ggyy8@gmail.com"] ;; lookup ref for existing entity
+    :req/add-customer-list #{"a-1234" "d-1234"} ;; tempid for newly created entity
+    :req/remove-customer-list #{"a-3214"}
+    :req/status :req.status/open}
+
+   {:db/id "firstreq"
+    :req/sales [:user/email "ggyy8@gmail.com"] ;; lookup ref
+    :req/add-customer-list #{"a-3214" "a-6789"} ;; tempid
+    :req/remove-customer-list #{}
+    :req/status :req.status/approved}
+
+   {:allo/sales [:user/email "ggyy8@gmail.com"]
+    :allo/customer "a-3214"
+    :allo/request "firstreq"}
+   {:allo/sales [:user/email "ggyy8@gmail.com"]
+    :allo/customer "a-6789"
+    :allo/request "firstreq"}
+   {:allo/sales [:user/email "yygg9@gmail.com"]
+    :allo/customer "d-9876"
+    :allo/request "firstreq"}
+  ]]}
+;; norm7 installs certain fake request data into Datomic for testing purpose
+:clj-crm/norm7 {:txes [[
+   {:req/sales [:user/email "yygg9@gmail.com"] ;; lookup ref for existing entity
+    :req/add-customer-list #{[:customer/rp-id "a-3214"]} ;; lookup ref for existing entity
+    :req/remove-customer-list #{[:customer/rp-id "d-9876"]}
+    :req/status :req.status/open}
+  ]]}
 }

@@ -113,11 +113,40 @@
                    :where [?e ?attr ?val]]
                  db attr val)))
 
+(defn get-allo-customers-by-user
+  "
+  get the customers list currently allocated by user -- sales' own customer list
+  example usage: (map d/touch(get-allo-customers-by-user (d/db conn) [:user/email \"ggyy8@gmail.com\"]))
+  "
+  [db user]
+  (->>  (d/q '[:find [?c ...]
+               :in $ ?u
+               :where
+               [?e :allo/sales ?u]
+               [?e :allo/customer ?c]]
+             db user)
+        (map #(d/entity db %))))
+
+(defn get-requests-by-status
+  "
+  get the ([request-entity, #inst] ... ) or () when there is no requests
+  example usage: (get-requests-by-status (d/db conn) :req.status/open)
+  Note: This query will bring request's created time along with request entity.
+  "
+  [db status]
+  (->>  (d/q '[:find ?e ?inst
+               :in $ ?v
+               :where
+               [?e :req/status ?v ?tx true]
+               [?tx :db/txInstant ?inst]]
+             db status)
+        (map (fn [[req-eid inst]] [(d/entity db req-eid) inst]))))
+
 (comment
   ;; example of upsert-user!
   (upsert-user! conn {:user-name "Laurence Chen"
                       :pwd "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
-                      :email "humorless@gmail.com"
+                      :email "ggyy8@gmail.com"
                       :status :user.status/active
                       :roles  :user.roles/sales}))
 

@@ -22,9 +22,6 @@
   [_ binding acc]
   (update-in acc [:letks] into [binding `(:identity ~'+compojure-api-request+)]))
 
-(def loginResp
-  {(s/optional-key :token) s/Str
-   (s/optional-key :error) s/Str})
 
 (def service-routes
   (api
@@ -38,49 +35,26 @@
      :auth-rules authenticated?
      :current-user user
      (ok {:user user}))
+
+   (POST "/api/register" req
+     :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str]
+     :summary     "User uses email/password to register, default role is sales"
+     (if (user-register! screenname email password)
+       (ok)
+       (bad-request)))
+
+   (POST "/api/login" req
+     :body-params [email :- s/Str, password :- s/Str]
+     :summary     "User uses email/password to login"
+     (if-let [token-datum (user-auth email password)]
+       (ok {:user {:token token-datum}})
+       (unauthorized {:error "wrong auth data"})))
+
    (context "/api" []
+     :auth-rules authenticated?
      :tags ["thingie"]
-     (POST "/register" req
-       :body-params [email :- s/Str, pass :- s/Str, screenname :- s/Str]
-       :summary     "User uses email/pass to register, default role is sales"
-       (if (user-register! screenname email pass)
-         (ok)
-         (bad-request)))
-
-     (POST "/login" req
-       :return      loginResp
-       :body-params [email :- s/Str, pass :- s/Str]
-       :summary     "User uses email/pass to login"
-       (if-let [token-datum (user-auth email pass)]
-         (ok {:token token-datum})
-         (unauthorized {:error "wrong auth data"})))
-
      (GET "/plus" []
        :return       Long
        :query-params [x :- Long, {y :- Long 1}]
        :summary      "x+y with query-parameters. y defaults to 1."
-       (ok (+ x y)))
-
-     (POST "/minus" []
-       :return      Long
-       :body-params [x :- Long, y :- Long]
-       :summary     "x-y with body-parameters."
-       (ok (- x y)))
-
-     (GET "/times/:x/:y" []
-       :return      Long
-       :path-params [x :- Long, y :- Long]
-       :summary     "x*y with path-parameters"
-       (ok (* x y)))
-
-     (POST "/divide" []
-       :return      Double
-       :form-params [x :- Long, y :- Long]
-       :summary     "x/y with form-parameters"
-       (ok (/ x y)))
-
-     (GET "/power" []
-       :return      Long
-       :header-params [x :- Long, y :- Long]
-       :summary     "x^y with header-parameters"
-       (ok (long (Math/pow x y)))))))
+       (ok (+ x y))))))

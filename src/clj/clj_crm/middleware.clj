@@ -79,7 +79,7 @@
       wrap-auth
       wrap-webjars
       wrap-flash
-      (wrap-cors :access-control-allow-origin [#"http://10.20.30.40:4100"]
+      (wrap-cors :access-control-allow-origin [(re-pattern (:cors-regex-str env))]
                  :access-control-allow-methods [:get :put :post :delete])
       (wrap-session {:cookie-attrs {:http-only true}})
       (wrap-defaults

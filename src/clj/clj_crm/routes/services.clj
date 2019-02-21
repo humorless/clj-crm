@@ -3,6 +3,7 @@
             [compojure.api.sweet :refer :all]
             [schema.core :as s]
             [clj-crm.domain.auth :refer [user-auth user-register!]]
+            [clj-crm.domain.query :as dq]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]))
@@ -22,18 +23,19 @@
   [_ binding acc]
   (update-in acc [:letks] into [binding `(:identity ~'+compojure-api-request+)]))
 
-
 (def service-routes
   (api
    {:swagger {:ui "/swagger-ui"
               :spec "/swagger.json"
               :data {:info {:version "1.0.0"
-                            :title "Sample API"
-                            :description "Sample Services"}}}}
+                            :title "CRM system API"
+                            :description "Customer booking, pipeline, AR calculation Services"}}}}
 
    (GET "/authenticated" []
      :auth-rules authenticated?
+     :header-params [authorization :- s/Str]
      :current-user user
+     :description "Authorization header expects the following format 'Token {token}', for example: Token eyJhbGciOiJ..."
      (ok {:user user}))
 
    (POST "/api/register" req
@@ -52,7 +54,18 @@
 
    (context "/api" []
      :auth-rules authenticated?
-     :tags ["thingie"]
+     :header-params [authorization :- s/Str]
+     :current-user user
+     :description "Authorization header expects the following format 'Token {token}', for example: Token eyJhbGciOiJ..."
+     :tags ["Restricted API"]
+     (POST "/query" req
+       :body [queries [dq/Query] {:description "Query as vector"}]
+       :summary "frontend use query api to do all kind of read operations"
+       (let [[status result] (dq/query queries user req)]
+         (case status
+           :ok (ok {:result result})
+           :error (bad-request {:reason result}))))
+
      (GET "/plus" []
        :return       Long
        :query-params [x :- Long, {y :- Long 1}]

@@ -1,13 +1,13 @@
 (ns clj-crm.domain.query
-  (:require [clj-crm.db.core :refer [conn find-one-by upsert-user!]]
+  (:require [clj-crm.db.core :refer [conn find-one-by get-allo-customers-by-user]]
             [schema.core :as s]
             [clojure.tools.logging :as log]
             [datomic.api :as d]))
 
 (defn query-command-switch
   "Input:
-   user-q is the form: {:user ggyy8@gmail.com
-                         :q   \"all-customers \"}
+   user-q is the form: {:user \"ggyy8@gmail.com\"
+                         :q   \"all-customers\"}
    Output:
    :all-customers"
   [user-q]
@@ -22,11 +22,23 @@
    :customer2
    :customer3])
 
+(defn marshal-customer
+  "Input: customer as type (EntityMap)
+   Ouput: data suitable for transfer to network"
+  [c]
+  {:id (:customer/id c)
+   :name (:customer/name c)
+   :name-en (:customer/name-en c)
+   :tax-id (:customer/tax-id c)
+   :inventory-type (:customer/inventory-type c)})
+
 (defmethod dispatch-q :my-customers
   [user-q]
   (log/info "user-q as" user-q)
-  [:customer5
-   :customer9])
+  (let [email (:user user-q)
+        user-lookup-ref [:user/email email]
+        data (mapv marshal-customer (get-allo-customers-by-user  (d/db conn)  user-lookup-ref))]
+    data))
 
 (s/defschema Query {:q s/Str})
 

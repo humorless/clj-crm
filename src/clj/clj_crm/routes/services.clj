@@ -42,7 +42,7 @@
      :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str]
      :summary     "User uses email/password to register, default role is sales"
      (if (user-register! screenname email password)
-       (ok)
+       (ok {:user {:token (user-auth email password)}})
        (bad-request)))
 
    (POST "/api/login" req

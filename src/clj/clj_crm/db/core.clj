@@ -113,6 +113,19 @@
                    :where [?e ?attr ?val]]
                  db attr val)))
 
+(defn get-open-requests-by-user
+  "get the open request currently submitted by user -- sales' own request
+   e.g.:
+   (map d/touch (get-open-requests-by-user (d/db conn) [:user/email \"ggyy8@gmail.com\"]))"
+  [db user]
+  (->> (d/q '[:find ?e .
+              :in $ ?u
+              :where
+              [?e :req/sales ?u]
+              [?e :req/status :req.status/open]]
+            db user)
+       (map #(d/entity db %))))
+
 (defn get-allo-customers-by-user
   "
   get the customers list currently allocated by user -- sales' own customer list

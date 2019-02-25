@@ -1,5 +1,5 @@
 (ns clj-crm.domain.query
-  (:require [clj-crm.db.core :refer [conn find-one-by get-allo-customers-by-user marshal-entity]]
+  (:require [clj-crm.db.core :as dcore :refer [conn]]
             [schema.core :as s]
             [clojure.tools.logging :as log]
             [datomic.api :as d]))
@@ -16,18 +16,29 @@
 ;; example usage: (dispatch-q {:user "ggyy8@gmail.com" :q "all-customers"}))
 (defmulti dispatch-q query-command-switch)
 
+(defmethod dispatch-q :my-requests
+  [user-q]
+  (log/info "at my-requests, user-q as" user-q)
+  (let [email (:user user-q)
+        user-lookup-ref [:user/email email]
+        query-result (dcore/get-open-requests-by-user (d/db conn) user-lookup-ref)
+        data (mapv dcore/marshal-entity query-result)]
+    data))
+
 (defmethod dispatch-q :all-customers
   [user-q]
-  [:customer1
-   :customer2
-   :customer3])
+  (log/info "at all-customers, user-q as" user-q)
+  (let [query-result (flatten (dcore/find-all-by (d/db conn) :customer/id))
+        data (mapv dcore/marshal-entity query-result)]
+    data))
 
 (defmethod dispatch-q :my-customers
   [user-q]
-  (log/info "user-q as" user-q)
+  (log/info "at my-customers, user-q as" user-q)
   (let [email (:user user-q)
         user-lookup-ref [:user/email email]
-        data (mapv marshal-entity (get-allo-customers-by-user  (d/db conn)  user-lookup-ref))]
+        query-result (dcore/get-allo-customers-by-user (d/db conn)  user-lookup-ref)
+        data (mapv dcore/marshal-entity query-result)]
     data))
 
 (s/defschema PageSchema {:page-size s/Int

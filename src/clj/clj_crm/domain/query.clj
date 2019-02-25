@@ -28,7 +28,7 @@
 (defmethod dispatch-q :all-customers
   [user-q]
   (log/info "at all-customers, user-q as" user-q)
-  (let [query-result (flatten (dcore/find-all-by (d/db conn) :customer/id))
+  (let [query-result (dcore/find-all-by (d/db conn) :customer/id)
         data (mapv dcore/marshal-entity query-result)]
     data))
 

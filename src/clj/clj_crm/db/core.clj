@@ -20,7 +20,7 @@
 (def norms-map (c/read-resource "schema.edn"))
 
 ;; verification
-;; (d/touch (ffirst (find-all-by (d/db conn) :conformity/conformed-norms))))
+;; => (map d/touch (find-all-by (d/db conn) :conformity/conformed-norms)))
 (defn setup-app-schema [conn]
   (c/ensure-conforms conn norms-map (keys norms-map)))
 
@@ -64,8 +64,7 @@
    all :find results are entity ids."
   [query db & args]
   (->> (apply d/q query db args)
-       (mapv (fn [items]
-               (mapv (partial d/entity db) items)))))
+       (map (partial d/entity db))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Public Api
@@ -92,9 +91,11 @@
 
 ;; Similar usage pattern to SQL expression: `SELECT * FROM A`
 (defn find-all-by
-  "Returns all entities possessing attr."
+  "Returns all entities possessing attr.
+
+   Output is `(eid ...)`"
   [db attr]
-  (qes '[:find ?e
+  (qes '[:find [?e ...]
          :in $ ?attr
          :where [?e ?attr]]
        db attr))
@@ -116,9 +117,12 @@
 (defn get-open-requests-by-user
   "get the open request currently submitted by user -- sales' own request
    e.g.:
-   (map d/touch (get-open-requests-by-user (d/db conn) [:user/email \"ggyy8@gmail.com\"]))"
+   (map d/touch (get-open-requests-by-user (d/db conn) [:user/email \"ggyy8@gmail.com\"]))
+
+   Output is `(eid ...)`
+   () or (#:db{:id 17592186045470}) "
   [db user]
-  (->> (d/q '[:find ?e .
+  (->> (d/q '[:find [?e ...]
               :in $ ?u
               :where
               [?e :req/sales ?u]
@@ -130,7 +134,9 @@
   "
   get the customers list currently allocated by user -- sales' own customer list
   example usage: (map d/touch(get-allo-customers-by-user (d/db conn) [:user/email \"ggyy8@gmail.com\"]))
-  "
+
+  Output is `(eid ...)`
+  () or (#:db{:id 17592186045461} #:db{:id 17592186045462}) "
   [db user]
   (->>  (d/q '[:find [?c ...]
                :in $ ?u

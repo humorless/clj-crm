@@ -59,6 +59,12 @@
     :user/email "yygg9@gmail.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales}
+
+   {:user/name "Test screen name 3"
+    :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
+    :user/email "user@example.com"
+    :user/status :user.status/active
+    :user/roles  :user.roles/sales}
    ]]}
 
 ;; norm3 installs customer table schema into Datomic

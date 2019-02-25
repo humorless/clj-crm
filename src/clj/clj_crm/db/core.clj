@@ -142,6 +142,24 @@
              db status)
         (map (fn [[req-eid inst]] [(d/entity db req-eid) inst]))))
 
+(defn marshal-entity
+  "Input: data of class 'datomic.query.EntityMap'
+   Ouput: data map suitable for transfer to network
+
+   Note: when transfer to network, keyword's namespace will be removed.
+   e.g.
+   ':customer/id' -> ':id'
+
+   However, the reverse ref is special case:
+   ':db/id'       -> ':eid'"
+  [c]
+  (let [erase-namespace #(keyword (name %)) ;; remove namespace from keyword
+        entity-map (d/touch c)]
+    (reduce (fn [acc [k v]]
+              (into acc {(erase-namespace k) v}))
+            {:eid (:db/id entity-map)} ;; prepare :eid in inital map
+            (seq c))))
+
 (comment
   ;; example of upsert-user!
   (upsert-user! conn {:user-name "Laurence Chen"
@@ -149,49 +167,3 @@
                       :email "ggyy8@gmail.com"
                       :status :user.status/active
                       :roles  :user.roles/sales}))
-
-(comment
-  ;; traditional way to create module public read API
-  (defn get-user-by-email
-    "Given db value and an email, return the user as Entity (datomic.query.EntityMap)"
-    [db email]
-    ;; find specification using single scalar form
-    (->> (d/q '[:find ?e . :in $ ?m
-                :where [?e :user/email ?m]]
-              db email)
-         (d/entity db)))
-
-  ;; traditional way to create schema
-  (defn create-schema []
-    (let [schema [{:db/ident              :user/id
-                   :db/valueType          :db.type/string
-                   :db/cardinality        :db.cardinality/one
-                   :db.install/_attribute :db.part/db}
-                  {:db/ident              :user/first-name
-                   :db/valueType          :db.type/string
-                   :db/cardinality        :db.cardinality/one
-                   :db.install/_attribute :db.part/db}
-                  {:db/ident              :user/last-name
-                   :db/valueType          :db.type/string
-                   :db/cardinality        :db.cardinality/one
-                   :db.install/_attribute :db.part/db}
-                  {:db/ident              :user/email
-                   :db/valueType          :db.type/string
-                   :db/cardinality        :db.cardinality/one
-                   :db.install/_attribute :db.part/db}]]
-      @(d/transact conn schema)))
-  ;; example codes along with luminus-generation
-  (defn entity [conn id]
-    (d/entity (d/db conn) id))
-
-  (defn touch [conn results]
-    "takes 'entity ids' results from a query
-     e.g. '#{[272678883689461] [272678883689462] [272678883689459] [272678883689457]}'"
-    (let [e (partial entity conn)]
-      (map #(-> % first e d/touch) results)))
-
-  (defn find-user [conn id]
-    (let [user (d/q '[:find ?e :in $ ?id
-                      :where [?e :user/id ?id]]
-                    (d/db conn) id)]
-      (touch conn user))))

@@ -59,9 +59,9 @@
      :description "Authorization header expects the following format 'Token {token}', for example: Token eyJhbGciOiJ..."
      :tags ["Restricted API"]
      (POST "/query" req
-       :body [queries [dq/Query] {:description "Query as vector"}]
+       :body [q dq/QuerySchema {:description "Query"}]
        :summary "frontend use query api to do all kind of read operations"
-       (let [[status result] (dq/query queries user req)]
+       (let [[status result] (dq/query q user req)]
          (case status
            :ok (ok {:result result})
            :error (bad-request {:reason result}))))

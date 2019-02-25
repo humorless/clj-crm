@@ -26,11 +26,13 @@
   "Input: customer as type (EntityMap)
    Ouput: data suitable for transfer to network"
   [c]
-  {:id (:customer/id c)
+  {:eid (:db/id c)
+   :id (:customer/id c)
    :name (:customer/name c)
    :name-en (:customer/name-en c)
    :tax-id (:customer/tax-id c)
-   :inventory-type (:customer/inventory-type c)})
+   :inventory-type (:customer/inventory-type c)
+   :business-type (:customer/business-type c)})
 
 (defmethod dispatch-q :my-customers
   [user-q]
@@ -40,20 +42,23 @@
         data (mapv marshal-customer (get-allo-customers-by-user  (d/db conn)  user-lookup-ref))]
     data))
 
-(s/defschema Query {:q s/Str})
+(s/defschema PageSchema {:page-size s/Int
+                         :page-index s/Int})
+(s/defschema QuerySchema {(s/required-key :q) s/Str
+                          (s/optional-key :pagination) PageSchema})
 
 (defn query
   " Input:
-    queries is the form: [Query]
-    user is the form: {:user ggyy8@gmail.com, :exp ...}
+    q is in the form: [Query]
+    user is in the form: {:user ggyy8@gmail.com, :exp ...}
 
     Output:
     Return the result as the form of [status result], status maybe :ok :error.
     Example of return value is [:ok \"Hello World\"]"
-  [queries user req]
-  (log/info "queries as" queries)
+  [q user req]
+  ;; log user query
+  (log/info "query as" q)
   (log/info "user as" user)
-  ;; check user queries
   (let [uid (:user user)
-        user-queries (map #(assoc % :user uid) queries)]
-    [:ok (mapv dispatch-q user-queries)]))
+        user-q (assoc q :user uid)]
+    [:ok (dispatch-q user-q)]))

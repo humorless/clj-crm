@@ -130,6 +130,17 @@
             db user)
        (map #(d/entity db %))))
 
+(defn insert-open-request
+  "Given the user entity, there can be only one open request"
+  [conn {:keys [user add-list remove-list]}]
+  (if (seq (get-open-requests-by-user (d/db conn) user))
+    :request-alread-exist ;; let this insert request be idempotent
+    (do @(d/transact conn [{:req/sales                user
+                            :req/add-customer-list    add-list
+                            :req/remove-customer-list remove-list
+                            :req/status               :req.status/open}])
+        :insert-success)))
+
 (defn get-allo-customers-by-user
   "
   get the customers list currently allocated by user -- sales' own customer list

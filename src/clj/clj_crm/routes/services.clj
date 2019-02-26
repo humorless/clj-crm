@@ -4,6 +4,7 @@
             [schema.core :as s]
             [clj-crm.domain.auth :refer [user-auth user-register!]]
             [clj-crm.domain.query :as dq]
+            [clj-crm.domain.command :as dc]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]))
@@ -62,6 +63,14 @@
        :body [q dq/QuerySchema {:description "Query"}]
        :summary "frontend use query api to do all kind of read operations"
        (let [[status result] (dq/query q user req)]
+         (case status
+           :ok (ok {:result result})
+           :error (bad-request {:reason result}))))
+
+     (POST "/command" req
+       :body [c dc/CommandSchema {:description "Command"}]
+       :summary "frontend use command api to do all kind of write operations"
+       (let [[status result] (dc/command c user req)]
          (case status
            :ok (ok {:result result})
            :error (bad-request {:reason result}))))

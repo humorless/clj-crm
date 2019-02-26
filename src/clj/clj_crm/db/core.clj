@@ -93,7 +93,7 @@
 (defn find-all-by
   "Returns all entities possessing attr.
 
-   Output is `(eid ...)`"
+   Output is `(entity ...)`"
   [db attr]
   (qes '[:find [?e ...]
          :in $ ?attr
@@ -114,12 +114,26 @@
                    :where [?e ?attr ?val]]
                  db attr val)))
 
+(defn get-customers-of-open-requests-by-user
+  "For sales'own request, pull out its add-customer-list and remove-customer-list
+
+  Output is `({} ...)`
+  () or ({:req/add-customer-list [{:db/id } ...]} ...) "
+  [db user]
+  (->> (d/q '[:find [?e ...]
+              :in $ ?u
+              :where
+              [?e :req/sales ?u]
+              [?e :req/status :req.status/open]]
+            db user)
+       (map #(d/pull db '[{:req/add-customer-list [*]} {:req/remove-customer-list [*]}] %))))
+
 (defn get-open-requests-by-user
   "get the open request currently submitted by user -- sales' own request
    e.g.:
    (map d/touch (get-open-requests-by-user (d/db conn) [:user/email \"ggyy8@gmail.com\"]))
 
-   Output is `(eid ...)`
+   Output is `(entity ...)`
    () or (#:db{:id 17592186045470}) "
   [db user]
   (->> (d/q '[:find [?e ...]
@@ -146,7 +160,7 @@
   get the customers list currently allocated by user -- sales' own customer list
   example usage: (map d/touch(get-allo-customers-by-user (d/db conn) [:user/email \"ggyy8@gmail.com\"]))
 
-  Output is `(eid ...)`
+  Output is `(entity ...)`
   () or (#:db{:id 17592186045461} #:db{:id 17592186045462}) "
   [db user]
   (->>  (d/q '[:find [?c ...]

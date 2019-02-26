@@ -16,13 +16,44 @@
 ;; example usage: (dispatch-q {:user "ggyy8@gmail.com" :q "all-customers"}))
 (defmulti dispatch-q query-command-switch)
 
+(defn marshal-customer
+  "for input's field, remove the namespace of keyword, replace :db/id as :eid
+   Also, for the enumeration like :customer/business-type and :customer/inventory-type, do the necessary marshalling
+   Input:
+
+   {CUSTOMER-MAP}"
+  [customer]
+  (let [db (d/db conn)
+        erase-namespace #(keyword (name %))
+        eid (:db/id customer)
+        c (dissoc customer :db/id)]
+    (reduce (fn [acc [k v]]
+              (if-let [enum (:db/id v)]
+                (into acc {(erase-namespace k) (d/ident db enum)}) ;; handle the :business-type/:inventory-type
+                (into acc {(erase-namespace k) v})))
+            {:eid eid}
+            c)))
+
+(defn marshal-request
+  "for input's field, remove the namespace of keyword
+   Input:
+
+   {:req/add-customer-list    [{CUSTOMER-MAP} ...]
+    :req/remove-customer-list [{CUSTOMER-MAP} ...]}  "
+  [req]
+  (let [erase-namespace #(keyword (name %))]
+    (reduce (fn [acc [k v]]
+              (into acc {(erase-namespace k) (mapv marshal-customer v)}))
+            {}
+            req)))
+
 (defmethod dispatch-q :my-requests
   [user-q]
   (log/info "at my-requests, user-q as" user-q)
   (let [email (:user user-q)
         user-lookup-ref [:user/email email]
-        query-result (dcore/get-open-requests-by-user (d/db conn) user-lookup-ref)
-        data (mapv dcore/marshal-entity query-result)]
+        query-result (dcore/get-customers-of-open-requests-by-user (d/db conn) user-lookup-ref)
+        data (mapv marshal-request query-result)]
     data))
 
 (defmethod dispatch-q :all-customers

@@ -128,6 +128,22 @@
             db user)
        (map #(d/pull db '[{:req/add-customer-list [*]} {:req/remove-customer-list [*]}] %))))
 
+(defn get-left-joined-customers-users
+  "Output is `({Customer-User})`
+
+  {Customer-User} is in the form of:
+  `
+  {:db/id 17592186045461,
+   :allo/_customer [{:allo/sales {:db/id 17592186045429}}]}
+  `"
+  [db]
+  (->> (d/q '[:find [?c ...]
+              :in $
+              :where
+              [?c :customer/id]]
+            db)
+       (map #(d/pull db '[{:allo/_customer [:allo/sales]} :db/id] %))))
+
 (defn get-open-requests-by-user
   "get the open request currently submitted by user -- sales' own request
    e.g.:

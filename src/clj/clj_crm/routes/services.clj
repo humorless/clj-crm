@@ -2,7 +2,7 @@
   (:require [ring.util.http-response :refer :all]
             [compojure.api.sweet :refer :all]
             [schema.core :as s]
-            [clj-crm.domain.auth :refer [user-auth user-register!]]
+            [clj-crm.domain.auth :refer [user-datum user-auth user-register!]]
             [clj-crm.domain.query :as dq]
             [clj-crm.domain.command :as dc]
             [compojure.api.meta :refer [restructure-param]]
@@ -43,15 +43,22 @@
      :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str]
      :summary     "User uses email/password to register, default role is sales"
      (if (user-register! screenname email password)
-       (ok {:user {:token (user-auth email password)}})
+       (ok {:user (user-datum email)})
        (bad-request)))
 
    (POST "/api/login" req
      :body-params [email :- s/Str, password :- s/Str]
      :summary     "User uses email/password to login"
-     (if-let [token-datum (user-auth email password)]
-       (ok {:user {:token token-datum}})
+     (if (user-auth email password)
+       (ok {:user (user-datum email)})
        (unauthorized {:error "wrong auth data"})))
+
+   (GET "/api/user" req
+     :auth-rules authenticated?
+     :header-params [authorization :- s/Str]
+     :current-user user
+     :summary     "User use jwe token to get the user-datum"
+     (ok {:user (user-datum (:user user))}))
 
    (context "/api" []
      :auth-rules authenticated?

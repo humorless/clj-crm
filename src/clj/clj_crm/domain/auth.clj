@@ -18,9 +18,17 @@
                           :roles  :user.roles/sales}))))
 
 (defn user-auth
-  "return 'jwe token' when email/pass pair correct, otherwise return nil"
+  "return 'true' when email/pass pair correct, otherwise return nil"
   [email pass]
   (let [db (d/db conn)]
     (when-let [user (find-one-by db :user/email email)] ;;get user record from db
       (when (hs/check pass (:user/pwd user)) ;;compare user pass
-        (token (:user/email user)))))) ;; encrypt :user/email into jwe token
+        true))))
+
+(defn user-datum
+  "return the 'user map'"
+  [email]
+  (let [u (find-one-by (d/db conn) :user/email email)
+        jwe-token (token (:user/email u))
+        username (:user/name u)]
+  {:token jwe-token :email email :username username}))

@@ -128,21 +128,68 @@
             db user)
        (map #(d/pull db '[{:req/add-customer-list [*]} {:req/remove-customer-list [*]}] %))))
 
-(defn get-left-joined-customers-users
-  "Output is `({Customer-User})`
+(defn marshal-customer
+  "for input's field, remove the namespace of keyword, replace :db/id as :eid
+   Also, for the enumeration like :customer/business-type and :customer/inventory-type, do the necessary marshalling
+   Input:
 
-  {Customer-User} is in the form of:
+   {CUSTOMER-MAP}"
+  [db customer]
+  (let [erase-namespace #(keyword (name %))
+        eid (:db/id customer)
+        c (dissoc customer :db/id)]
+    (reduce (fn [acc [k v]]
+              (if-let [enum (:db/id v)]
+                (into acc {(erase-namespace k) (d/ident db enum)}) ;; handle the :business-type/:inventory-type
+                (into acc {(erase-namespace k) v})))
+            {:eid eid}
+            c)))
+
+(defn marshal-request
+  "for input's field, remove the namespace of keyword
+   Input:
+
+   {:req/add-customer-list    [{CUSTOMER-MAP} ...]
+    :req/remove-customer-list [{CUSTOMER-MAP} ...]}  "
+  [req]
+  (let [db (d/db conn)
+        erase-namespace #(keyword (name %))]
+    (reduce (fn [acc [k v]]
+              (into acc {(erase-namespace k) (mapv #(marshal-customer db  %) v)}))
+            {}
+            req)))
+
+(defn marshal-left-joined-customer
+  "Input is  database and `{LJ-CUSTOMER-MAP}`"
+  [db lj-c]
+  (let [sid  (get-in lj-c [:allo/_customer 0 :allo/sales :db/id])
+        sname (get-in lj-c [:allo/_customer 0 :allo/sales :user/name])
+        c (dissoc lj-c :allo/_customer)
+        c-with-sales (assoc c :sales {:eid sid
+                                      :name sname})]
+    (if sid
+      (marshal-customer db c-with-sales)
+      (marshal-customer db c))))
+
+(defn get-left-joined-customers
+  "Output is `({LJ-CUSTOMER-MAP} ...)`
+
+  {LJ-CUSTOMER-MAP} is in the form of:
   `
-  {:db/id 17592186045461,
-   :allo/_customer [{:allo/sales {:db/id 17592186045429}}]}
-  `"
+  {
+   [normal-customer-field]*
+   :allo/_customer [{:allo/sales {:db/id ...
+                                  :user/name ...}}]}
+  `
+  However, field `:allo/_customer` does not always exist
+  "
   [db]
   (->> (d/q '[:find [?c ...]
               :in $
               :where
               [?c :customer/id]]
             db)
-       (map #(d/pull db '[{:allo/_customer [:allo/sales]} :db/id] %))))
+       (map #(d/pull db '[{:allo/_customer [{:allo/sales [:user/name :db/id]}]} *] %))))
 
 (defn get-open-requests-by-user
   "get the open request currently submitted by user -- sales' own request

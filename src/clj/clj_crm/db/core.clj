@@ -117,16 +117,22 @@
 (defn get-customers-of-open-requests-by-user
   "For sales'own request, pull out its add-customer-list and remove-customer-list
 
-  Output is `({} ...)`
-  () or ({:req/add-customer-list [{:db/id } ...]} ...) "
+  Output is `({REQ} ...)` or `()`
+  {REQ} is of the form:
+  {:req/add-customer-list    [{CUSTOMER-MAP} ...]
+   :req/remove-customer-list [{CUSTOMER-MAP} ...]
+   :req/tx ...}"
   [db user]
-  (->> (d/q '[:find [?e ...]
-              :in $ ?u
-              :where
-              [?e :req/sales ?u]
-              [?e :req/status :req.status/open]]
-            db user)
-       (map #(d/pull db '[{:req/add-customer-list [*]} {:req/remove-customer-list [*]}] %))))
+  (let [req-get #(d/pull db '[{:req/add-customer-list [*]} {:req/remove-customer-list [*]}] %)]
+    (->> (d/q '[:find ?e ?inst
+                :in $ ?u
+                :where
+                [?e :req/sales ?u]
+                [?e :req/status :req.status/open ?tx true]
+                [?tx :db/txInstant ?inst]]
+              db user)
+         (map (fn [[req-eid inst]]
+                (assoc (req-get req-eid) :req/tx inst))))))
 
 (defn marshal-customer
   "for input's field, remove the namespace of keyword, replace :db/id as :eid
@@ -150,14 +156,16 @@
    Input:
 
    {:req/add-customer-list    [{CUSTOMER-MAP} ...]
-    :req/remove-customer-list [{CUSTOMER-MAP} ...]}  "
+    :req/remove-customer-list [{CUSTOMER-MAP} ...]
+    :req/tx ...}"
   [req]
   (let [db (d/db conn)
-        erase-namespace #(keyword (name %))]
+        erase-namespace #(keyword (name %))
+        t (:req/tx req)]
     (reduce (fn [acc [k v]]
               (into acc {(erase-namespace k) (mapv #(marshal-customer db  %) v)}))
-            {}
-            req)))
+            {:tx t}
+            (dissoc req :req/tx))))
 
 (defn marshal-left-joined-customer
   "Input is  database and `{LJ-CUSTOMER-MAP}`"

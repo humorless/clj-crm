@@ -50,28 +50,28 @@
 :clj-crm/norm2 {:txes [[
    {:user/name "Test screen name 1"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
-    :user/email "ggyy8@gmail.com"
+    :user/email "user1@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales}
 
    {:user/name "Test screen name 2"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
-    :user/email "yygg9@gmail.com"
+    :user/email "user2@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales}
 
    {:user/name "Test screen name 3"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
-    :user/email "user@example.com"
+    :user/email "user3@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales}
    ]]}
 
 ;; norm3 installs customer table schema into Datomic
 :clj-crm/norm3 {:txes [[
-   {:db/doc "Customer id from LAMP, data type long"
+   {:db/doc "Customer id from LAMP, data type string"
     :db/ident :customer/id
-    :db/valueType :db.type/long
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db/index true
     :db/id #db/id [:db.part/db]
@@ -208,74 +208,106 @@
 ;; norm6 installs certain fake customer/request/allocation data into Datomic for testing purpose
 :clj-crm/norm6 {:txes [[
    {:db/id "a-1234"
-    :customer/id 99
-    :customer/name "蔡英文"
-    :customer/name-en "English Tsai"
-    :customer/tax-id "年金改革"
-    :customer/business-type :customer.bus/arts
+    :customer/id "CM0001"
+    :customer/name "AAA股份有限公司"
+    :customer/name-en "AAA Corporation"
+    :customer/tax-id "12345678"
+    :customer/business-type :customer.bus/food
     :customer/inventory-type :customer.inv/account
     :customer/rp-id "a-1234"}
 
    {:db/id "d-1234"
-    :customer/id 99
-    :customer/name "蔡英文"
-    :customer/name-en "English Tsai"
-    :customer/tax-id "年金改革"
-    :customer/business-type :customer.bus/arts
+    :customer/id "CM0002"
+    :customer/name "BBB股份有限公司"
+    :customer/name-en "BBB Corporation"
+    :customer/tax-id "23456789"
+    :customer/business-type :customer.bus/games
     :customer/inventory-type :customer.inv/display
     :customer/rp-id "d-1234"}
 
    {:db/id "a-3214"
-    :customer/id 101
-    :customer/name "陳水扁"
-    :customer/name-en "Mr. Chen"
-    :customer/tax-id "一邊一國"
-    :customer/business-type :customer.bus/fashion
+    :customer/id "CM0003"
+    :customer/name "CCC股份有限公司"
+    :customer/name-en "CCC Corporation"
+    :customer/tax-id "34567891"
+    :customer/business-type :customer.bus/e-commerce
     :customer/inventory-type :customer.inv/account
     :customer/rp-id "a-3214"}
 
    {:db/id "a-6789"
-    :customer/id 102
-    :customer/name "李登輝"
-    :customer/name-en "Mr. Lee"
-    :customer/tax-id "特殊國與國關系"
-    :customer/business-type :customer.bus/food
+    :customer/id "CM0004"
+    :customer/name "DDD股份有限公司"
+    :customer/name-en "DDD Corporation"
+    :customer/tax-id "45678912"
+    :customer/business-type :customer.bus/arts
     :customer/inventory-type :customer.inv/account
     :customer/rp-id "a-6789"}
 
    {:db/id "d-9876"
-    :customer/id 103
-    :customer/name "蔣經國"
-    :customer/name-en "Mr. Chiang"
-    :customer/tax-id "漢賊不兩立"
-    :customer/business-type :customer.bus/games
+    :customer/id "CM0005"
+    :customer/name "EEE股份有限公司"
+    :customer/name-en "EEE Corporation"
+    :customer/tax-id "56789123"
+    :customer/business-type :customer.bus/automotive
     :customer/inventory-type :customer.inv/display
     :customer/rp-id "d-9876"}
 
-   {:req/sales [:user/email "ggyy8@gmail.com"] ;; lookup ref for existing entity
+   {:customer/id "CM0006"
+    :customer/name "FFF股份有限公司"
+    :customer/name-en "FFF Corporation"
+    :customer/tax-id "67891234"
+    :customer/business-type :customer.bus/education
+    :customer/inventory-type :customer.inv/display
+    :customer/rp-id "d-000000001"}
+
+   {:customer/id "CM0007"
+    :customer/name "GGG股份有限公司"
+    :customer/name-en "GGG Corporation"
+    :customer/tax-id "78912345"
+    :customer/business-type :customer.bus/fashion
+    :customer/inventory-type :customer.inv/display
+    :customer/rp-id "d-000000002"}
+
+   {:customer/id "CM0008"
+    :customer/name "HHH股份有限公司"
+    :customer/name-en "HHH Corporation"
+    :customer/tax-id "89123456"
+    :customer/business-type :customer.bus/finance
+    :customer/inventory-type :customer.inv/display
+    :customer/rp-id "d-000000003"}
+
+   {:customer/id "CM0009"
+    :customer/name "III股份有限公司"
+    :customer/name-en "III Corporation"
+    :customer/tax-id "91234567"
+    :customer/business-type :customer.bus/retail
+    :customer/inventory-type :customer.inv/display
+    :customer/rp-id "d-000000004"}
+
+   {:req/sales [:user/email "user1@example.com"] ;; lookup ref for existing entity
     :req/add-customer-list #{"a-1234" "d-1234"} ;; tempid for newly created entity
     :req/remove-customer-list #{"a-3214"}
     :req/status :req.status/open}
 
    {:db/id "firstreq"
-    :req/sales [:user/email "ggyy8@gmail.com"] ;; lookup ref
+    :req/sales [:user/email "user1@example.com"] ;; lookup ref
     :req/add-customer-list #{"a-3214" "a-6789"} ;; tempid
     :req/remove-customer-list #{}
     :req/status :req.status/approved}
 
-   {:allo/sales [:user/email "ggyy8@gmail.com"]
+   {:allo/sales [:user/email "user1@example.com"]
     :allo/customer "a-3214"
     :allo/request "firstreq"}
-   {:allo/sales [:user/email "ggyy8@gmail.com"]
+   {:allo/sales [:user/email "user1@example.com"]
     :allo/customer "a-6789"
     :allo/request "firstreq"}
-   {:allo/sales [:user/email "yygg9@gmail.com"]
+   {:allo/sales [:user/email "user2@example.com"]
     :allo/customer "d-9876"
     :allo/request "firstreq"}
   ]]}
 ;; norm7 installs certain fake request data into Datomic for testing purpose
 :clj-crm/norm7 {:txes [[
-   {:req/sales [:user/email "yygg9@gmail.com"] ;; lookup ref for existing entity
+   {:req/sales [:user/email "user2@example.com"] ;; lookup ref for existing entity
     :req/add-customer-list #{[:customer/rp-id "a-3214"]} ;; lookup ref for existing entity
     :req/remove-customer-list #{[:customer/rp-id "d-9876"]}
     :req/status :req.status/open}

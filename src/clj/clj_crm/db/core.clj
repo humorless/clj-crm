@@ -120,7 +120,7 @@
   {REQ} is of the form:
   {:req/add-customer-list    [{CUSTOMER-MAP} ...]
    :req/remove-customer-list [{CUSTOMER-MAP} ...]
-   :req/tx ...}"
+   :req/time ...}"
   [db user]
   (let [req-get #(d/pull db '[{:req/add-customer-list [*]} {:req/remove-customer-list [*]}] %)]
     (->> (d/q '[:find ?e ?inst
@@ -131,7 +131,7 @@
                 [?tx :db/txInstant ?inst]]
               db user)
          (map (fn [[req-eid inst]]
-                (assoc (req-get req-eid) :req/tx inst))))))
+                (assoc (req-get req-eid) :req/time inst))))))
 
 (defn marshal-customer
   "for input's field, remove the namespace of keyword, replace :db/id as :eid
@@ -156,15 +156,15 @@
 
    {:req/add-customer-list    [{CUSTOMER-MAP} ...]
     :req/remove-customer-list [{CUSTOMER-MAP} ...]
-    :req/tx ...}"
+    :req/time ...}"
   [req]
   (let [db (d/db conn)
         erase-namespace #(keyword (name %))
-        t (:req/tx req)]
+        t (:req/time req)]
     (reduce (fn [acc [k v]]
               (into acc {(erase-namespace k) (mapv #(marshal-customer db  %) v)}))
-            {:tx t}
-            (dissoc req :req/tx))))
+            {:allotime t}
+            (dissoc req :req/time))))
 
 (defn marshal-left-joined-customer
   "Input is  database and `{LJ-CUSTOMER-MAP}`"

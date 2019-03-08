@@ -399,10 +399,10 @@
 
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer "a-3214"
-    :allo/time #inst "2014-02-28"}
+    :allo/time #inst "2014-01-28"}
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer "a-6789"
-    :allo/time #inst "2014-02-28"}
+    :allo/time #inst "2014-01-29"}
    {:allo/sales [:user/email "userA2@example.com"]
     :allo/customer "d-9876"
     :allo/time #inst "2014-02-28"}

@@ -6,14 +6,14 @@
 
 (defn query-command-switch
   "Input:
-   user-q is the form: {:user \"ggyy8@gmail.com\"
+   user-q is the form: {:user \"userA1@example.com\"
                          :q   \"all-customers\"}
    Output:
    :all-customers"
   [user-q]
   (keyword (:q user-q)))
 
-;; example usage: (dispatch-q {:user "ggyy8@gmail.com" :q "all-customers"}))
+;; example usage: (dispatch-q {:user "userA1@example.com" :q "all-customers"}))
 (defmulti dispatch-q query-command-switch)
 
 (defmethod dispatch-q :my-requests
@@ -50,7 +50,7 @@
 (defn query
   " Input:
     q is in the form: [Query]
-    user is in the form: {:user ggyy8@gmail.com, :exp ...}
+    user is in the form: {:user userA1@example.com, :exp ...}
 
     Output:
     Return the result as the form of [status result], status maybe :ok :error.

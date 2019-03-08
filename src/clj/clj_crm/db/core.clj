@@ -101,9 +101,9 @@
        db attr))
 
 ;; example:
-;;   (d/touch (find-one-by (d/db conn) :user/email  "ggyy8@gmail.co"))
+;;   (d/touch (find-one-by (d/db conn) :user/email  "userA1@example.co"))
 ;;   => NPE
-;;   (:user/pwd (find-one-by (d/db conn) :user/email "ggyy8@gmail.com"))
+;;   (:user/pwd (find-one-by (d/db conn) :user/email "userA1@example.com"))
 ;;   => $pwd
 (defn find-one-by
   "Given db value and an (attr/val), return the user as EntityMap (datomic.query.EntityMap)"
@@ -202,7 +202,7 @@
 (defn get-open-requests-by-user
   "get the open request currently submitted by user -- sales' own request
    e.g.:
-   (map d/touch (get-open-requests-by-user (d/db conn) [:user/email \"ggyy8@gmail.com\"]))
+   (map d/touch (get-open-requests-by-user (d/db conn) [:user/email \"userA1@example.com\"]))
 
    Output is `(entity ...)`
    () or (#:db{:id 17592186045470}) "
@@ -229,7 +229,7 @@
 (defn get-allo-customers-by-user
   "
   get the customers list currently allocated by user -- sales' own customer list
-  example usage: (map d/touch(get-allo-customers-by-user (d/db conn) [:user/email \"ggyy8@gmail.com\"]))
+  example usage: (map d/touch(get-allo-customers-by-user (d/db conn) [:user/email \"userA1@example.com\"]))
 
   Output is `(entity ...)`
   () or (#:db{:id 17592186045461} #:db{:id 17592186045462}) "
@@ -279,6 +279,6 @@
   ;; example of upsert-user!
   (upsert-user! conn {:user-name "Laurence Chen"
                       :pwd "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
-                      :email "ggyy8@gmail.com"
+                      :email "userA1@example.com"
                       :status :user.status/active
                       :roles  :user.roles/sales}))

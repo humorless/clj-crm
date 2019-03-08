@@ -6,7 +6,7 @@
 
 (defn switch
   "Input:
-   user-c is the form: {:user \"ggyy8@gmail.com\"
+   user-c is the form: {:user \"userA1@example.com\"
                          :c   \"new-request\"}
    Output:
    :new-requests"
@@ -40,7 +40,7 @@
 (defn command
   " Input:
     c is in the form: [Command]
-    user is in the form: {:user ggyy8@gmail.com, :exp ...}
+    user is in the form: {:user userA1@example.com, :exp ...}
 
     Output:
     Return the result as the form of [status result], status maybe :ok :error.

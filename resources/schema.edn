@@ -280,6 +280,7 @@
 
    ;; enumeration for request status
    [:db/add #db/id [:db.part/user] :db/ident :req.status/open]
+   [:db/add #db/id [:db.part/user] :db/ident :req.status/modified]
    [:db/add #db/id [:db.part/user] :db/ident :req.status/approved]
    [:db/add #db/id [:db.part/user] :db/ident :req.status/rejected]
 ]]}
@@ -299,9 +300,9 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "reference points to request"
-    :db/ident :allo/request
-    :db/valueType :db.type/ref
+   {:db/doc "Record the timing that sales applied for customer."
+    :db/ident :allo/time
+    :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
@@ -398,13 +399,13 @@
 
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer "a-3214"
-    :allo/request "firstreq"}
+    :allo/time #inst "2014-02-28"}
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer "a-6789"
-    :allo/request "firstreq"}
+    :allo/time #inst "2014-02-28"}
    {:allo/sales [:user/email "userA2@example.com"]
     :allo/customer "d-9876"
-    :allo/request "firstreq"}
+    :allo/time #inst "2014-02-28"}
   ]]}
 ;; norm7 installs certain fake request data into Datomic for testing purpose
 :clj-crm/norm7 {:txes [[
@@ -413,4 +414,11 @@
     :req/remove-customer-list #{[:customer/rp-id "d-9876"]}
     :req/status :req.status/open}
   ]]}
+:clj-crm/norm8 {:txes [[
+   {:req/sales [:user/email "userA1@example.com"] ;; lookup ref for existing entity
+    :req/add-customer-list #{[:customer/rp-id "d-000000004"]} ;; lookup ref for existing entity
+    :req/remove-customer-list #{}
+    :req/status :req.status/open}
+  ]]}
+
 }

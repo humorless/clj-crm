@@ -211,7 +211,7 @@
    (map d/touch (get-open-requests-by-user (d/db conn) [:user/email \"userA1@example.com\"]))
 
    Output is `(entity ...)`
-   () or (#:db{:id 17592186045470}) "
+   () or (#:db{:id 17592186045470} ...) "
   [db user]
   (->> (d/q '[:find [?e ...]
               :in $ ?u
@@ -224,13 +224,11 @@
 (defn insert-open-request
   "Given the user entity, there can be only one open request"
   [conn {:keys [user add-list remove-list]}]
-  (if (seq (get-open-requests-by-user (d/db conn) user))
-    :request-alread-exist ;; let this insert request be idempotent
-    (do @(d/transact conn [{:req/sales                user
-                            :req/add-customer-list    add-list
-                            :req/remove-customer-list remove-list
-                            :req/status               :req.status/open}])
-        :insert-success)))
+  (do @(d/transact conn [{:req/sales                user
+                          :req/add-customer-list    add-list
+                          :req/remove-customer-list remove-list
+                          :req/status               :req.status/open}])
+      :insert-success))
 
 (defn get-allo-customers-by-user
   "

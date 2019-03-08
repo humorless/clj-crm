@@ -20,7 +20,6 @@
   (log/info "at new-request, user-c as" user-c)
   (let [email (:user user-c)
         user-lookup-ref [:user/email email]
-        query-result (dcore/get-customers-of-open-requests-by-user (d/db conn) user-lookup-ref)
         req (:req user-c)
         tx-data (conj req [:user user-lookup-ref])]
     (log/info "at new-request, email as" email)
@@ -28,9 +27,7 @@
     (log/info "at new-request, req as" req)
     (log/info "at new-request, tx-data as" tx-data)
     ;; insert open request only if there do not exist 'open request'
-    (if-not (seq query-result)
-      (dcore/insert-open-request conn tx-data)
-      :insert-failed)))
+    (dcore/insert-open-request conn tx-data)))
 
 (s/defschema ReqSchema {:add-list #{s/Int}
                         :remove-list #{s/Int}})

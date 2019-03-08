@@ -17,12 +17,11 @@
       (d/create-database uri)
       (d/connect uri))))
 
-(def norms-map (c/read-resource "schema.edn"))
-
 ;; verification
 ;; => (map d/touch (find-all-by (d/db conn) :conformity/conformed-norms)))
 (defn setup-app-schema [conn]
-  (c/ensure-conforms conn norms-map (keys norms-map)))
+  (let [norms-map (c/read-resource "schema.edn")]
+    (c/ensure-conforms conn norms-map (keys norms-map))))
 
 (defn show-app-schema [conn]
   (let [system-ns #{"db" "db.type" "db.install" "db.part"

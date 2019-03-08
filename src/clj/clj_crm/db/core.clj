@@ -172,9 +172,11 @@
   [db lj-c]
   (let [sid  (get-in lj-c [:allo/_customer 0 :allo/sales :db/id])
         sname (get-in lj-c [:allo/_customer 0 :allo/sales :user/name])
+        atime (get-in lj-c [:allo/_customer 0 :allo/time])
         c (dissoc lj-c :allo/_customer)
         c-with-sales (assoc c :sales {:eid sid
-                                      :name sname})]
+                                      :name sname
+                                      :allotime atime})]
     (if sid
       (marshal-customer db c-with-sales)
       (marshal-customer db c))))
@@ -190,6 +192,8 @@
                                   :user/name ...}}]}
   `
   However, field `:allo/_customer` does not always exist
+  According to the business constraints, every customer should
+  be allocated by only one sales
   "
   [db]
   (->> (d/q '[:find [?c ...]
@@ -197,7 +201,9 @@
               :where
               [?c :customer/id]]
             db)
-       (map #(d/pull db '[{:allo/_customer [{:allo/sales [:user/name :db/id]}]} *] %))))
+       (map #(d/pull db '[{:allo/_customer [{:allo/sales [:user/name :db/id]}
+                                            :allo/time]}
+                          *] %))))
 
 (defn get-open-requests-by-user
   "get the open request currently submitted by user -- sales' own request

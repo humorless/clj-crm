@@ -37,25 +37,18 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
+   {:db/doc "User team"
+    :db/ident :user/team
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
    {:db/doc "Team name"
     :db/ident :team/name
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db/unique :db.unique/identity
-    :db/id #db/id [:db.part/db]
-    :db.install/_attribute :db.part/db}
-
-   {:db/doc "Team lead eid"
-    :db/ident :team/lead
-    :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one
-    :db/id #db/id [:db.part/db]
-    :db.install/_attribute :db.part/db}
-
-   {:db/doc "list of ref point to sales"
-    :db/ident :team/sales-list
-    :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/many
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
@@ -71,101 +64,110 @@
 
 ;; norm2 installs certain user init data into Datomic for testing purpose
 :clj-crm/norm2 {:txes [[
+   {:db/id     "t1"
+    :team/name "Team 1"}
+
+   {:db/id     "t2"
+    :team/name "Team 2"}
+
+   {:db/id     "t3"
+    :team/name "Team 3"}
+
    {:db/id     "A1"
     :user/name "sales name A1"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userA1@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales}
+    :user/roles  :user.roles/sales
+    :user/team "t1"}
 
    {:db/id     "A2"
     :user/name "sales name A2"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userA2@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales}
+    :user/roles  :user.roles/sales
+    :user/team "t1"}
 
    {:db/id     "A3"
     :user/name "sales name A3"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userA3@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales}
+    :user/roles  :user.roles/sales
+    :user/team "t1"}
 
    {:db/id     "A"
     :user/name "lead name A"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "leadA@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/lead}
+    :user/roles  :user.roles/lead
+    :user/team "t1"}
 
    {:db/id     "B1"
     :user/name "sales name B1"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userB1@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales}
+    :user/roles  :user.roles/sales
+    :user/team "t2"}
 
    {:db/id     "B2"
     :user/name "sales name B2"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userB2@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales}
+    :user/roles  :user.roles/sales
+    :user/team "t2"}
 
    {:db/id     "B3"
     :user/name "sales name B3"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userB3@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales}
+    :user/roles  :user.roles/sales
+    :user/team "t2"}
 
    {:db/id     "B"
     :user/name "lead name B"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "leadB@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/lead}
+    :user/roles  :user.roles/lead
+    :user/team "t2"}
 
    {:db/id     "C1"
     :user/name "sales name C1"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userC1@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales}
+    :user/roles  :user.roles/sales
+    :user/team "t3"}
 
    {:db/id     "C2"
     :user/name "sales name C2"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userC2@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales}
+    :user/roles  :user.roles/sales
+    :user/team "t3"}
 
    {:db/id     "C3"
     :user/name "sales name C3"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userC3@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales}
+    :user/roles  :user.roles/sales
+    :user/team "t3"}
 
    {:db/id     "C"
     :user/name "lead name C"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "leadC@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/lead}
-
-   {:team/name "Team 1"
-    :team/lead "A"  ;; tempid point to lead
-    :team/sales-list #{"A1" "A2" "A3"}}
-
-   {:team/name "Team 2"
-    :team/lead "B"  ;; tempid point to lead
-    :team/sales-list #{"B1" "B2" "B3"}}
-
-   {:team/name "Team 3"
-    :team/lead "C"  ;; tempid point to lead
-    :team/sales-list #{"C1" "C2" "C3"}}
+    :user/roles  :user.roles/lead
+    :user/team "t3"}
    ]]}
 
 ;; norm3 installs customer table schema into Datomic

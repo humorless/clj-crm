@@ -171,10 +171,14 @@
   [db lj-c]
   (let [sid  (get-in lj-c [:allo/_customer 0 :allo/sales :db/id])
         sname (get-in lj-c [:allo/_customer 0 :allo/sales :user/name])
+        team-id (get-in lj-c [:allo/_customer 0 :allo/sales :user/team :db/id])
+        team-name (get-in lj-c [:allo/_customer 0 :allo/sales :user/team :team/name])
         atime (get-in lj-c [:allo/_customer 0 :allo/time])
         c (dissoc lj-c :allo/_customer)
         c-with-sales (assoc c :sales {:eid sid
                                       :name sname
+                                      :team {:name team-name
+                                             :eid team-id}
                                       :allotime atime})]
     (if sid
       (marshal-customer db c-with-sales)
@@ -200,7 +204,9 @@
               :where
               [?c :customer/id]]
             db)
-       (map #(d/pull db '[{:allo/_customer [{:allo/sales [:user/name :db/id]}
+       (map #(d/pull db '[{:allo/_customer [{:allo/sales [:user/name
+                                                          :db/id
+                                                          {:user/team [:team/name :db/id]}]}
                                             :allo/time]}
                           *] %))))
 

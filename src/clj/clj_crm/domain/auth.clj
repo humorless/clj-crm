@@ -7,7 +7,7 @@
 
 (defn user-register!
   "if not exists email, store (email, hash(pass)) into db"
-  [screenname email pass]
+  [screenname email pass team-id]
   (log/info screenname "wants to register by" email)
   (let [db (d/db conn)]
     (when-not (find-one-by db :user/email email)
@@ -15,7 +15,8 @@
                           :pwd (hs/derive pass)
                           :email email
                           :status :user.status/active
-                          :roles  :user.roles/sales}))))
+                          :roles  :user.roles/sales
+                          :team team-id}))))
 
 (defn user-auth
   "return 'true' when email/pass pair correct, otherwise return nil"

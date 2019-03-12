@@ -39,10 +39,17 @@
      :description "Authorization header expects the following format 'Token {token}', for example: Token eyJhbGciOiJ..."
      (ok {:user user}))
 
+   (GET "/api/teams" req
+     :summary     "Return all the team names and entity ids"
+     (let [[status result] (dq/all-teams)]
+       (case status
+         :ok (ok {:result result})
+         :error (bad-request {:reason result}))))
+
    (POST "/api/register" req
-     :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str]
+     :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str, team-id :- Long]
      :summary     "User uses email/password to register, default role is sales"
-     (if (user-register! screenname email password)
+     (if (user-register! screenname email password team-id)
        (ok {:user (user-datum email)})
        (bad-request)))
 

@@ -16,6 +16,9 @@
 ;; example usage: (dispatch-q {:user "userA1@example.com" :q "all-customers"}))
 (defmulti dispatch-q query-command-switch)
 
+(defn all-teams []
+  [:ok (map dcore/marshal-entity (dcore/find-all-by (d/db conn) :team/name))])
+
 (defmethod dispatch-q :my-requests
   [user-q]
   (log/info "at my-requests, user-q as" user-q)

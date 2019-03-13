@@ -267,6 +267,24 @@
              db status)
         (map (fn [[req-eid inst]] [(d/entity db req-eid) inst]))))
 
+;; (get-request-open-time-by-eid (d/history (d/db conn)) 17592186045481))
+(defn get-request-open-time-by-eid
+  "
+  input is:
+  hdb -> historyDB of the database,
+  eid -> eid of a request.
+
+  outuput is:
+  the creation time of this open request.
+  "
+  [hdb eid]
+  (d/q '[:find ?inst .
+         :in $ ?v
+         :where
+         [?v :req/status :req.status/open ?tx true]
+         [?tx :db/txInstant ?inst]]
+       hdb eid))
+
 (defn marshal-entity
   "Input: data of class 'datomic.query.EntityMap'
    Ouput: data map suitable for transfer to network
@@ -284,6 +302,57 @@
               (into acc {(erase-namespace k) v}))
             {:eid (:db/id entity-map)} ;; prepare :eid in inital map
             (seq c))))
+
+(defn reject-request
+  "for request n, mark it as rejected"
+  [^long n]
+  @(d/transact conn [{:db/id      n
+                      :req/status :req.status/rejected}]))
+
+(defn add-allo-table
+  "add the allo table by vector of map "
+  [sid customer-list txInst]
+  (let [sids (repeat sid)
+        txInsts (repeat txInst)]
+    (->> (mapv (fn [s c t]
+                 {:allo/sales s
+                  :allo/customer c
+                  :allo/time t})
+               sids
+               customer-list
+               txInsts))
+    @(d/transact conn)))
+
+(defn retract-allo-table
+  "retract the allo table by :db.fn/retractEntity
+   d/q -> calcaute the entity id as vector"
+  [db sid customer-list]
+  (->> (d/q '[:find [?e ...]
+              :in $ ?sid [?cid ...]
+              :where
+              [?e :allo/sales ?sid]
+              [?e :allo/customer ?cid]]
+            db
+            sid
+            customer-list)
+       (mapv (fn [x] [:db.fn/retractEntity x]))
+       @(d/transact conn)))
+
+(defn approve-request
+  "for request n, mark it as approved
+   First synchronize the allocation table.
+   After sync, mark the request as approved."
+  [^long n]
+  (let [db (d/db conn)
+        txInst (get-request-open-time-by-eid (d/history db) n)
+        e (d/entity db n)
+        sid (:req/sales e)
+        add-list (:req/add-customer-list e)        ;; possibly nil
+        remove-list (:req/remove-customer-list e)] ;; possibly nil
+    (add-allo-table sid add-list txInst)
+    (retract-allo-table db sid remove-list))
+  @(d/transact conn [{:db/id      n
+                      :req/status :req.status/approved}]))
 
 (comment
   ;; example of upsert-user!

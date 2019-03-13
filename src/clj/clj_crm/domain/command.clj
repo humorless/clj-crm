@@ -15,6 +15,18 @@
 
 (defmulti dispatch-c switch)
 
+(defmethod dispatch-c :reject-request
+  [user-c]
+  (log/info "at reject-request, user-c as" user-c)
+  (let [req-id (:req-id user-c)]
+    (dcore/reject-request req-id)))
+
+(defmethod dispatch-c :approve-request
+  [user-c]
+  (log/info "at approve-request, user-c as" user-c)
+  (let [req-id (:req-id user-c)]
+    (dcore/approve-request req-id)))
+
 (defmethod dispatch-c :new-request
   [user-c]
   (log/info "at new-request, user-c as" user-c)
@@ -32,7 +44,8 @@
 (s/defschema ReqSchema {:add-list #{s/Int}
                         :remove-list #{s/Int}})
 (s/defschema CommandSchema {(s/required-key :c) s/Str
-                            (s/optional-key :req) ReqSchema})
+                            (s/optional-key :req) ReqSchema
+                            (s/optional-key :req-id) Long})
 
 (defn command
   " Input:

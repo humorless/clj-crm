@@ -19,6 +19,13 @@
 (defn all-teams []
   [:ok (map dcore/marshal-entity (dcore/find-all-by (d/db conn) :team/name))])
 
+(defmethod dispatch-q :all-requests
+  [user-q]
+  (log/info "at all-requests, user-q as" user-q)
+  (let [query-result (dcore/get-active-requests (d/db conn))
+        data (mapv dcore/marshal-request query-result)]
+    data))
+
 (defmethod dispatch-q :my-requests
   [user-q]
   (log/info "at my-requests, user-q as" user-q)

@@ -151,21 +151,49 @@
             {:eid eid}
             c)))
 
+(defn marshal-sales
+  "Input:
+   {:user/name \"sales name A1\"
+    :user/team {:db/id     ...
+                :team/name ...} }
+
+   Outupt:
+   {:name AAA
+    :team BBB }"
+  [db sales]
+  (let [sname (:user/name sales)
+        tname (get-in sales [:user/team :team/name])]
+    (when sname
+      {:name sname
+       :team tname})))
+
 (defn marshal-request
   "for input's field, remove the namespace of keyword
    Input:
 
    {:req/add-customer-list    [{CUSTOMER-MAP} ...]
     :req/remove-customer-list [{CUSTOMER-MAP} ...]
-    :req/time ...}"
+    :req/time #inst ...}
+
+   {:req/add-customer-list    [{CUSTOMER-MAP} ...]
+    :req/remove-customer-list [{CUSTOMER-MAP} ...]
+    :req/time ...
+    :db/id ..
+    :req/sales }
+
+   There may be two forms of request"
   [req]
   (let [db (d/db conn)
         erase-namespace #(keyword (name %))
-        t (:req/time req)]
+        t (:req/time req)
+        eid (:db/id req)
+        sales (:req/sales req)]
     (reduce (fn [acc [k v]]
               (into acc {(erase-namespace k) (mapv #(marshal-customer db  %) v)}))
-            {:allotime t}
-            (dissoc req :req/time))))
+            {:allotime t
+             :eid eid
+             :sales (marshal-sales db sales)}
+            (dissoc req :req/time :db/id :req/sales))))
 
 (defn marshal-left-joined-customer
   "Input is  database and `{LJ-CUSTOMER-MAP}`"
@@ -267,15 +295,16 @@
              db status)
         (map (fn [[req-eid inst]] [(d/entity db req-eid) inst]))))
 
-;; (get-request-open-time-by-eid (d/history (d/db conn)) 17592186045481))
-(defn get-request-open-time-by-eid
+;; (request-open-time-by-eid (d/history (d/db conn)) 17592186045481))
+(defn- request-open-time-by-eid
   "
   input is:
   hdb -> historyDB of the database,
   eid -> eid of a request.
 
   outuput is:
-  the creation time of this open request.
+  the creation time of this request no matter
+  if this request has been approved/modified/rejected.
   "
   [hdb eid]
   (d/q '[:find ?inst .
@@ -284,6 +313,36 @@
          [?v :req/status :req.status/open ?tx true]
          [?tx :db/txInstant ?inst]]
        hdb eid))
+
+(defn- active-request-eids
+  "Output is `(req-eid ...)`"
+  [db]
+  (let [active-status [:req.status/open :req.status/modified]]
+    (d/q '[:find [?e ...]
+           :in $ [?status ...]
+           :where
+           [?e :req/status ?status]]
+         db active-status)))
+
+(defn get-active-requests
+  "Output is `({REQ} ...)` or `()`
+
+  {REQ} is of the form:
+  {:req/add-customer-list    [{CUSTOMER-MAP} ...]
+   :req/remove-customer-list [{CUSTOMER-MAP} ...]
+   :req/sales ...
+   :req/time ...}"
+  [db]
+  (let [hdb (d/history db)
+        aq-eids (active-request-eids db)
+        txInsts (map #(get-request-open-time-by-eid hdb %) aq-eids)
+        join-req-fn #(d/pull db '[:db/id
+                                  {:req/add-customer-list [*]}
+                                  {:req/remove-customer-list [*]}
+                                  {:req/sales [:user/name
+                                               {:user/team [*]}]}] %)
+        aq-maps (map join-req-fn aq-eids)]
+    (map #(assoc %1 :req/time %2) aq-maps txInsts)))
 
 (defn marshal-entity
   "Input: data of class 'datomic.query.EntityMap'
@@ -344,7 +403,7 @@
    After sync, mark the request as approved."
   [^long n]
   (let [db (d/db conn)
-        txInst (get-request-open-time-by-eid (d/history db) n)
+        txInst (request-open-time-by-eid (d/history db) n)
         e (d/entity db n)
         sid (:req/sales e)
         add-list (:req/add-customer-list e)        ;; possibly nil

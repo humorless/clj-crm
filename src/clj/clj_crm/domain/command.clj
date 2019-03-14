@@ -19,15 +19,17 @@
   [user-c]
   (log/info "at reject-request, user-c as" user-c)
   (let [req-id (get-in user-c [:req-app :req-id])
-        req-status (get-in user-c [:req-app :req-status])]
-    (dcore/reject-request req-id req-status)))
+        req-status (get-in user-c [:req-app :req-status])
+        tx-data (dcore/tx-reject-request req-id req-status)]
+    @(d/transact conn tx-data)))
 
 (defmethod dispatch-c :approve-request
   [user-c]
   (log/info "at approve-request, user-c as" user-c)
   (let [req-id (get-in user-c [:req-app :req-id])
-        req-status (get-in user-c [:req-app :req-status])]
-    (dcore/approve-request req-id req-status)))
+        req-status (get-in user-c [:req-app :req-status])
+        tx-data (dcore/tx-approve-request req-id req-status)]
+    @(d/transact conn tx-data)))
 
 (defmethod dispatch-c :new-request
   [user-c]

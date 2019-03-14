@@ -367,14 +367,16 @@
             {:eid (:db/id entity-map)} ;; prepare :eid in inital map
             (seq c))))
 
-(defn reject-request
+(defn tx-reject-request
   "for request n, mark it as rejected"
   [^long n statusNow]
   (let [eid (d/entid (d/db conn) statusNow)]
-    @(d/transact conn [[:db.fn/cas n :req/status eid :req.status/rejected]])))
+    [[:db.fn/cas n :req/status eid :req.status/rejected]]))
 
 (defn add-allo-table
-  "add the allo table by vector of map "
+  "add the allo table by vector of map
+
+   Output is tx-data"
   [sid customer-list txInst]
   (let [sids (repeat sid)
         txInsts (repeat txInst)]
@@ -388,40 +390,50 @@
 
 (defn retract-allo-table
   "retract the allo table by :db.fn/retractEntity
-   d/q -> calcaute the entity id as vector"
-  [db sid customer-list]
-  (d/q '[:find [?e ...]
-         :in $ ?sid [?cid ...]
-         :where
-         [?e :allo/sales ?sid]
-         [?e :allo/customer ?cid]]
-       db
-       sid
-       customer-list)
-  (mapv (fn [x] [:db.fn/retractEntity x])))
+   d/q -> calcaute the entity id as vector
 
-(defn approve-request
+   Output is tx-data"
+  [db sid customer-list]
+  (->> (d/q '[:find [?e ...]
+              :in $ ?sid [?cid ...]
+              :where
+              [?e :allo/sales ?sid]
+              [?e :allo/customer ?cid]]
+            db sid customer-list)
+       (mapv (fn [x] [:db.fn/retractEntity x]))))
+
+(defn- request-content-by-eid
+  "input is:
+   eid -> eid of a request.
+
+   outuput is: [sid add-customer-list remove-customer-list]
+   add-customer-list     - [eid ...]
+   remove-customer-list  - [eid ...]
+  "
+  [db eid]
+  [(d/q '[:find ?s .        :in $ ?e :where [?e :req/sales ?s]] db eid)
+   (d/q '[:find [?list ...] :in $ ?e :where [?e :req/add-customer-list ?list]] db eid)
+   (d/q '[:find [?list ...] :in $ ?e :where [?e :req/remove-customer-list ?list]] db eid)])
+
+(defn tx-approve-request
   "for request n, mark it as approved
    First synchronize the allocation table.
    After sync, mark the request as approved."
   [^long n statusNow]
   (let [db (d/db conn)
+        ;; prepare eids, txInst
         txInst (request-open-time-by-eid (d/history db) n)
-        e (d/entity db n)
-        sid (:req/sales e)
-        add-list (:req/add-customer-list e)        ;; possibly nil
-        remove-list (:req/remove-customer-list e)
+        [sid add-list remove-list] (request-content-by-eid db n)
+        ;; prepare tx-add-allo, tx-retract-allo
         tx-add-allo (add-allo-table sid add-list txInst)
         tx-retract-allo (retract-allo-table db sid remove-list)
+        ;; prepare tx-app-req
         status-eid (d/entid db statusNow)
-        tx-app-req [:db.fn/cas n :req/status status-eid :req.status/approved]
+        tx-app-req [[:db.fn/cas n :req/status status-eid :req.status/approved]]
         tx-data (into [] (concat tx-add-allo tx-retract-allo tx-app-req))]
-    @(d/transact conn tx-data)))
+    tx-data))
 
-(comment
-  ;; example of upsert-user!
-  (upsert-user! conn {:user-name "Laurence Chen"
-                      :pwd "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
-                      :email "userA1@example.com"
-                      :status :user.status/active
-                      :roles  :user.roles/sales}))
+;; 要設法測完 :
+;; (1) request with add-customer-list, remove-customer-list
+;; (2) request with add-customer-list only
+;; (3) request with remove-customer-list only

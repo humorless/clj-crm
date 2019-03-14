@@ -18,14 +18,16 @@
 (defmethod dispatch-c :reject-request
   [user-c]
   (log/info "at reject-request, user-c as" user-c)
-  (let [req-id (:req-id user-c)]
-    (dcore/reject-request req-id)))
+  (let [req-id (get-in user-c [:req-app :req-id])
+        req-status (get-in user-c [:req-app :req-status])]
+    (dcore/reject-request req-id req-status)))
 
 (defmethod dispatch-c :approve-request
   [user-c]
   (log/info "at approve-request, user-c as" user-c)
-  (let [req-id (:req-id user-c)]
-    (dcore/approve-request req-id)))
+  (let [req-id (get-in user-c [:req-app :req-id])
+        req-status (get-in user-c [:req-app :req-status])]
+    (dcore/approve-request req-id req-status)))
 
 (defmethod dispatch-c :new-request
   [user-c]
@@ -41,11 +43,14 @@
     ;; insert open request only if there do not exist 'open request'
     (dcore/insert-open-request conn tx-data)))
 
-(s/defschema ReqSchema {:add-list #{s/Int}
-                        :remove-list #{s/Int}})
+(s/defschema newReqSchema {:add-list #{s/Int}
+                           :remove-list #{s/Int}})
+;; schema for approve and reject
+(s/defschema appReqSchema {:req-id s/Int
+                           :req-status s/Keyword})
 (s/defschema CommandSchema {(s/required-key :c) s/Str
-                            (s/optional-key :req) ReqSchema
-                            (s/optional-key :req-id) Long})
+                            (s/optional-key :req) newReqSchema
+                            (s/optional-key :req-app) appReqSchema})
 
 (defn command
   " Input:

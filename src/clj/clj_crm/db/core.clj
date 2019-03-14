@@ -177,9 +177,10 @@
 
    {:req/add-customer-list    [{CUSTOMER-MAP} ...]
     :req/remove-customer-list [{CUSTOMER-MAP} ...]
-    :req/time ...
-    :db/id ..
-    :req/sales }
+    :req/time #inst
+    :req/status ...
+    :db/id      ...
+    :req/sales  ... }
 
    There may be two forms of request"
   [req]
@@ -187,13 +188,15 @@
         erase-namespace #(keyword (name %))
         t (:req/time req)
         eid (:db/id req)
-        sales (:req/sales req)]
+        sales (:req/sales req)
+        status-enum (get-in req [:req/status :db/id])]
     (reduce (fn [acc [k v]]
               (into acc {(erase-namespace k) (mapv #(marshal-customer db  %) v)}))
             {:allotime t
              :eid eid
-             :sales (marshal-sales db sales)}
-            (dissoc req :req/time :db/id :req/sales))))
+             :sales (marshal-sales db sales)
+             :status (d/ident db status-enum)}
+            (dissoc req :req/time :db/id :req/sales :req/status))))
 
 (defn marshal-left-joined-customer
   "Input is  database and `{LJ-CUSTOMER-MAP}`"
@@ -330,13 +333,15 @@
   {REQ} is of the form:
   {:req/add-customer-list    [{CUSTOMER-MAP} ...]
    :req/remove-customer-list [{CUSTOMER-MAP} ...]
+   :req/status
    :req/sales ...
    :req/time ...}"
   [db]
   (let [hdb (d/history db)
         aq-eids (active-request-eids db)
-        txInsts (map #(get-request-open-time-by-eid hdb %) aq-eids)
+        txInsts (map #(request-open-time-by-eid hdb %) aq-eids)
         join-req-fn #(d/pull db '[:db/id
+                                  :req/status
                                   {:req/add-customer-list [*]}
                                   {:req/remove-customer-list [*]}
                                   {:req/sales [:user/name
@@ -364,54 +369,54 @@
 
 (defn reject-request
   "for request n, mark it as rejected"
-  [^long n]
-  @(d/transact conn [{:db/id      n
-                      :req/status :req.status/rejected}]))
+  [^long n statusNow]
+  (let [eid (d/entid (d/db conn) statusNow)]
+    @(d/transact conn [[:db.fn/cas n :req/status eid :req.status/rejected]])))
 
 (defn add-allo-table
   "add the allo table by vector of map "
   [sid customer-list txInst]
   (let [sids (repeat sid)
         txInsts (repeat txInst)]
-    (->> (mapv (fn [s c t]
-                 {:allo/sales s
-                  :allo/customer c
-                  :allo/time t})
-               sids
-               customer-list
-               txInsts))
-    @(d/transact conn)))
+    (mapv (fn [s c t]
+            {:allo/sales s
+             :allo/customer c
+             :allo/time t})
+          sids
+          customer-list
+          txInsts)))
 
 (defn retract-allo-table
   "retract the allo table by :db.fn/retractEntity
    d/q -> calcaute the entity id as vector"
   [db sid customer-list]
-  (->> (d/q '[:find [?e ...]
-              :in $ ?sid [?cid ...]
-              :where
-              [?e :allo/sales ?sid]
-              [?e :allo/customer ?cid]]
-            db
-            sid
-            customer-list)
-       (mapv (fn [x] [:db.fn/retractEntity x]))
-       @(d/transact conn)))
+  (d/q '[:find [?e ...]
+         :in $ ?sid [?cid ...]
+         :where
+         [?e :allo/sales ?sid]
+         [?e :allo/customer ?cid]]
+       db
+       sid
+       customer-list)
+  (mapv (fn [x] [:db.fn/retractEntity x])))
 
 (defn approve-request
   "for request n, mark it as approved
    First synchronize the allocation table.
    After sync, mark the request as approved."
-  [^long n]
+  [^long n statusNow]
   (let [db (d/db conn)
         txInst (request-open-time-by-eid (d/history db) n)
         e (d/entity db n)
         sid (:req/sales e)
         add-list (:req/add-customer-list e)        ;; possibly nil
-        remove-list (:req/remove-customer-list e)] ;; possibly nil
-    (add-allo-table sid add-list txInst)
-    (retract-allo-table db sid remove-list))
-  @(d/transact conn [{:db/id      n
-                      :req/status :req.status/approved}]))
+        remove-list (:req/remove-customer-list e)
+        tx-add-allo (add-allo-table sid add-list txInst)
+        tx-retract-allo (retract-allo-table db sid remove-list)
+        status-eid (d/entid db statusNow)
+        tx-app-req [:db.fn/cas n :req/status status-eid :req.status/approved]
+        tx-data (into [] (concat tx-add-allo tx-retract-allo tx-app-req))]
+    @(d/transact conn tx-data)))
 
 (comment
   ;; example of upsert-user!

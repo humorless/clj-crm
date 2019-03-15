@@ -2,7 +2,7 @@
 
 generated using Luminus version "3.10.35"
 
-FIXME
+clj-crm is a Customer relationship management software, which the primary function is to distribute customers to sales and estimate the credit of each sales based on order data and customer-sales binding time.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ You will need [Leiningen][1] 2.0 or above installed.
 To run the REPL with dev profile, run:
 
 ```
-  lein with-profile dev repl
+  lein repl
 ```
 
 To start the application state in `REPL`, run:
@@ -55,4 +55,4 @@ To start a web server for the application, run:
 
 ## License
 
-Copyright © 2019 FIXME
+Copyright © 2019 Laurence Chen

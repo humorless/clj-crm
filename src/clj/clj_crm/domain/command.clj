@@ -19,37 +19,46 @@
   [user-c]
   (log/info "at reject-request, user-c as" user-c)
   (let [req-id (get-in user-c [:req-app :req-id])
-        req-status (get-in user-c [:req-app :req-status])
+        req-status (keyword (get-in user-c [:req-app :req-status]))
         tx-data (dcore/tx-reject-request req-id req-status)]
-    @(d/transact conn tx-data)))
+    (log/info "at reject-request, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
 
 (defmethod dispatch-c :approve-request
   [user-c]
   (log/info "at approve-request, user-c as" user-c)
   (let [req-id (get-in user-c [:req-app :req-id])
-        req-status (get-in user-c [:req-app :req-status])
+        req-status (keyword (get-in user-c [:req-app :req-status]))
         tx-data (dcore/tx-approve-request req-id req-status)]
-    @(d/transact conn tx-data)))
+    (log/info "at approve-request, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
 
 (defmethod dispatch-c :new-request
   [user-c]
   (log/info "at new-request, user-c as" user-c)
   (let [email (:user user-c)
         user-lookup-ref [:user/email email]
-        req (:req user-c)
-        tx-data (conj req [:user user-lookup-ref])]
-    (log/info "at new-request, email as" email)
-    (log/info "at new-request, ulr as" user-lookup-ref)
-    (log/info "at new-request, req as" req)
+        add-list (get-in user-c [:req :add-list])
+        remove-list (get-in user-c [:req :remove-list])
+        tx-data [{:req/sales                user-lookup-ref
+                  :req/add-customer-list    add-list
+                  :req/remove-customer-list remove-list
+                  :req/status               :req.status/open}]]
     (log/info "at new-request, tx-data as" tx-data)
-    ;; insert open request only if there do not exist 'open request'
-    (dcore/insert-open-request conn tx-data)))
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
 
 (s/defschema newReqSchema {:add-list #{s/Int}
                            :remove-list #{s/Int}})
-;; schema for approve and reject
+
+;;appReqSchema is for approve and reject
+;;  `req-status` string need to be in this schema to do concurrency control
+;;  Reasonable `req-status` string may be "req.status/open", "req.status/modified"
 (s/defschema appReqSchema {:req-id s/Int
-                           :req-status s/Keyword})
+                           :req-status s/Str})
+
 (s/defschema CommandSchema {(s/required-key :c) s/Str
                             (s/optional-key :req) newReqSchema
                             (s/optional-key :req-app) appReqSchema})

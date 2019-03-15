@@ -258,15 +258,6 @@
             db user)
        (map #(d/entity db %))))
 
-(defn insert-open-request
-  "Given the user entity, there can be only one open request"
-  [conn {:keys [user add-list remove-list]}]
-  (do @(d/transact conn [{:req/sales                user
-                          :req/add-customer-list    add-list
-                          :req/remove-customer-list remove-list
-                          :req/status               :req.status/open}])
-      :insert-success))
-
 (defn get-allo-customers-by-user
   "
   get the customers list currently allocated by user -- sales' own customer list
@@ -367,13 +358,14 @@
             {:eid (:db/id entity-map)} ;; prepare :eid in inital map
             (seq c))))
 
+;; (tx-reject-request 17592186045489 :req.status/open))
 (defn tx-reject-request
   "for request n, mark it as rejected"
   [^long n statusNow]
   (let [eid (d/entid (d/db conn) statusNow)]
     [[:db.fn/cas n :req/status eid :req.status/rejected]]))
 
-(defn add-allo-table
+(defn- add-allo-table
   "add the allo table by vector of map
 
    Output is tx-data"
@@ -388,7 +380,7 @@
           customer-list
           txInsts)))
 
-(defn retract-allo-table
+(defn- retract-allo-table
   "retract the allo table by :db.fn/retractEntity
    d/q -> calcaute the entity id as vector
 
@@ -415,6 +407,8 @@
    (d/q '[:find [?list ...] :in $ ?e :where [?e :req/add-customer-list ?list]] db eid)
    (d/q '[:find [?list ...] :in $ ?e :where [?e :req/remove-customer-list ?list]] db eid)])
 
+;; (tx-approve-request 17592186045489 :req.status/open))
+;; (tx-approve-request 17592186045489 :req.status/modified))
 (defn tx-approve-request
   "for request n, mark it as approved
    First synchronize the allocation table.

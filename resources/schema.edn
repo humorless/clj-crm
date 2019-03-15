@@ -407,8 +407,13 @@
     :allo/time #inst "2014-01-29"}
    {:allo/sales [:user/email "userA2@example.com"]
     :allo/customer "d-9876"
-    :allo/time #inst "2014-02-28"}
-  ]]}
+    :allo/time #inst "2014-02-28"}]
+
+  [{:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity
+    :req/add-customer-list #{}
+    :req/remove-customer-list #{[:customer/rp-id "d-9876"]}
+    :req/status :req.status/open}]
+   ]}
 ;; norm7 installs certain fake request data into Datomic for testing purpose
 :clj-crm/norm7 {:txes [[
    {:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity

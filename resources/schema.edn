@@ -337,6 +337,14 @@
     :customer/inventory-type :customer.inv/display
     :customer/rp-id "d-2345"}
 
+   {:customer/id "CM0002"
+    :customer/name "BBB股份有限公司"
+    :customer/name-en "BBB Corporation"
+    :customer/tax-id "23456789"
+    :customer/business-type :customer.bus/games
+    :customer/inventory-type :customer.inv/account
+    :customer/rp-id "a-2345"}
+
    {:db/id "a-3214"
     :customer/id "CM0003"
     :customer/name "CCC股份有限公司"

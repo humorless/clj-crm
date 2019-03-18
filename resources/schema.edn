@@ -320,14 +320,22 @@
     :customer/inventory-type :customer.inv/account
     :customer/rp-id "a-1234"}
 
-   {:db/id "d-1234"
+   {:customer/id "CM0001"
+    :customer/name "AAA股份有限公司"
+    :customer/name-en "AAA Corporation"
+    :customer/tax-id "12345678"
+    :customer/business-type :customer.bus/food
+    :customer/inventory-type :customer.inv/display
+    :customer/rp-id "d-1234"}
+
+   {:db/id "d-2345"
     :customer/id "CM0002"
     :customer/name "BBB股份有限公司"
     :customer/name-en "BBB Corporation"
     :customer/tax-id "23456789"
     :customer/business-type :customer.bus/games
     :customer/inventory-type :customer.inv/display
-    :customer/rp-id "d-1234"}
+    :customer/rp-id "d-2345"}
 
    {:db/id "a-3214"
     :customer/id "CM0003"
@@ -389,7 +397,7 @@
     :customer/rp-id "d-000000004"}
 
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref for existing entity
-    :req/add-customer-list #{"a-1234" "d-1234"} ;; tempid for newly created entity
+    :req/add-customer-list #{"a-1234" "d-2345"} ;; tempid for newly created entity
     :req/remove-customer-list #{"a-3214"}
     :req/status :req.status/open}
 

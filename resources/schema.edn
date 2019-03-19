@@ -354,6 +354,15 @@
     :customer/inventory-type :customer.inv/account
     :customer/rp-id "a-3214"}
 
+   {:db/id "d-3214"
+    :customer/id "CM0003"
+    :customer/name "CCC股份有限公司"
+    :customer/name-en "CCC Corporation"
+    :customer/tax-id "34567891"
+    :customer/business-type :customer.bus/e-commerce
+    :customer/inventory-type :customer.inv/display
+    :customer/rp-id "d-3214"}
+
    {:db/id "a-6789"
     :customer/id "CM0004"
     :customer/name "DDD股份有限公司"
@@ -417,6 +426,9 @@
 
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer "a-3214"
+    :allo/time #inst "2014-01-28"}
+   {:allo/sales [:user/email "userA1@example.com"]
+    :allo/customer "d-3214"
     :allo/time #inst "2014-01-28"}
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer "a-6789"

@@ -43,6 +43,43 @@
         data (mapv #(dcore/marshal-left-joined-customer db %) query-result)]
     data))
 
+(defn pull-inventory
+  "Input is a ordinary customer map
+
+  {:id ...
+   :name ...
+   :name-en ...
+   :inventory-type
+   :eid ...}"
+  [c-map]
+  (let [invent-part (assoc {}
+                           :inventory-type (:inventory-type c-map)
+                           :eid (:eid c-map))
+        s (:sales c-map)]
+    (if (nil? s)
+      invent-part
+      (assoc invent-part :sales s))))
+
+(defn un-join-customer-inventory
+  "Input is a vector of a pair of [tax-id customerVector]
+
+   customerVector is in the form of [customerMap, customerMap]"
+  [[tax-id customers]]
+  (let [c (first customers)
+        c-inherent (dissoc c :eid :sales :inventory-type :rp-id)
+        i-types (mapv pull-inventory customers)]
+    (assoc c-inherent :inventory i-types)))
+
+(defmethod dispatch-q :customer-report
+  [user-q]
+  (log/info "at all-customers, user-q as" user-q)
+  (let [db (d/db conn)
+        query-result (dcore/get-left-joined-customers db)
+        all-customers (mapv #(dcore/marshal-left-joined-customer db %) query-result)
+        tax-customer-pairs (group-by :tax-id all-customers)
+        data (map un-join-customer-inventory tax-customer-pairs)]
+    data))
+
 (defmethod dispatch-q :my-customers
   [user-q]
   (log/info "at my-customers, user-q as" user-q)

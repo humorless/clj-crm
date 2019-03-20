@@ -105,6 +105,14 @@
     :user/roles  :user.roles/lead
     :user/team "t1"}
 
+   {:db/id     "Q"
+    :user/name "Annie"
+    :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
+    :user/email "manager@example.com"
+    :user/status :user.status/active
+    :user/roles  :user.roles/manager
+    :user/team "t1"}
+
    {:db/id     "B1"
     :user/name "sales name B1"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"

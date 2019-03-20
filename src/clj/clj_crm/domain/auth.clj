@@ -32,5 +32,6 @@
   (let [u (find-one-by (d/db conn) :user/email email)
         eid (:db/id u)
         jwe-token (token (:user/email u))
-        username (:user/name u)]
-    {:token jwe-token :email email :username username :eid eid}))
+        username (:user/name u)
+        r (:user/roles u)]
+    {:token jwe-token :email email :username username :eid eid :role r}))

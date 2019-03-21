@@ -454,7 +454,7 @@
 :clj-crm/norm7 {:txes [[
    {:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity
     :req/add-customer-list #{[:customer/rp-id "a-3214"]} ;; lookup ref for existing entity
-    :req/remove-customer-list #{[:customer/rp-id "d-9876"]}
+    :req/remove-customer-list #{}
     :req/status :req.status/open}
   ]]}
 :clj-crm/norm8 {:txes [[

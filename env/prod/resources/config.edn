@@ -1,2 +1,5 @@
 {:prod true
- :port 3000}
+ :port 3000
+ :nrepl-port 7000
+ :cors-regex-str "http://10.20.30.40:5000"
+ :database-url "datomic:free://localhost:4334/clj_crm"}

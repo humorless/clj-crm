@@ -5,10 +5,8 @@ generated using Luminus version "3.10.35"
 clj-crm is a Customer relationship management software, which the primary function is to distribute customers to sales and estimate the credit of each sales based on order data and customer-sales binding time.
 
 ## Prerequisites
+In `infra` directory, there is an Ansible playbook to do the server provisition.
 
-You will need [Leiningen][1] 2.0 or above installed.
-
-[1]: https://github.com/technomancy/leiningen
 
 ## REPL-driven development
 To run the REPL with dev profile, run:
@@ -42,15 +40,16 @@ To login H2 database (datomic storage backend),
 To backup database, run:
 
 ```
-bin/datomic -Xmx1g -Xms1g backup-db datomic:free://localhost:4334/clj_crm_dev file:/full/path/to/backup-directory
+bin/datomic -Xmx1g -Xms1g backup-db datomic:free://localhost:4334/clj_crm file:/full/path/to/backup-directory
 ```
 Note: Backup URIs are per database. You can backup the same database at different points in time to a single backup URI.
 
-## Running
+## Run a production server
 To start a web server for the application, run:
 
 ```
-  lein run
+  lein uberjar
+  java -Dconf=env/prod/resources/config.edn -jar target/uberjar/clj-crm.jar 
 ```
 
 ## License

@@ -19,8 +19,8 @@
 
 ;; verification
 ;; => (map d/touch (find-all-by (d/db conn) :conformity/conformed-norms)))
-(defn setup-app-schema [conn]
-  (let [norms-map (c/read-resource "schema.edn")]
+(defn setup-app-db [fname]
+  (let [norms-map (c/read-resource fname)]
     (c/ensure-conforms conn norms-map (keys norms-map))))
 
 (defn show-app-schema [conn]

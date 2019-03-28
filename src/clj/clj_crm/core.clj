@@ -5,6 +5,7 @@
             [clj-crm.config :refer [env]]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.tools.logging :as log]
+            [clj-crm.db.core :refer [setup-app-db]]
             [mount.core :as mount])
   (:gen-class))
 
@@ -15,10 +16,10 @@
 (mount/defstate ^{:on-reload :noop} http-server
   :start
   (http/start
-    (-> env
-        (assoc  :handler #'handler/app)
-        (update :io-threads #(or % (* 2 (.availableProcessors (Runtime/getRuntime)))))
-        (update :port #(or (-> env :options :port) %))))
+   (-> env
+       (assoc  :handler #'handler/app)
+       (update :io-threads #(or % (* 2 (.availableProcessors (Runtime/getRuntime)))))
+       (update :port #(or (-> env :options :port) %))))
   :stop
   (http/stop http-server))
 
@@ -31,7 +32,6 @@
   (when repl-server
     (nrepl/stop repl-server)))
 
-
 (defn stop-app []
   (doseq [component (:stopped (mount/stop))]
     (log/info component "stopped"))
@@ -43,6 +43,9 @@
                         mount/start-with-args
                         :started)]
     (log/info component "started"))
+  (log/info "install db schema")
+  (setup-app-db "schema.edn") ;; setup app schema, idempotent operation
+  (setup-app-db "preload-data.edn")
   (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))
 
 (defn -main [& args]

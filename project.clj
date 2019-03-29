@@ -42,7 +42,8 @@
                  [ring/ring-defaults "0.3.2"]
                  [ring-cors "0.1.13"]
                  [selmer "1.12.6"]
-                 [io.rkn/conformity "0.5.1"]]
+                 [io.rkn/conformity "0.5.1"]
+                 [clj-http-lite "0.3.0"]]
 
   :min-lein-version "2.0.0"
 

@@ -216,31 +216,14 @@
       (marshal-customer db c-with-sales)
       (marshal-customer db c))))
 
-(defn get-left-joined-customers
-  "Output is `({LJ-CUSTOMER-MAP} ...)`
-
-  {LJ-CUSTOMER-MAP} is in the form of:
-  `
-  {
-   [normal-customer-field]*
-   :allo/_customer [{:allo/sales {:db/id ...
-                                  :user/name ...}}]}
-  `
-  However, field `:allo/_customer` does not always exist
-  According to the business constraints, every customer should
-  be allocated by only one sales
-  "
+(defn customer-eids
+  "get all the customer eids"
   [db]
-  (->> (d/q '[:find [?c ...]
-              :in $
-              :where
-              [?c :customer/id]]
-            db)
-       (map #(d/pull db '[{:allo/_customer [{:allo/sales [:user/name
-                                                          :db/id
-                                                          {:user/team [:team/name :db/id]}]}
-                                            :allo/time]}
-                          *] %))))
+  (d/q '[:find [?c ...]
+         :in $
+         :where
+         [?c :customer/id]]
+       db))
 
 (defn customer-eids-by-user
   "get the customers list currently allocated by user -- sales' own customer list"

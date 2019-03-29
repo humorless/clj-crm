@@ -39,7 +39,8 @@
   [user-q]
   (log/info "at all-customers, user-q as" user-q)
   (let [db (d/db conn)
-        query-result (dcore/get-left-joined-customers db)
+        eids (dcore/customer-eids db)
+        query-result (map #(dcore/c-eid->cust+sales db %) eids)
         data (mapv #(dcore/marshal-left-joined-customer db %) query-result)]
     data))
 
@@ -74,7 +75,8 @@
   [user-q]
   (log/info "at all-customers, user-q as" user-q)
   (let [db (d/db conn)
-        query-result (dcore/get-left-joined-customers db)
+        eids (dcore/customer-eids db)
+        query-result (map #(dcore/c-eid->cust+sales db %) eids)
         customers (mapv #(dcore/marshal-left-joined-customer db %) query-result)
         tax-customer-pairs (group-by :tax-id customers)
         data (map un-join-customer-inventory tax-customer-pairs)]

@@ -242,6 +242,37 @@
                                             :allo/time]}
                           *] %))))
 
+(defn customer-eids-by-user
+  "get the customers list currently allocated by user -- sales' own customer list"
+  [db user]
+  (d/q '[:find [?c ...]
+         :in $ ?u
+         :where
+         [?e :allo/sales ?u]
+         [?e :allo/customer ?c]]
+       db user))
+
+(defn c-eid->cust+sales
+  "Transform customer eid -> {HashMap} with customer fields and sales fields
+
+   the {HashMap} is in the form of
+  `
+  {
+   [normal-customer-field]*
+   :allo/_customer [{:allo/sales {:db/id ...
+                                  :user/name ...}}]}
+  `
+  However, field `:allo/_customer` does not always exist
+  According to the business constraints, every customer should
+  be allocated by only one sales
+  "
+  [db c-eid]
+  (d/pull db '[{:allo/_customer [{:allo/sales [:user/name
+                                               :db/id
+                                               {:user/team [:team/name :db/id]}]}
+                                 :allo/time]}
+               *] c-eid))
+
 (defn get-open-requests-by-user
   "get the open request currently submitted by user -- sales' own request
    e.g.:
@@ -257,22 +288,6 @@
               [?e :req/status :req.status/open]]
             db user)
        (map #(d/entity db %))))
-
-(defn get-allo-customers-by-user
-  "
-  get the customers list currently allocated by user -- sales' own customer list
-  example usage: (map d/touch(get-allo-customers-by-user (d/db conn) [:user/email \"userA1@example.com\"]))
-
-  Output is `(entity ...)`
-  () or (#:db{:id 17592186045461} #:db{:id 17592186045462}) "
-  [db user]
-  (->>  (d/q '[:find [?c ...]
-               :in $ ?u
-               :where
-               [?e :allo/sales ?u]
-               [?e :allo/customer ?c]]
-             db user)
-        (map #(d/entity db %))))
 
 (defn get-requests-by-status
   "

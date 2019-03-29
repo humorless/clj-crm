@@ -75,18 +75,27 @@
   (log/info "at all-customers, user-q as" user-q)
   (let [db (d/db conn)
         query-result (dcore/get-left-joined-customers db)
-        all-customers (mapv #(dcore/marshal-left-joined-customer db %) query-result)
-        tax-customer-pairs (group-by :tax-id all-customers)
+        customers (mapv #(dcore/marshal-left-joined-customer db %) query-result)
+        tax-customer-pairs (group-by :tax-id customers)
         data (map un-join-customer-inventory tax-customer-pairs)]
     data))
 
-(defmethod dispatch-q :my-customers
+(defmethod dispatch-q :my-customer-report
   [user-q]
-  (log/info "at my-customers, user-q as" user-q)
-  (let [email (:user user-q)
+  (comment
+    "To test this method:
+
+    (dispatch-q {:q \"my-customer-report\"
+                 :user \"userA1@example.com\"})")
+  (log/info "at my-customer-report, user-q as" user-q)
+  (let [db (d/db conn)
+        email (:user user-q)
         user-lookup-ref [:user/email email]
-        query-result (dcore/get-allo-customers-by-user (d/db conn)  user-lookup-ref)
-        data (mapv dcore/marshal-entity query-result)]
+        eids (dcore/customer-eids-by-user db user-lookup-ref)
+        query-result (map #(dcore/c-eid->cust+sales db %) eids)
+        customers (mapv #(dcore/marshal-left-joined-customer db %) query-result)
+        tax-customer-pairs (group-by :tax-id customers)
+        data (map un-join-customer-inventory tax-customer-pairs)]
     data))
 
 (s/defschema PageSchema {:page-size s/Int

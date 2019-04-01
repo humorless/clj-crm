@@ -43,7 +43,7 @@
                  [ring-cors "0.1.13"]
                  [selmer "1.12.6"]
                  [io.rkn/conformity "0.5.1"]
-                 [clj-http-lite "0.3.0"]]
+                 [clj-http "3.9.1"]]
 
   :min-lein-version "2.0.0"
 

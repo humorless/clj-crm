@@ -73,7 +73,7 @@
         query-result (map #(c-eid->customer db %) eids)]
     (set query-result)))
 
-(defn get-new-customers
+(defn- get-new-customers
   "From LAMP system, get the current lamp customers.
    From DB, get the customers inside DB.
    Find out the new customers in LAMP but not in DB.
@@ -84,3 +84,23 @@
   (let [l-customer-rel (get-customers-from-lamp addr)
         d-customer-rel (get-customers-from-db db)]
     (cs/difference l-customer-rel d-customer-rel)))
+
+(defn- rel->tx-customers [c-rel]
+  (let [cust->two-products (fn [m]
+                             [(assoc m :customer/inventory-type :customer.inv/account
+                                     :customer/rp-id (str "a-" (:customer/id m)))
+                              (assoc m :customer/inventory-type :customer.inv/display
+                                     :customer/rp-id (str "d-" (:customer/id m)))])]
+    (vec (mapcat cust->two-products c-rel))))
+
+(defn sync-lamp-data
+  "Get the LAMP data.
+   Calculate the difference.
+   Write into database"
+  []
+  (let [customer-rels (get-new-customers url (d/db conn))
+        tx-data (rel->tx-customers customer-rels)]
+    (do (prn "tx-data write into db, length: " (count tx-data))
+        (prn "first item of tx-data" (first tx-data))
+        (when (seq tx-data)
+          @(d/transact conn tx-data)))))

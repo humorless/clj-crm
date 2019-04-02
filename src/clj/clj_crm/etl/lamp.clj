@@ -93,14 +93,15 @@
                                      :customer/rp-id (str "d-" (:customer/id m)))])]
     (vec (mapcat cust->two-products c-rel))))
 
-(defn sync-lamp-data
+(defn sync-data
   "Get the LAMP data.
    Calculate the difference.
    Write into database"
   []
+  (log/info "etl.lamp sync-data triggered!")
   (let [customer-rels (get-new-customers url (d/db conn))
         tx-data (rel->tx-customers customer-rels)]
-    (do (prn "tx-data write into db, length: " (count tx-data))
-        (prn "first item of tx-data" (first tx-data))
+    (do (log/info "etl.lamp tx-data write into db, length: " (count tx-data))
+        (log/info "etl.lamp first item of tx-data" (first tx-data))
         (when (seq tx-data)
           @(d/transact conn tx-data)))))

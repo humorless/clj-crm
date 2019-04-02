@@ -39,7 +39,7 @@
   [user-q]
   (log/info "at all-customers, user-q as" user-q)
   (let [db (d/db conn)
-        eids (dcore/customer-eids db)
+        eids (dcore/get-customer-eids db)
         query-result (map #(dcore/c-eid->cust+sales db %) eids)
         data (mapv #(dcore/marshal-left-joined-customer db %) query-result)]
     data))
@@ -75,7 +75,7 @@
   [user-q]
   (log/info "at all-customers, user-q as" user-q)
   (let [db (d/db conn)
-        eids (dcore/customer-eids db)
+        eids (dcore/get-customer-eids db)
         query-result (map #(dcore/c-eid->cust+sales db %) eids)
         customers (mapv #(dcore/marshal-left-joined-customer db %) query-result)
         tax-customer-pairs (group-by :tax-id customers)
@@ -93,7 +93,7 @@
   (let [db (d/db conn)
         email (:user user-q)
         user-lookup-ref [:user/email email]
-        eids (dcore/customer-eids-by-user db user-lookup-ref)
+        eids (dcore/get-customer-eids-by-user db user-lookup-ref)
         query-result (map #(dcore/c-eid->cust+sales db %) eids)
         customers (mapv #(dcore/marshal-left-joined-customer db %) query-result)
         tax-customer-pairs (group-by :tax-id customers)

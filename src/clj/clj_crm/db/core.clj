@@ -216,7 +216,7 @@
       (marshal-customer db c-with-sales)
       (marshal-customer db c))))
 
-(defn customer-eids
+(defn get-customer-eids
   "get all the customer eids"
   [db]
   (d/q '[:find [?c ...]
@@ -225,7 +225,7 @@
          [?c :customer/id]]
        db))
 
-(defn customer-eids-by-user
+(defn get-customer-eids-by-user
   "get the customers list currently allocated by user -- sales' own customer list"
   [db user]
   (d/q '[:find [?c ...]

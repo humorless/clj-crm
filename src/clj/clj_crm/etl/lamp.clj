@@ -1,9 +1,12 @@
 (ns clj-crm.etl.lamp
   (:require [clj-http.client :as hc]
             [cheshire.core :as che]
+            [clojure.set :as cs]
             [clojure.string :as s]
             [clojure.tools.logging :as log]
             [mount.core :refer [defstate]]
+            [clj-crm.db.core :as dcore :refer [conn]]
+            [datomic.api :as d]
             [clj-crm.config :refer [env]]))
 
 (defn- lamp-path [base]
@@ -44,7 +47,7 @@
       (log/error "ETL found unkown business type" (:businessTypes m) (:custNm m) (:regNo m))
       :customer.bus/unknown)))
 
-(defn get-customer-data [addr]
+(defn- get-customers-from-lamp [addr]
   (let [d (get-lamp-data addr)
         d-edn (che/parse-string d true)
         d-content-list (:DATA_OBJECT d-edn)
@@ -54,4 +57,30 @@
                             :customer/id (:legacyNo m)
                             :customer/business-type (->business-type m)})]
     (->> (map ->customer d-content-list)
-         (sort-by :customer/id))))
+         set)))
+
+(defn- c-eid->customer
+  "Transfrom customer eid -> {HashMap with customer fields}"
+  [db c-eid]
+  (let [e (d/entity db c-eid)
+        b-type (:customer/business-type e)
+        customer-data (d/pull db '[:customer/tax-id :customer/name
+                                   :customer/name-en :customer/id] c-eid)]
+    (assoc customer-data :customer/business-type b-type)))
+
+(defn- get-customers-from-db [db]
+  (let [eids (dcore/get-customer-eids db)
+        query-result (map #(c-eid->customer db %) eids)]
+    (set query-result)))
+
+(defn get-new-customers
+  "From LAMP system, get the current lamp customers.
+   From DB, get the customers inside DB.
+   Find out the new customers in LAMP but not in DB.
+
+   Quick test:
+   (get-new-customers url (d/db conn))"
+  [addr db]
+  (let [l-customer-rel (get-customers-from-lamp addr)
+        d-customer-rel (get-customers-from-db db)]
+    (cs/difference l-customer-rel d-customer-rel)))

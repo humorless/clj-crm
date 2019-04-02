@@ -142,6 +142,7 @@
    [:db/add #db/id [:db.part/user] :db/ident :customer.bus/travel]
    [:db/add #db/id [:db.part/user] :db/ident :customer.bus/retail]
    [:db/add #db/id [:db.part/user] :db/ident :customer.bus/miscellaneous]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.bus/unknown]
 ]]}
 ;; norm4 installs request table schema into Datomic
 :clj-crm/norm4 {:txes [[

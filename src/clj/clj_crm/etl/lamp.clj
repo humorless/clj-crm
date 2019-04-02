@@ -2,6 +2,7 @@
   (:require [clj-http.client :as hc]
             [cheshire.core :as che]
             [clojure.string :as s]
+            [clojure.tools.logging :as log]
             [mount.core :refer [defstate]]
             [clj-crm.config :refer [env]]))
 
@@ -12,7 +13,7 @@
   :start (-> env :lamp-url lamp-path)
   :stop "")
 
-(defn- get-data-from-url [addr]
+(defn- get-lamp-data [addr]
   (:body (hc/get addr)))
 
 (def b-type-table {"Arts / Movie / Entertainment" :customer.bus/arts
@@ -35,16 +36,22 @@
                    "Wholesale / Distribution / Retail" :customer.bus/retail
                    "Miscellaneous" :customer.bus/miscellaneous})
 
-(defn src-data []
-  (let [d (get-data-from-url url)
+(defn- ->business-type [m]
+  (if-let [result (get b-type-table (s/trim (:businessTypes m)))]
+    result
+    (do
+      (prn "ETL found unkown business type" (:businessTypes m) (:custNm m) (:regNo m))
+      (log/error "ETL found unkown business type" (:businessTypes m) (:custNm m) (:regNo m))
+      :customer.bus/unknown)))
+
+(defn get-customer-data [addr]
+  (let [d (get-lamp-data addr)
         d-edn (che/parse-string d true)
         d-content-list (:DATA_OBJECT d-edn)
-        f (fn [m] {:customer/tax-id (:regNo m)
-                   :customer/name (:custNm m)
-                   :customer/name-en (:alterNm1 m)
-                   :customer/id (:legacyNo m)
-                   :customer/business-type (get b-type-table (s/trim (:businessTypes m)))})]
-    (map f d-content-list)))
-
-(def d (src-data))
-(count (into #{} (map #(:customer/business-type %) d)))
+        ->customer (fn [m] {:customer/tax-id (:regNo m)
+                            :customer/name (:custNm m)
+                            :customer/name-en (:alterNm1 m)
+                            :customer/id (:legacyNo m)
+                            :customer/business-type (->business-type m)})]
+    (->> (map ->customer d-content-list)
+         (sort-by :customer/id))))

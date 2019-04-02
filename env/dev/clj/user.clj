@@ -4,20 +4,26 @@
             [expound.alpha :as expound]
             [clojure.tools.logging :as log]
             [clj-crm.db.core :refer [setup-app-db]]
+            [clj-crm.etl.core :refer [init-etl]]
             [mount.core :as mount]
             [clj-crm.figwheel :refer [start-fw stop-fw cljs]]
             [clj-crm.core :refer [start-app]]))
 
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
 
+(def cancel-etl-f (atom {}))
+
 (defn start []
   (mount/start-without #'clj-crm.core/repl-server)
   (log/info "prepare to install db schema")
   (setup-app-db "schema.edn")
-  (setup-app-db "dev-preload-data.edn"))
+  (setup-app-db "dev-preload-data.edn")
+  (let [f (init-etl 86400)]
+    (reset! cancel-etl-f f)))
 
 (defn stop []
-  (mount/stop-except #'clj-crm.core/repl-server))
+  (mount/stop-except #'clj-crm.core/repl-server)
+  (@cancel-etl-f)) ;; call canceling function on ETL scheduler
 
 (defn restart []
   (stop)

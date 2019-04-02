@@ -8,9 +8,12 @@
   "Trigger timer to run ETL periodically.
    Run once a day -> interval = 86400"
   [interval]
-  (let [events-seq (periodic-seq (t/now)
-                                 (t/seconds interval))]
+  (let [events-seq (rest (periodic-seq (t/now)
+                                       (t/seconds interval)))]
+    (lamp/sync-data)
     (chime/chime-at events-seq
                     (fn [ts]
                       (prn "at " ts "sync data")
-                      (lamp/sync-data)))))
+                      (lamp/sync-data))
+                    {:on-finished (fn []
+                                    (println "Schedule finished."))})))

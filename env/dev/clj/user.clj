@@ -11,7 +11,7 @@
 
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
 
-(def cancel-etl-f (atom {}))
+(def cancel-etl-f (atom (constantly "cancel function init state")))
 
 (defn start []
   (mount/start-without #'clj-crm.core/repl-server)

@@ -5,6 +5,7 @@
             [clj-crm.config :refer [env]]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.tools.logging :as log]
+            [clj-crm.etl.core :refer [init-etl]]
             [clj-crm.db.core :refer [setup-app-db]]
             [mount.core :as mount])
   (:gen-class))
@@ -46,6 +47,7 @@
   (log/info "install db schema")
   (setup-app-db "schema.edn") ;; setup app schema, idempotent operation
   (setup-app-db "preload-data.edn")
+  (init-etl 86400)
   (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))
 
 (defn -main [& args]

@@ -73,17 +73,6 @@
         query-result (map #(c-eid->customer db %) eids)]
     (set query-result)))
 
-(defn- get-new-customers
-  "From LAMP system, get the current lamp customers.
-   From DB, get the customers inside DB.
-   Find out the new customers in LAMP but not in DB.
-
-   Quick test:
-   (get-new-customers url (d/db conn))"
-  [addr db]
-  (let [l-customer-rel (get-customers-from-lamp addr)
-        d-customer-rel (get-customers-from-db db)]
-    (cs/difference l-customer-rel d-customer-rel)))
 
 (defn- rel->tx-customers [c-rel]
   (let [cust->two-products (fn [m]
@@ -94,13 +83,16 @@
     (vec (mapcat cust->two-products c-rel))))
 
 (defn sync-data
-  "Get the LAMP data.
-   Calculate the difference.
+  "From LAMP system, get the current lamp customers.
+   From DB, get the customers inside DB.
+   Calculate the difference. Find out the new customers in LAMP but not in DB.
    Write into database"
   []
   (log/info "etl.lamp sync-data triggered!")
-  (let [customer-rels (get-new-customers url (d/db conn))
-        tx-data (rel->tx-customers customer-rels)]
+  (let [l-customer-rel (get-customers-from-lamp url)
+        d-customer-rel (get-customers-from-db (d/db conn))
+        new-customer-rels (cs/difference l-customer-rel d-customer-rel)
+        tx-data (rel->tx-customers new-customer-rels)]
     (do (log/info "etl.lamp tx-data write into db, length: " (count tx-data))
         (log/info "etl.lamp first item of tx-data" (first tx-data))
         (when (seq tx-data)

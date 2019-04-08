@@ -7,7 +7,9 @@
             [mount.core :refer [defstate]]
             [clj-crm.db.core :as dcore :refer [conn]]
             [datomic.api :as d]
-            [clj-crm.config :refer [env]]))
+            [clj-crm.config :refer [env]]
+            [clojure.data.csv :as csv])
+  (:import [java.io StringWriter]))
 
 (defn- lamp-path [base]
   (str base "/nfi/CustomerInterfaceBO/getCustomerList?EMPLOYEE_NO=ANONYMOUS&DATA=[{compNm:LINETWLTD,sourceSystem:LAMP}]"))
@@ -73,7 +75,6 @@
         query-result (map #(c-eid->customer db %) eids)]
     (set query-result)))
 
-
 (defn- rel->tx-customers [c-rel]
   (let [cust->two-products (fn [m]
                              [(assoc m :customer/inventory-type :customer.inv/account
@@ -97,3 +98,12 @@
         (log/info "etl.lamp first item of tx-data" (first tx-data))
         (when (seq tx-data)
           @(d/transact conn tx-data)))))
+
+(defn lamp-data-csv
+  "Get data from LAMP, and change it to csv form"
+  []
+  (let [rels (get-customers-from-lamp url)
+        data (map vals rels)
+        string-writer (StringWriter.)]
+    (csv/write-csv string-writer data)
+    (str string-writer)))

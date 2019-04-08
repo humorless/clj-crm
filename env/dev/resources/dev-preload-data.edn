@@ -1,6 +1,9 @@
 {
 ;; data1 installs certain user init data into Datomic for testing purpose
 :clj-crm/data1 {:txes [[
+   {:db/id     "t0"
+    :team/name "Team Null"}
+
    {:db/id     "t1"
     :team/name "Team 1"}
 

@@ -1,22 +1,23 @@
 (ns clj-crm.domain.auth
-  (:require [clj-crm.db.core :refer [conn find-one-by upsert-user!]]
+  (:require [clj-crm.db.core :refer [conn find-one-by]]
             [clj-crm.middleware :refer [token]]
             [clojure.tools.logging :as log]
             [datomic.api :as d]
             [buddy.hashers :as hs]))
 
-(defn user-register!
+(defn register-user
   "if not exists email, store (email, hash(pass)) into db"
-  [screenname email pass team-id]
-  (log/info screenname "wants to register by" email)
+  [screenname email pass role team-id]
+  (log/info screenname "wants to register by email/role/team-id" email role team-id)
   (let [db (d/db conn)]
     (when-not (find-one-by db :user/email email)
-      (upsert-user! conn {:user-name screenname
-                          :pwd (hs/derive pass)
-                          :email email
-                          :status :user.status/active
-                          :roles  :user.roles/sales
-                          :team team-id}))))
+      (let [tx-user {:user/name screenname
+                     :user/pwd (hs/derive pass)
+                     :user/email email
+                     :user/status :user.status/active
+                     :user/roles role
+                     :user/team team-id}]
+        @(d/transact conn [tx-user])))))
 
 (defn user-auth
   "return 'true' when email/pass pair correct, otherwise return nil"

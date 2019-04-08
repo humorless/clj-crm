@@ -69,16 +69,6 @@
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn upsert-user!
-  "Given the user entity has :db.unique/identity attribute, Datomic will upsert"
-  [conn {:keys [user-name pwd email status roles team]}]
-  @(d/transact conn [{:user/name      user-name
-                      :user/pwd       pwd
-                      :user/email     email
-                      :user/status    status
-                      :user/roles     roles
-                      :user/team      team}]))
-
 ;; Given that A.attr is primary key
 ;; Similar usage pattern to SQL expression: `SELECT * FROM A WHERE A.attr = val`
 (defn find-by

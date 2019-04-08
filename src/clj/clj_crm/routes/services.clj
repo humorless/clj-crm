@@ -2,7 +2,7 @@
   (:require [ring.util.http-response :refer :all]
             [compojure.api.sweet :refer :all]
             [schema.core :as s]
-            [clj-crm.domain.auth :refer [user-datum user-auth user-register!]]
+            [clj-crm.domain.auth :refer [user-datum user-auth register-user]]
             [clj-crm.domain.query :as dq]
             [clj-crm.domain.command :as dc]
             [compojure.api.meta :refer [restructure-param]]
@@ -47,9 +47,10 @@
          :error (bad-request {:reason result}))))
 
    (POST "/api/register" req
-     :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str, team-id :- Long]
-     :summary     "User uses email/password to register, default role is sales"
-     (if (user-register! screenname email password team-id)
+     :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str, role :- s/Str, team-id :- Long]
+     :summary     "User uses email/password to register, UI default role is sales"
+     :description "possilbe value of role could be: sales, lead, manager"
+     (if (register-user screenname email password (keyword "user.roles" role) team-id)
        (ok {:user (user-datum email)})
        (bad-request)))
 

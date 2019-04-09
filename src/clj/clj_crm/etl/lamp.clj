@@ -44,11 +44,11 @@
                    "Miscellaneous" :customer.bus/miscellaneous})
 
 (defn- ->business-type [m]
-  (if-let [result (get b-type-table (s/trim (:businessTypes m)))]
+  (if-let [result (get b-type-table (s/trim (:customer/business-type m)))]
     result
     (do
-      (prn "ETL found unkown business type" (:businessTypes m) (:custNm m) (:regNo m))
-      (log/error "ETL found unkown business type" (:businessTypes m) (:custNm m) (:regNo m))
+      (prn "ETL found unkown business type" (:customer/business-type m) (:customer/name m) (:customer/tax-id m))
+      (log/error "ETL found unkown business type" (:customer/business-type m) (:customer/name m) (:customer/tax-id m))
       :customer.bus/unknown)))
 
 (defn- get-customers-from-api [addr]
@@ -59,8 +59,9 @@
                             :customer/name (:custNm m)
                             :customer/name-en (:alterNm1 m)
                             :customer/id (:legacyNo m)
-                            :customer/business-type (->business-type m)})]
+                            :customer/business-type (:businessTypes m)})]
     (->> (map ->customer d-content-list)
+         (map #(assoc % :customer/business-type (->business-type %)))
          set)))
 
 (defn- c-eid->customer
@@ -86,7 +87,11 @@
     (vec (mapcat cust->two-products c-rel))))
 
 (defn- get-customers-from-excel
-  "Read the excel file, and retrieve the customers data"
+  "Read the excel file, and retrieve the customers data
+
+  Implementation details:
+  rest - remove the title row
+  set  - remove duplicated rows"
   [addr]
   (with-open [stream (io/input-stream (str addr "/clist.xlsx"))]
     (->> (spreadsheet/load-workbook stream)
@@ -95,10 +100,12 @@
                                       :B :customer/name
                                       :C :customer/name-en
                                       :H :customer/tax-id
-                                      :P :businessTypes})
+                                      :P :customer/business-type
+                                      :F :registrationStatus})
          rest
-         (mapv #(assoc % :customer/business-type (->business-type %)))
-         (mapv #(dissoc % :businessTypes))
+         (filter #(= (:registrationStatus %) "[C]LINE TAIWAN"))
+         (map #(dissoc % :registrationStatus))
+         (map #(assoc % :customer/business-type (->business-type %)))
          set)))
 
 ;;;;; public API ;;;;;

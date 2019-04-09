@@ -46,7 +46,8 @@
                  [clj-http "3.9.1"]
                  [clj-time "0.15.0"]
                  [jarohen/chime "0.2.2"]
-                 [org.clojure/data.csv "0.1.4"]]
+                 [org.clojure/data.csv "0.1.4"]
+                 [dk.ative/docjure "1.12.0"]]
 
   :min-lein-version "2.0.0"
 

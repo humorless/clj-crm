@@ -8,18 +8,20 @@
             [clj-crm.db.core :as dcore :refer [conn]]
             [datomic.api :as d]
             [clj-crm.config :refer [env]]
-            [clojure.data.csv :as csv])
+            [clojure.data.csv :as csv]
+            [dk.ative.docjure.spreadsheet :as spreadsheet]
+            [clojure.java.io :as io])
   (:import [java.io StringWriter]))
+
+(defstate url
+  :start (-> env :lamp-url)
+  :stop "")
 
 (defn- lamp-path [base]
   (str base "/nfi/CustomerInterfaceBO/getCustomerList?EMPLOYEE_NO=ANONYMOUS&DATA=[{compNm:LINETWLTD,sourceSystem:LAMP}]"))
 
-(defstate url
-  :start (-> env :lamp-url lamp-path)
-  :stop "")
-
 (defn- get-lamp-data [addr]
-  (:body (hc/get addr)))
+  (:body (hc/get (lamp-path addr))))
 
 (def b-type-table {"Arts / Movie / Entertainment" :customer.bus/arts
                    "Automotive / Transportation / Energy" :customer.bus/automotive
@@ -49,7 +51,7 @@
       (log/error "ETL found unkown business type" (:businessTypes m) (:custNm m) (:regNo m))
       :customer.bus/unknown)))
 
-(defn- get-customers-from-lamp [addr]
+(defn- get-customers-from-api [addr]
   (let [d (get-lamp-data addr)
         d-edn (che/parse-string d true)
         d-content-list (:DATA_OBJECT d-edn)
@@ -83,6 +85,24 @@
                                      :customer/rp-id (str "d-" (:customer/id m)))])]
     (vec (mapcat cust->two-products c-rel))))
 
+(defn- get-customers-from-excel
+  "Read the excel file, and retrieve the customers data"
+  [addr]
+  (with-open [stream (io/input-stream (str addr "/clist.xlsx"))]
+    (->> (spreadsheet/load-workbook stream)
+         (spreadsheet/select-sheet "Sheet0")
+         (spreadsheet/select-columns {:A :customer/id
+                                      :B :customer/name
+                                      :C :customer/name-en
+                                      :H :customer/tax-id
+                                      :P :businessTypes})
+         rest
+         (mapv #(assoc % :customer/business-type (->business-type %)))
+         (mapv #(dissoc % :businessTypes))
+         set)))
+
+;;;;; public API ;;;;;
+
 (defn sync-data
   "From LAMP system, get the current lamp customers.
    From DB, get the customers inside DB.
@@ -90,7 +110,7 @@
    Write into database"
   []
   (log/info "etl.lamp sync-data triggered!")
-  (let [l-customer-rel (get-customers-from-lamp url)
+  (let [l-customer-rel (get-customers-from-excel url)
         d-customer-rel (get-customers-from-db (d/db conn))
         new-customer-rels (cs/difference l-customer-rel d-customer-rel)
         tx-data (rel->tx-customers new-customer-rels)]
@@ -102,7 +122,7 @@
 (defn lamp-data-csv
   "Get data from LAMP, and change it to csv form"
   []
-  (let [rels (get-customers-from-lamp url)
+  (let [rels (get-customers-from-api url)
         data (map vals rels)
         string-writer (StringWriter.)]
     (csv/write-csv string-writer data)

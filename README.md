@@ -50,13 +50,24 @@ Note: Backup URIs are per database. You can backup the same database at differen
 ```
   cd db
   ./provision.sh
+  tmux new-session -s datomic
   ./start.sh
 ```
 
 2. Prepare the LAMP url
+
+```
+  cd $LAMP_DIR
+  tmux new-session -s upload
+  simple-http-upload-server -p 3001
+  C-B d
+  tmux new-session -s lamp
+  serve -l 5001
+```
 3. To start a web server for the application, run:
 
 ```
+  tmux new-session -s prod
   lein uberjar
   java -Dconf=env/prod/resources/config.edn -Dcors-regex-str="http://10.20.30.41:5000"  -jar target/uberjar/clj-crm.jar
 ```

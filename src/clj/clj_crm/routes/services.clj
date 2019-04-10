@@ -5,6 +5,7 @@
             [clj-crm.domain.auth :refer [user-datum user-auth register-user]]
             [clj-crm.domain.query :as dq]
             [clj-crm.domain.command :as dc]
+            [clj-crm.etl.lamp :as lamp]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]))
@@ -67,6 +68,13 @@
      :current-user user
      :summary     "User use jwe token to get the user-datum"
      (ok {:user (user-datum (:user user))}))
+
+   (POST "/api/sync" req
+     :body-params [note :- s/Str]
+     :summary     "Forcely invoke LAMP data sync right away."
+     (if-let [r (lamp/sync-data)]
+       (ok {:result :insert-done})
+       (ok {:result :already-sync})))
 
    (context "/api" []
      :auth-rules authenticated?

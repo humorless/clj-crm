@@ -45,7 +45,9 @@ bin/datomic -Xmx1g -Xms1g backup-db datomic:free://localhost:4334/clj_crm file:/
 Note: Backup URIs are per database. You can backup the same database at different points in time to a single backup URI.
 
 ## Run a production server
-To start a web server for the application, run:
+1. Prepare the Datomic url
+2. Prepare the LAMP url
+3. To start a web server for the application, run:
 
 ```
   lein uberjar

@@ -47,7 +47,7 @@
   (log/info "install db schema")
   (setup-app-db "schema.edn") ;; setup app schema, idempotent operation
   (setup-app-db "preload-data.edn")
-  (init-etl 86400)
+  (init-etl)
   (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))
 
 (defn -main [& args]

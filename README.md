@@ -46,12 +46,19 @@ Note: Backup URIs are per database. You can backup the same database at differen
 
 ## Run a production server
 1. Prepare the Datomic url
+
+```
+  cd db
+  ./provision.sh
+  ./start.sh
+```
+
 2. Prepare the LAMP url
 3. To start a web server for the application, run:
 
 ```
   lein uberjar
-  java -Dconf=env/prod/resources/config.edn -jar target/uberjar/clj-crm.jar 
+  java -Dconf=env/prod/resources/config.edn -Dcors-regex-str="http://10.20.30.41:5000"  -jar target/uberjar/clj-crm.jar
 ```
 
 ## License

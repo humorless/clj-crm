@@ -49,6 +49,15 @@
 ;; Utility function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn query-db-fn
+  "Given db-fn-name, ex: :fn/replace-to-many
+   Return the db function, which can be tested at REPL"
+  [db-fn-name]
+  (d/q '[:find ?f .
+         :where
+         [?e :db/ident db-fn-name]
+         [?e :db/fn ?f]] (d/db conn)))
+
 (defn only
   "Return the only item from a query result"
   [query-result]
@@ -353,12 +362,20 @@
             {:eid (:db/id entity-map)} ;; prepare :eid in inital map
             (seq c))))
 
-;; (tx-reject-request 17592186045489 :req.status/open))
+(defn tx-modify-request
+  "for request e, modify its add-list and remove-list
+   Note that: add-list and remove-list can be nil"
+  [^long e stamp add-list remove-list]
+  [[:fn/replace-to-many e :req/add-customer-list add-list]
+   [:fn/replace-to-many e :req/remove-customer-list remove-list]
+   [:db.fn/cas e :req/stamp stamp (inc stamp)]
+   [:db/add e :req/status :req.status/modified]])
+
 (defn tx-reject-request
-  "for request n, mark it as rejected"
-  [^long n statusNow]
-  (let [eid (d/entid (d/db conn) statusNow)]
-    [[:db.fn/cas n :req/status eid :req.status/rejected]]))
+  "for request e, mark it as rejected"
+  [^long e stamp]
+  [[:db.fn/cas e :req/stamp stamp (inc stamp)]
+   [:db/add e :req/status :req.status/rejected]])
 
 (defn- add-allo-table
   "add the allo table by vector of map
@@ -402,23 +419,22 @@
    (d/q '[:find [?list ...] :in $ ?e :where [?e :req/add-customer-list ?list]] db eid)
    (d/q '[:find [?list ...] :in $ ?e :where [?e :req/remove-customer-list ?list]] db eid)])
 
-;; (tx-approve-request 17592186045489 :req.status/open))
-;; (tx-approve-request 17592186045489 :req.status/modified))
+;; (tx-approve-request 17592186045489 0))
 (defn tx-approve-request
-  "for request n, mark it as approved
+  "for request e, mark it as approved
    First synchronize the allocation table.
    After sync, mark the request as approved."
-  [^long n statusNow]
+  [^long e stamp]
   (let [db (d/db conn)
         ;; prepare eids, txInst
-        txInst (request-open-time-by-eid (d/history db) n)
-        [sid add-list remove-list] (request-content-by-eid db n)
+        txInst (request-open-time-by-eid (d/history db) e)
+        [sid add-list remove-list] (request-content-by-eid db e)
         ;; prepare tx-add-allo, tx-retract-allo
         tx-add-allo (add-allo-table sid add-list txInst)
         tx-retract-allo (retract-allo-table db sid remove-list)
         ;; prepare tx-app-req
-        status-eid (d/entid db statusNow)
-        tx-app-req [[:db.fn/cas n :req/status status-eid :req.status/approved]]
+        tx-app-req [[:db.fn/cas e :req/stamp stamp (inc stamp)]
+                    [:db/add e :req/status :req.status/approved]]
         tx-data (into [] (concat tx-add-allo tx-retract-allo tx-app-req))]
     tx-data))
 

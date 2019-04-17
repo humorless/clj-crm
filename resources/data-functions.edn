@@ -1,9 +1,20 @@
 [
-  {:db/id #db/id [:db.part/user]
-  :db/ident :inc
+ {:db/id #db/id [:db.part/user]
+  :db/ident :fn/inc
   :db/doc "Data function that increments value of attribute a by amount."
   :db/fn #db/fn {:lang "clojure"
                  :params [db e a amount]
                  :code [[:db/add e a
-                         (-> (d/entity db e) a (+ amount))]]}} 
+                         (-> (d/entity db e) a (+ amount))]]}}
+
+ {:db/id #db/id [:db.part/user]
+  :db/ident :fn/replace-to-many
+  :db/doc "Given an entity e, a to-many attribute, and a list of new values, yields a transaction that replaces the old values by new ones"
+  :db/fn #db/fn {:lang "clojure"
+                 :params [db eid attr new-vals]
+                 :code (let [old-vals (d/pull db '[attr] eid)
+                             to-remove (remove (set (seq new-vals)) old-vals)]
+                         (concat
+                           (for [rv to-remove] [:db/retract eid attr rv])
+                           (for [nv new-vals] [:db/add eid attr nv])))}}
 ]

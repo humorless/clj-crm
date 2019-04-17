@@ -15,12 +15,24 @@
 
 (defmulti dispatch-c switch)
 
+(defmethod dispatch-c :modify-request
+  [user-c]
+  (log/info "at modify-request, user-c as" user-c)
+  (let [id (get-in user-c [:req-op :id])
+        stamp (get-in user-c [:req-op :stamp])
+        add-list (get-in user-c [:req-op :add-list])
+        remove-list (get-in user-c [:req-op :remove-list])
+        tx-data (dcore/tx-modify-request id stamp add-list remove-list)]
+    (log/info "at modify-request, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
 (defmethod dispatch-c :reject-request
   [user-c]
   (log/info "at reject-request, user-c as" user-c)
-  (let [req-id (get-in user-c [:req-app :req-id])
-        req-status (keyword (get-in user-c [:req-app :req-status]))
-        tx-data (dcore/tx-reject-request req-id req-status)]
+  (let [id (get-in user-c [:req-op :id])
+        stamp (get-in user-c [:req-op :stamp])
+        tx-data (dcore/tx-reject-request id stamp)]
     (log/info "at reject-request, tx-data as" tx-data)
     (do @(d/transact conn tx-data)
         :cmd-success)))
@@ -28,9 +40,9 @@
 (defmethod dispatch-c :approve-request
   [user-c]
   (log/info "at approve-request, user-c as" user-c)
-  (let [req-id (get-in user-c [:req-app :req-id])
-        req-status (keyword (get-in user-c [:req-app :req-status]))
-        tx-data (dcore/tx-approve-request req-id req-status)]
+  (let [id (get-in user-c [:req-op :id])
+        stamp (get-in user-c [:req-op :stamp])
+        tx-data (dcore/tx-approve-request id stamp)]
     (log/info "at approve-request, tx-data as" tx-data)
     (do @(d/transact conn tx-data)
         :cmd-success)))
@@ -45,7 +57,8 @@
         tx-data [{:req/sales                user-lookup-ref
                   :req/add-customer-list    add-list
                   :req/remove-customer-list remove-list
-                  :req/status               :req.status/open}]]
+                  :req/status               :req.status/open
+                  :req/stamp                0}]]
     (log/info "at new-request, tx-data as" tx-data)
     (do @(d/transact conn tx-data)
         :cmd-success)))
@@ -53,15 +66,17 @@
 (s/defschema newReqSchema {:add-list #{s/Int}
                            :remove-list #{s/Int}})
 
-;;appReqSchema is for approve and reject
-;;  `req-status` string need to be in this schema to do concurrency control
-;;  Reasonable `req-status` string may be "req.status/open", "req.status/modified"
-(s/defschema appReqSchema {:req-id s/Int
-                           :req-status s/Str})
+;; opReqSchema is for approve/reject/modify
+;; :stamp is to make sure that even two admin operate on the same request
+;; the request's approval/rejection/modification will be logically strict.
+(s/defschema opReqSchema {:id s/Int
+                          :stamp s/Int
+                          (s/optional-key :add-list) #{s/Int}
+                          (s/optional-key :remove-list) #{s/Int}})
 
 (s/defschema CommandSchema {(s/required-key :c) s/Str
                             (s/optional-key :req) newReqSchema
-                            (s/optional-key :req-app) appReqSchema})
+                            (s/optional-key :req-op) opReqSchema})
 
 (defn command
   " Input:

@@ -23,6 +23,10 @@
   (let [norms-map (c/read-resource fname)]
     (c/ensure-conforms conn norms-map (keys norms-map))))
 
+(defn setup-db-fn []
+  (let [data-fn-tx (c/read-resource "data-functions.edn")]
+    @(d/transact conn data-fn-tx)))
+
 (defn show-app-schema [conn]
   (let [system-ns #{"db" "db.type" "db.install" "db.part"
                     "db.lang" "fressian" "db.unique" "db.excise"
@@ -178,15 +182,17 @@
         erase-namespace #(keyword (name %))
         t (:req/time req)
         eid (:db/id req)
+        stamp (:req/stamp req)
         sales (:req/sales req)
         status-enum (get-in req [:req/status :db/id])]
     (reduce (fn [acc [k v]]
               (into acc {(erase-namespace k) (mapv #(marshal-customer db  %) v)}))
             {:allotime t
              :eid eid
+             :stamp stamp
              :sales (marshal-sales db sales)
              :status (d/ident db status-enum)}
-            (dissoc req :req/time :db/id :req/sales :req/status))))
+            (dissoc req :req/time :db/id :req/stamp :req/sales :req/status))))
 
 (defn marshal-left-joined-customer
   "Input is  database and `{LJ-CUSTOMER-MAP}`"
@@ -321,6 +327,7 @@
         txInsts (map #(request-open-time-by-eid hdb %) aq-eids)
         join-req-fn #(d/pull db '[:db/id
                                   :req/status
+                                  :req/stamp
                                   {:req/add-customer-list [*]}
                                   {:req/remove-customer-list [*]}
                                   {:req/sales [:user/name

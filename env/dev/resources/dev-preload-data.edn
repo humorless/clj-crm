@@ -225,13 +225,15 @@
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref for existing entity
     :req/add-customer-list #{"a-1234" "d-2345"} ;; tempid for newly created entity
     :req/remove-customer-list #{"a-3214"}
-    :req/status :req.status/open}
+    :req/status :req.status/open
+    :req/stamp 0}
 
    {:db/id "firstreq"
     :req/sales [:user/email "userA1@example.com"] ;; lookup ref
     :req/add-customer-list #{"a-3214" "a-6789"} ;; tempid
     :req/remove-customer-list #{}
-    :req/status :req.status/approved}
+    :req/status :req.status/approved
+    :req/stamp 0}
 
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer "a-3214"
@@ -249,19 +251,22 @@
   [{:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity
     :req/add-customer-list #{}
     :req/remove-customer-list #{[:customer/rp-id "d-9876"]}
-    :req/status :req.status/open}]
+    :req/status :req.status/open
+    :req/stamp 0}]
    ]}
 ;; data3 installs certain fake request data into Datomic for testing purpose
 :clj-crm/data3 {:txes [[
    {:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity
     :req/add-customer-list #{[:customer/rp-id "a-3214"]} ;; lookup ref for existing entity
     :req/remove-customer-list #{}
-    :req/status :req.status/open}
+    :req/status :req.status/open
+    :req/stamp 0}
   ]]}
 :clj-crm/data4 {:txes [[
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref for existing entity
     :req/add-customer-list #{[:customer/rp-id "d-000000004"]} ;; lookup ref for existing entity
     :req/remove-customer-list #{}
-    :req/status :req.status/open}
+    :req/status :req.status/open
+    :req/stamp 0}
   ]]}
 }

@@ -1,0 +1,9 @@
+[
+  {:db/id #db/id [:db.part/user]
+  :db/ident :inc
+  :db/doc "Data function that increments value of attribute a by amount."
+  :db/fn #db/fn {:lang "clojure"
+                 :params [db e a amount]
+                 :code [[:db/add e a
+                         (-> (d/entity db e) a (+ amount))]]}} 
+]

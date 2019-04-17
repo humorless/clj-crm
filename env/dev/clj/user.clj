@@ -3,7 +3,7 @@
             [clojure.spec.alpha :as s]
             [expound.alpha :as expound]
             [clojure.tools.logging :as log]
-            [clj-crm.db.core :refer [setup-app-db]]
+            [clj-crm.db.core :refer [setup-app-db setup-db-fn]]
             [clj-crm.etl.core :refer [init-etl]]
             [mount.core :as mount]
             [clj-crm.figwheel :refer [start-fw stop-fw cljs]]
@@ -18,6 +18,7 @@
   (log/info "prepare to install db schema")
   (setup-app-db "schema.edn")
   (setup-app-db "dev-preload-data.edn")
+  (setup-db-fn)
   (let [f (init-etl)]
     (reset! cancel-etl-f f)))
 

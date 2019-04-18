@@ -52,11 +52,13 @@
 (defn query-db-fn
   "Given db-fn-name, ex: :fn/replace-to-many
    Return the db function, which can be tested at REPL"
-  [db-fn-name]
+  [db db-fn-name]
   (d/q '[:find ?f .
+         :in $ ?name
          :where
-         [?e :db/ident db-fn-name]
-         [?e :db/fn ?f]] (d/db conn)))
+         [?e :db/ident ?name]
+         [?e :db/fn ?f]]
+       db db-fn-name))
 
 (defn only
   "Return the only item from a query result"

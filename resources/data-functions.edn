@@ -12,7 +12,10 @@
   :db/doc "Given an entity e, a to-many attribute, and a list of new values, yields a transaction that replaces the old values by new ones"
   :db/fn #db/fn {:lang "clojure"
                  :params [db eid attr new-vals]
-                 :code (let [old-vals (d/pull db '[attr] eid)
+                 :code (let [old-vals (d/q '[:find [?t ...]
+                                             :in $ ?to-many-attr ?e
+                                             :where [?e ?to-many-attr ?t]]
+                                           db attr eid)
                              to-remove (remove (set (seq new-vals)) old-vals)]
                          (concat
                            (for [rv to-remove] [:db/retract eid attr rv])

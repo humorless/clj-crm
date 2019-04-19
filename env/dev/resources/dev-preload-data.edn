@@ -257,7 +257,7 @@
 ;; data3 installs certain fake request data into Datomic for testing purpose
 :clj-crm/data3 {:txes [[
    {:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity
-    :req/add-customer-list #{[:customer/rp-id "a-3214"]} ;; lookup ref for existing entity
+    :req/add-customer-list #{[:customer/rp-id "d-000000002"]} ;; lookup ref for existing entity
     :req/remove-customer-list #{}
     :req/status :req.status/open
     :req/stamp 0}

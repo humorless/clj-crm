@@ -23,6 +23,9 @@
   (let [norms-map (c/read-resource fname)]
     (c/ensure-conforms conn norms-map (keys norms-map))))
 
+;; Given that every db-fn entity has :db/ident
+;; The (setup-db-fn) has `upsert` semantic, which means that
+;; if we modify a db-fn :xxx and (setup-db-fn), and the :xxx will be updated.
 (defn setup-db-fn []
   (let [data-fn-tx (c/read-resource "data-functions.edn")]
     @(d/transact conn data-fn-tx)))

@@ -175,16 +175,37 @@
       {:name sname
        :team tname})))
 
+(defn- marshal-field-name
+  "if the field-name is :db/id, transform it to :eid
+   else remove the namespace of the field-name"
+  [field-name]
+  (if (= field-name :db/id)
+    :eid
+    (keyword (name field-name))))
+
+(defn recur-marshal
+  "recursively marshal out the {HashMap} of data"
+  [db m]
+  (cond
+    (string? m) m
+    (number? m) m
+    (= (class m) java.util.Date) m ;; for #inst
+    (vector? m) (mapv #(recur-marshal db %) m) ;; for vector
+    (and (= (class m) clojure.lang.PersistentArrayMap) (= (count m) 1)) (d/ident db (:db/id m)) ;; for enumeration
+    :else (reduce (fn [acc [k v]]
+                    (into acc {(marshal-field-name k) (recur-marshal db v)}))
+                  {} m)))
+
 (defn marshal-request
   "for input's field, remove the namespace of keyword
    Input:
 
-   {:req/add-customer-list    [{CUSTOMER-MAP} ...]
-    :req/remove-customer-list [{CUSTOMER-MAP} ...]
+   {:req/add-customer-items    [{CUSTOMER-MAP} ...]
+    :req/remove-customer-items [{CUSTOMER-MAP} ...]
     :req/time #inst ...}
 
-   {:req/add-customer-list    [{CUSTOMER-MAP} ...]
-    :req/remove-customer-list [{CUSTOMER-MAP} ...]
+   {:req/add-customer-items   [{CUSTOMER-MAP} ...]
+    :req/remove-customer-items [{CUSTOMER-MAP} ...]
     :req/time #inst
     :req/status ...
     :db/id      ...
@@ -297,8 +318,8 @@
              db status)
         (map (fn [[req-eid inst]] [(d/entity db req-eid) inst]))))
 
-;; (request-open-time-by-eid (d/history (d/db conn)) 17592186045481))
-(defn- request-open-time-by-eid
+;; (r-eid->request-open-time (d/history (d/db conn)) 17592186045481))
+(defn r-eid->request-open-time
   "
   input is:
   hdb -> historyDB of the database,
@@ -310,13 +331,14 @@
   "
   [hdb eid]
   (d/q '[:find ?inst .
-         :in $ ?v
+         :in $ ?e
          :where
-         [?v :req/status :req.status/open ?tx true]
+         [?e :req/status :req.status/open ?tx true]
          [?tx :db/txInstant ?inst]]
        hdb eid))
 
-(defn- active-request-eids
+;; (active-request-eids [[45 :req/status :req.status/modified] [46 :req/status :req.status/open] [47 :req/status :req.status/rejected
+(defn active-request-eids
   "Output is `(req-eid ...)`"
   [db]
   (let [active-status [:req.status/open :req.status/modified]]
@@ -326,24 +348,35 @@
            [?e :req/status ?status]]
          db active-status)))
 
+(defn r-eid->req
+  "Transform request eid -> {HashMap}"
+  [db eid]
+  (d/pull db '[:db/id
+               :req/status
+               :req/stamp
+               {:req/add-customer-items [{:customerItem/customer [*]} *]}
+               {:req/remove-customer-items [{:customerItem/customer [*]} *]}
+               {:req/sales [:user/name
+                            {:user/team [*]}]}] eid))
+;; deprecated functions
 (defn get-active-requests
   "Output is `({REQ} ...)` or `()`
 
   {REQ} is of the form:
-  {:req/add-customer-list    [{CUSTOMER-MAP} ...]
-   :req/remove-customer-list [{CUSTOMER-MAP} ...]
+  {:req/add-customer-items    [{CUSTOMER-MAP} ...]
+   :req/remove-customer-items [{CUSTOMER-MAP} ...]
    :req/status
    :req/sales ...
    :req/time ...}"
   [db]
   (let [hdb (d/history db)
         aq-eids (active-request-eids db)
-        txInsts (map #(request-open-time-by-eid hdb %) aq-eids)
+        txInsts (map #(r-eid->request-open-time hdb %) aq-eids)
         join-req-fn #(d/pull db '[:db/id
                                   :req/status
                                   :req/stamp
-                                  {:req/add-customer-list [*]}
-                                  {:req/remove-customer-list [*]}
+                                  {:req/add-customer-items [*]}
+                                  {:req/remove-customer-items [*]}
                                   {:req/sales [:user/name
                                                {:user/team [*]}]}] %)
         aq-maps (map join-req-fn aq-eids)]
@@ -432,7 +465,7 @@
   [^long e stamp]
   (let [db (d/db conn)
         ;; prepare eids, txInst
-        txInst (request-open-time-by-eid (d/history db) e)
+        txInst (r-eid->request-open-time (d/history db) e)
         [sid add-list remove-list] (request-content-by-eid db e)
         ;; prepare tx-add-allo, tx-retract-allo
         tx-add-allo (add-allo-table sid add-list txInst)

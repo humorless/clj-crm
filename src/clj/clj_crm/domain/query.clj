@@ -22,8 +22,13 @@
 (defmethod dispatch-q :all-requests
   [user-q]
   (log/info "at all-requests, user-q as" user-q)
-  (let [query-result (dcore/get-active-requests (d/db conn))
-        data (mapv dcore/marshal-request query-result)]
+  (let [db (d/db conn)
+        eids (dcore/active-request-eids db)
+        req-maps (map #(dcore/r-eid->req db %) eids)
+        hdb (d/history db)
+        txInsts (map #(dcore/r-eid->request-open-time hdb %) eids)
+        query-result (map #(assoc %1 :req/time %2) req-maps txInsts)
+        data (mapv #(dcore/recur-marshal db %) query-result)]
     data))
 
 (defmethod dispatch-q :my-requests
@@ -100,10 +105,7 @@
         data (map un-join-customer-inventory tax-customer-pairs)]
     data))
 
-(s/defschema PageSchema {:page-size s/Int
-                         :page-index s/Int})
-(s/defschema QuerySchema {(s/required-key :q) s/Str
-                          (s/optional-key :pagination) PageSchema})
+(s/defschema QuerySchema {(s/required-key :q) s/Str})
 
 (defn query
   " Input:

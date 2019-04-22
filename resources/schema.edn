@@ -69,6 +69,7 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db/index true
+    :db/unique :db.unique/identity
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
@@ -103,24 +104,12 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "Customer inventory type: currently only account and display"
-    :db/ident :customer/inventory-type
-    :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one
-    :db/id #db/id [:db.part/db]
-    :db.install/_attribute :db.part/db}
-
-   {:db/doc "Customer replacement ID. The example of rp-id is a-1234gh or d-1234gh. The account type will begins with a-. The display type will begins with d-"
-    :db/ident :customer/rp-id
+   {:db/doc "Enterprise group name"
+    :db/ident :customer/group-name
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
-    :db/unique :db.unique/identity
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
-
-   ;; enumeration for customer/inventory-type
-   [:db/add #db/id [:db.part/user] :db/ident :customer.inv/account]
-   [:db/add #db/id [:db.part/user] :db/ident :customer.inv/display]
 
    ;; enumeration for customer/business-type
    [:db/add #db/id [:db.part/user] :db/ident :customer.bus/arts]
@@ -145,23 +134,27 @@
    [:db/add #db/id [:db.part/user] :db/ident :customer.bus/unknown]
 ]]}
 ;; norm4 installs request table schema into Datomic
-:clj-crm/norm4 {:txes [[
-   {:db/doc "reference points to user. The user should be sales"
+:clj-crm/norm4 {:txes [
+  [{:db/doc "reference points to user. The user should be sales"
     :db/ident :req/sales
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "list of reference points to customer."
-    :db/ident :req/add-customer-list
+   {:db/doc "list of reference tuple points to (customer, product)."
+    :db/ident :req/add-customer-items
+    :db/isComponent true
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "list of reference points to customer."
-    :db/ident :req/remove-customer-list
+   ;; :customer-item/product   ref type
+   ;; :customer-item/customer  ref type
+   {:db/doc "list of reference tuple points to (customer, product)."
+    :db/ident :req/remove-customer-items
+    :db/isComponent true
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many
     :db/id #db/id [:db.part/db]
@@ -185,8 +178,32 @@
    [:db/add #db/id [:db.part/user] :db/ident :req.status/open]
    [:db/add #db/id [:db.part/user] :db/ident :req.status/modified]
    [:db/add #db/id [:db.part/user] :db/ident :req.status/approved]
-   [:db/add #db/id [:db.part/user] :db/ident :req.status/rejected]
-]]}
+   [:db/add #db/id [:db.part/user] :db/ident :req.status/rejected]]
+
+   [{:db/doc "Currently, the only schema of product entity."
+     :db/ident :product/type
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db/id #db/id [:db.part/db]
+     :db.install/_attribute :db.part/db}
+    ;; enumeration for product.type
+    [:db/add #db/id [:db.part/user] :db/ident :product.type/account]
+    [:db/add #db/id [:db.part/user] :db/ident :product.type/display]]
+
+   [{:db/doc "customerItem table is a sub component of request"
+     :db/ident :customerItem/product
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db/id #db/id [:db.part/db]
+     :db.install/_attribute :db.part/db}
+
+    {:db/doc "customerItem table is a sub component of request"
+     :db/ident :customerItem/customer
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db/id #db/id [:db.part/db]
+     :db.install/_attribute :db.part/db}]
+]}
 ;; norm5 installs allocation table schema into Datomic
 :clj-crm/norm5 {:txes [[
    {:db/doc "reference points to user. The user should be sales"
@@ -196,8 +213,15 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "reference points to customer"
+   {:db/doc "reference points to customer table"
     :db/ident :allo/customer
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "reference points to product table"
+    :db/ident :allo/product
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]

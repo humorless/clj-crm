@@ -122,39 +122,6 @@
                    :where [?e ?attr ?val]]
                  db attr val)))
 
-(defn marshal-customer
-  "for input's field, remove the namespace of keyword, replace :db/id as :eid
-   Also, for the enumeration like :customer/business-type and :customer/inventory-type, do the necessary marshalling
-   Input:
-
-   {CUSTOMER-MAP}"
-  [db customer]
-  (let [erase-namespace #(keyword (name %))
-        eid (:db/id customer)
-        c (dissoc customer :db/id)]
-    (reduce (fn [acc [k v]]
-              (if-let [enum (:db/id v)]
-                (into acc {(erase-namespace k) (d/ident db enum)}) ;; handle the :business-type/:inventory-type
-                (into acc {(erase-namespace k) v})))
-            {:eid eid}
-            c)))
-
-(defn marshal-sales
-  "Input:
-   {:user/name \"sales name A1\"
-    :user/team {:db/id     ...
-                :team/name ...} }
-
-   Outupt:
-   {:name AAA
-    :team BBB }"
-  [db sales]
-  (let [sname (:user/name sales)
-        tname (get-in sales [:user/team :team/name])]
-    (when sname
-      {:name sname
-       :team tname})))
-
 (defn- marshal-field-name
   "if the field-name is :db/id, transform it to :eid
    else remove the namespace of the field-name"
@@ -216,37 +183,6 @@
                                  :allo/time
                                  :allo/product]}
                *] c-eid))
-
-(defn get-open-requests-by-user
-  "get the open request currently submitted by user -- sales' own request
-   e.g.:
-   (map d/touch (get-open-requests-by-user (d/db conn) [:user/email \"userA1@example.com\"]))
-
-   Output is `(entity ...)`
-   () or (#:db{:id 17592186045470} ...) "
-  [db user]
-  (->> (d/q '[:find [?e ...]
-              :in $ ?u
-              :where
-              [?e :req/sales ?u]
-              [?e :req/status :req.status/open]]
-            db user)
-       (map #(d/entity db %))))
-
-(defn get-requests-by-status
-  "
-  get the ([request-entity, #inst] ... ) or () when there is no requests
-  example usage: (get-requests-by-status (d/db conn) :req.status/open)
-  Note: This query will bring request's created time along with request entity.
-  "
-  [db status]
-  (->>  (d/q '[:find ?e ?inst
-               :in $ ?v
-               :where
-               [?e :req/status ?v ?tx true]
-               [?tx :db/txInstant ?inst]]
-             db status)
-        (map (fn [[req-eid inst]] [(d/entity db req-eid) inst]))))
 
 ;; (r-eid->request-open-time (d/history (d/db conn)) 17592186045481))
 (defn r-eid->request-open-time

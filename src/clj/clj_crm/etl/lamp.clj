@@ -74,17 +74,9 @@
     (assoc customer-data :customer/business-type b-type)))
 
 (defn- get-customers-from-db [db]
-  (let [eids (dcore/get-customer-eids db)
+  (let [eids (dcore/customer-eids db)
         query-result (map #(c-eid->customer db %) eids)]
     (set query-result)))
-
-(defn- rel->tx-customers [c-rel]
-  (let [cust->two-products (fn [m]
-                             [(assoc m :customer/inventory-type :customer.inv/account
-                                     :customer/rp-id (str "a-" (:customer/id m)))
-                              (assoc m :customer/inventory-type :customer.inv/display
-                                     :customer/rp-id (str "d-" (:customer/id m)))])]
-    (vec (mapcat cust->two-products c-rel))))
 
 (defn- get-customers-from-excel
   "Read the excel file, and retrieve the customers data
@@ -119,8 +111,7 @@
   (log/info "etl.lamp sync-data triggered!")
   (let [l-customer-rel (get-customers-from-excel url)
         d-customer-rel (get-customers-from-db (d/db conn))
-        new-customer-rels (cs/difference l-customer-rel d-customer-rel)
-        tx-data (rel->tx-customers new-customer-rels)]
+        tx-data (cs/difference l-customer-rel d-customer-rel)]
     (do (log/info "etl.lamp tx-data write into db, length: " (count tx-data))
         (log/info "etl.lamp first item of tx-data" (first tx-data))
         (when (seq tx-data)

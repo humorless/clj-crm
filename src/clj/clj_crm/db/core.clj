@@ -122,26 +122,6 @@
                    :where [?e ?attr ?val]]
                  db attr val)))
 
-(defn get-customers-of-open-requests-by-user
-  "For sales'own request, pull out its add-customer-list and remove-customer-list
-
-  Output is `({REQ} ...)` or `()`
-  {REQ} is of the form:
-  {:req/add-customer-list    [{CUSTOMER-MAP} ...]
-   :req/remove-customer-list [{CUSTOMER-MAP} ...]
-   :req/time ...}"
-  [db user]
-  (let [req-get #(d/pull db '[{:req/add-customer-list [*]} {:req/remove-customer-list [*]}] %)]
-    (->> (d/q '[:find ?e ?inst
-                :in $ ?u
-                :where
-                [?e :req/sales ?u]
-                [?e :req/status :req.status/open ?tx true]
-                [?tx :db/txInstant ?inst]]
-              db user)
-         (map (fn [[req-eid inst]]
-                (assoc (req-get req-eid) :req/time inst))))))
-
 (defn marshal-customer
   "for input's field, remove the namespace of keyword, replace :db/id as :eid
    Also, for the enumeration like :customer/business-type and :customer/inventory-type, do the necessary marshalling
@@ -196,59 +176,8 @@
                     (into acc {(marshal-field-name k) (recur-marshal db v)}))
                   {} m)))
 
-(defn marshal-request
-  "for input's field, remove the namespace of keyword
-   Input:
-
-   {:req/add-customer-items    [{CUSTOMER-MAP} ...]
-    :req/remove-customer-items [{CUSTOMER-MAP} ...]
-    :req/time #inst ...}
-
-   {:req/add-customer-items   [{CUSTOMER-MAP} ...]
-    :req/remove-customer-items [{CUSTOMER-MAP} ...]
-    :req/time #inst
-    :req/status ...
-    :db/id      ...
-    :req/sales  ... }
-
-   There may be two forms of request"
-  [req]
-  (let [db (d/db conn)
-        erase-namespace #(keyword (name %))
-        t (:req/time req)
-        eid (:db/id req)
-        stamp (:req/stamp req)
-        sales (:req/sales req)
-        status-enum (get-in req [:req/status :db/id])]
-    (reduce (fn [acc [k v]]
-              (into acc {(erase-namespace k) (mapv #(marshal-customer db  %) v)}))
-            {:allotime t
-             :eid eid
-             :stamp stamp
-             :sales (marshal-sales db sales)
-             :status (d/ident db status-enum)}
-            (dissoc req :req/time :db/id :req/stamp :req/sales :req/status))))
-
-(defn marshal-left-joined-customer
-  "Input is  database and `{LJ-CUSTOMER-MAP}`"
-  [db lj-c]
-  (let [sid  (get-in lj-c [:allo/_customer 0 :allo/sales :db/id])
-        sname (get-in lj-c [:allo/_customer 0 :allo/sales :user/name])
-        team-id (get-in lj-c [:allo/_customer 0 :allo/sales :user/team :db/id])
-        team-name (get-in lj-c [:allo/_customer 0 :allo/sales :user/team :team/name])
-        atime (get-in lj-c [:allo/_customer 0 :allo/time])
-        c (dissoc lj-c :allo/_customer)
-        c-with-sales (assoc c :sales {:eid sid
-                                      :name sname
-                                      :team {:name team-name
-                                             :eid team-id}
-                                      :allotime atime})]
-    (if sid
-      (marshal-customer db c-with-sales)
-      (marshal-customer db c))))
-
-(defn get-customer-eids
-  "get all the customer eids"
+(defn customer-eids
+  "all the customer eids"
   [db]
   (d/q '[:find [?c ...]
          :in $
@@ -256,7 +185,7 @@
          [?c :customer/id]]
        db))
 
-(defn get-customer-eids-by-user
+(defn user-customer-eids
   "get the customers list currently allocated by user -- sales' own customer list"
   [db user]
   (d/q '[:find [?c ...]
@@ -266,7 +195,7 @@
          [?e :allo/customer ?c]]
        db user))
 
-(defn c-eid->cust+sales
+(defn c-eid->cust+sales+prod
   "Transform customer eid -> {HashMap} with customer fields and sales fields
 
    the {HashMap} is in the form of
@@ -284,7 +213,8 @@
   (d/pull db '[{:allo/_customer [{:allo/sales [:user/name
                                                :db/id
                                                {:user/team [:team/name :db/id]}]}
-                                 :allo/time]}
+                                 :allo/time
+                                 :allo/product]}
                *] c-eid))
 
 (defn get-open-requests-by-user
@@ -348,6 +278,17 @@
            [?e :req/status ?status]]
          db active-status)))
 
+(defn user-active-request-eids
+  "Output is `(req-eid ...)`"
+  [db user]
+  (let [active-status [:req.status/open :req.status/modified]]
+    (d/q '[:find [?e ...]
+           :in $ ?u  [?status ...]
+           :where
+           [?e :req/sales ?u]
+           [?e :req/status ?status]]
+         db user active-status)))
+
 (defn r-eid->req
   "Transform request eid -> {HashMap}"
   [db eid]
@@ -358,29 +299,6 @@
                {:req/remove-customer-items [{:customerItem/customer [*]} *]}
                {:req/sales [:user/name
                             {:user/team [*]}]}] eid))
-;; deprecated functions
-(defn get-active-requests
-  "Output is `({REQ} ...)` or `()`
-
-  {REQ} is of the form:
-  {:req/add-customer-items    [{CUSTOMER-MAP} ...]
-   :req/remove-customer-items [{CUSTOMER-MAP} ...]
-   :req/status
-   :req/sales ...
-   :req/time ...}"
-  [db]
-  (let [hdb (d/history db)
-        aq-eids (active-request-eids db)
-        txInsts (map #(r-eid->request-open-time hdb %) aq-eids)
-        join-req-fn #(d/pull db '[:db/id
-                                  :req/status
-                                  :req/stamp
-                                  {:req/add-customer-items [*]}
-                                  {:req/remove-customer-items [*]}
-                                  {:req/sales [:user/name
-                                               {:user/team [*]}]}] %)
-        aq-maps (map join-req-fn aq-eids)]
-    (map #(assoc %1 :req/time %2) aq-maps txInsts)))
 
 (defn marshal-entity
   "Input: data of class 'datomic.query.EntityMap'

@@ -203,7 +203,7 @@
   [{:allo/sales [:user/email "userA1@example.com"]
     :allo/customer [:customer/id "CM0003"]
     :allo/product :product.type/account
-    :allo/time #inst "2014-01-28"}
+    :allo/time #inst "2014-01-28T09:00:00Z"}
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer [:customer/id "CM0003"]
     :allo/product :product.type/display

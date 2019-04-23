@@ -269,47 +269,57 @@
   [[:db.fn/cas e :req/stamp stamp (inc stamp)]
    [:db/add e :req/status :req.status/rejected]])
 
-(defn- add-allo-table
+(defn- tx-add-allo-table
   "add the allo table by vector of map
 
    Output is tx-data"
-  [sid customer-list txInst]
+  [db sid customer-items txInst]
   (let [sids (repeat sid)
-        txInsts (repeat txInst)]
-    (mapv (fn [s c t]
+        txInsts (repeat txInst)
+        c-p-rels (d/q '[:find [?c ?p]
+                        :in $ [?ci ...]
+                        :where
+                        [?ci :customerItem/customer ?c]
+                        [?ci :customerItem/product ?p]]
+                      db customer-items)]
+    (mapv (fn [s c-p-tuple t]
             {:allo/sales s
-             :allo/customer c
+             :allo/customer (first c-p-tuple)
+             :allo/product  (second c-p-tuple)
              :allo/time t})
           sids
-          customer-list
+          c-p-rels
           txInsts)))
 
-(defn- retract-allo-table
+(defn- tx-retract-allo-table
   "retract the allo table by :db.fn/retractEntity
    d/q -> calcaute the entity id as vector
 
    Output is tx-data"
-  [db sid customer-list]
+  [db sid customer-items]
   (->> (d/q '[:find [?e ...]
-              :in $ ?sid [?cid ...]
+              :in $ ?sid [?ci ...]
               :where
               [?e :allo/sales ?sid]
-              [?e :allo/customer ?cid]]
-            db sid customer-list)
+              [?e :allo/customer ?c]
+              [?e :allo/product ?p]
+              [?ci :customerItem/customer ?c]
+              [?ci :customerItem/product ?p]]
+            db sid customer-items)
        (mapv (fn [x] [:db.fn/retractEntity x]))))
 
-(defn- request-content-by-eid
+(defn- r-eid->request-content
   "input is:
    eid -> eid of a request.
 
-   outuput is: [sid add-customer-list remove-customer-list]
-   add-customer-list     - [eid ...]
-   remove-customer-list  - [eid ...]
+   outuput is: [sid add-customer-items remove-customer-items]
+   add-customer-items     - [eid ...]
+   remove-customer-items  - [eid ...]
   "
   [db eid]
   [(d/q '[:find ?s .        :in $ ?e :where [?e :req/sales ?s]] db eid)
-   (d/q '[:find [?list ...] :in $ ?e :where [?e :req/add-customer-list ?list]] db eid)
-   (d/q '[:find [?list ...] :in $ ?e :where [?e :req/remove-customer-list ?list]] db eid)])
+   (d/q '[:find [?ci ...] :in $ ?e :where [?e :req/add-customer-items ?ci]] db eid)
+   (d/q '[:find [?ci ...] :in $ ?e :where [?e :req/remove-customer-items ?ci]] db eid)])
 
 ;; (tx-approve-request 17592186045489 0))
 (defn tx-approve-request
@@ -320,14 +330,14 @@
   (let [db (d/db conn)
         ;; prepare eids, txInst
         txInst (r-eid->request-open-time (d/history db) e)
-        [sid add-list remove-list] (request-content-by-eid db e)
+        [sid add-list remove-list] (r-eid->request-content db e)
         ;; prepare tx-add-allo, tx-retract-allo
-        tx-add-allo (add-allo-table sid add-list txInst)
-        tx-retract-allo (retract-allo-table db sid remove-list)
-        ;; prepare tx-app-req
-        tx-app-req [[:db.fn/cas e :req/stamp stamp (inc stamp)]
-                    [:db/add e :req/status :req.status/approved]]
-        tx-data (into [] (concat tx-add-allo tx-retract-allo tx-app-req))]
+        tx-add-allo (tx-add-allo-table db sid add-list txInst)
+        tx-retract-allo (tx-retract-allo-table db sid remove-list)
+        ;; prepare tx-req-status
+        tx-req-status [[:db.fn/cas e :req/stamp stamp (inc stamp)]
+                       [:db/add e :req/status :req.status/approved]]
+        tx-data (into [] (concat tx-add-allo tx-retract-allo tx-req-status))]
     tx-data))
 
 ;; 要設法測完 :

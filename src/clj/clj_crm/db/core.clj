@@ -255,11 +255,11 @@
             (seq c))))
 
 (defn tx-modify-request
-  "for request e, modify its add-list and remove-list
-   Note that: add-list and remove-list can be nil"
-  [^long e stamp add-list remove-list]
-  [[:fn/replace-to-many e :req/add-customer-list add-list]
-   [:fn/replace-to-many e :req/remove-customer-list remove-list]
+  "for request e, modify its add-customer-items and remove-customer-items
+   Note that: add-items and remove-items can be nil"
+  [^long e stamp add-items remove-items]
+  [[:fn/replace-to-many e :req/add-customer-items add-items]
+   [:fn/replace-to-many e :req/remove-customer-items remove-items]
    [:db.fn/cas e :req/stamp stamp (inc stamp)]
    [:db/add e :req/status :req.status/modified]])
 

@@ -74,8 +74,8 @@
 ;; the request's approval/rejection/modification will be logically strict.
 (s/defschema opReqSchema {:id s/Int
                           :stamp s/Int
-                          (s/optional-key :add-list) #{customerItemSchema}
-                          (s/optional-key :remove-list) #{customerItemSchema}})
+                          (s/optional-key :add-list) #{s/Int}
+                          (s/optional-key :remove-list) #{s/Int}})
 
 (s/defschema CommandSchema {(s/required-key :c) s/Str
                             (s/optional-key :req) newReqSchema

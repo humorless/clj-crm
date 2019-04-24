@@ -99,7 +99,6 @@
          (map #(dissoc % :registrationStatus))
          (map #(assoc % :customer/business-type (->business-type %)))
          set)))
-
 ;;;;; public API ;;;;;
 
 (defn sync-data
@@ -111,7 +110,7 @@
   (log/info "etl.lamp sync-data triggered!")
   (let [l-customer-rel (get-customers-from-excel url)
         d-customer-rel (get-customers-from-db (d/db conn))
-        tx-data (cs/difference l-customer-rel d-customer-rel)]
+        tx-data (vec (cs/difference l-customer-rel d-customer-rel))]
     (do (log/info "etl.lamp tx-data write into db, length: " (count tx-data))
         (log/info "etl.lamp first item of tx-data" (first tx-data))
         (when (seq tx-data)

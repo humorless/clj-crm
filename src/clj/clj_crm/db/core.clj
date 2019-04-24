@@ -276,7 +276,7 @@
   [db sid customer-items txInst]
   (let [sids (repeat sid)
         txInsts (repeat txInst)
-        c-p-rels (d/q '[:find [?c ?p]
+        c-p-rels (d/q '[:find ?c ?p
                         :in $ [?ci ...]
                         :where
                         [?ci :customerItem/customer ?c]

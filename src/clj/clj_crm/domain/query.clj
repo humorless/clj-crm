@@ -7,11 +7,11 @@
 (defn query-command-switch
   "Input:
    user-q is the form: {:user \"userA1@example.com\"
-                         :q   \"all-customers\"}
+                         :q   :all-customers}
    Output:
    :all-customers"
   [user-q]
-  (keyword (:q user-q)))
+  (:q user-q))
 
 ;; example usage: (dispatch-q {:user "userA1@example.com" :q "all-customers"}))
 (defmulti dispatch-q query-command-switch)
@@ -59,7 +59,7 @@
   (comment
     "To test this method:
 
-    (dispatch-q {:q \"my-customer-report\"
+    (dispatch-q {:q :my-customer-report
                  :user \"userA1@example.com\"})")
   (log/info "at my-customer-report, user-q as" user-q)
   (let [db (d/db conn)
@@ -70,7 +70,7 @@
         data (mapv #(dcore/recur-marshal db %) query-result)]
     data))
 
-(s/defschema QuerySchema {(s/required-key :q) s/Str})
+(s/defschema QuerySchema {(s/required-key :q) s/Keyword})
 
 (defn query
   " Input:

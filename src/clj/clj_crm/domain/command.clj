@@ -7,11 +7,11 @@
 (defn switch
   "Input:
    user-c is the form: {:user \"userA1@example.com\"
-                         :c   \"new-request\"}
+                         :c   :new-request}
    Output:
    :new-requests"
   [user-c]
-  (keyword (:c user-c)))
+  (:c user-c))
 
 (defmulti dispatch-c switch)
 
@@ -64,7 +64,7 @@
         :cmd-success)))
 
 (s/defschema customerItemSchema {:customerItem/customer s/Int
-                                 :customerItem/product  s/Str})
+                                 :customerItem/product  s/Keyword})
 
 (s/defschema newReqSchema {:add-list #{customerItemSchema}
                            :remove-list #{customerItemSchema}})
@@ -77,7 +77,7 @@
                           (s/optional-key :add-list) #{s/Int}
                           (s/optional-key :remove-list) #{s/Int}})
 
-(s/defschema CommandSchema {(s/required-key :c) s/Str
+(s/defschema CommandSchema {(s/required-key :c) s/Keyword
                             (s/optional-key :req) newReqSchema
                             (s/optional-key :req-op) opReqSchema})
 

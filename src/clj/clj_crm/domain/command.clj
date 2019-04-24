@@ -7,11 +7,11 @@
 (defn switch
   "Input:
    user-c is the form: {:user \"userA1@example.com\"
-                         :c   \"new-request\"}
+                         :c   :new-request}
    Output:
    :new-requests"
   [user-c]
-  (keyword (:c user-c)))
+  (:c user-c))
 
 (defmulti dispatch-c switch)
 
@@ -55,16 +55,19 @@
         add-list (get-in user-c [:req :add-list])
         remove-list (get-in user-c [:req :remove-list])
         tx-data [{:req/sales                user-lookup-ref
-                  :req/add-customer-list    add-list
-                  :req/remove-customer-list remove-list
+                  :req/add-customer-items    add-list
+                  :req/remove-customer-items remove-list
                   :req/status               :req.status/open
                   :req/stamp                0}]]
     (log/info "at new-request, tx-data as" tx-data)
     (do @(d/transact conn tx-data)
         :cmd-success)))
 
-(s/defschema newReqSchema {:add-list #{s/Int}
-                           :remove-list #{s/Int}})
+(s/defschema customerItemSchema {:customerItem/customer s/Int
+                                 :customerItem/product  s/Keyword})
+
+(s/defschema newReqSchema {:add-list #{customerItemSchema}
+                           :remove-list #{customerItemSchema}})
 
 ;; opReqSchema is for approve/reject/modify
 ;; :stamp is to make sure that even two admin operate on the same request
@@ -74,7 +77,7 @@
                           (s/optional-key :add-list) #{s/Int}
                           (s/optional-key :remove-list) #{s/Int}})
 
-(s/defschema CommandSchema {(s/required-key :c) s/Str
+(s/defschema CommandSchema {(s/required-key :c) s/Keyword
                             (s/optional-key :req) newReqSchema
                             (s/optional-key :req-op) opReqSchema})
 

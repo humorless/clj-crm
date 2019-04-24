@@ -122,112 +122,29 @@
                    :where [?e ?attr ?val]]
                  db attr val)))
 
-(defn get-customers-of-open-requests-by-user
-  "For sales'own request, pull out its add-customer-list and remove-customer-list
+(defn- marshal-field-name
+  "if the field-name is :db/id, transform it to :eid
+   else remove the namespace of the field-name"
+  [field-name]
+  (if (= field-name :db/id)
+    :eid
+    (keyword (name field-name))))
 
-  Output is `({REQ} ...)` or `()`
-  {REQ} is of the form:
-  {:req/add-customer-list    [{CUSTOMER-MAP} ...]
-   :req/remove-customer-list [{CUSTOMER-MAP} ...]
-   :req/time ...}"
-  [db user]
-  (let [req-get #(d/pull db '[{:req/add-customer-list [*]} {:req/remove-customer-list [*]}] %)]
-    (->> (d/q '[:find ?e ?inst
-                :in $ ?u
-                :where
-                [?e :req/sales ?u]
-                [?e :req/status :req.status/open ?tx true]
-                [?tx :db/txInstant ?inst]]
-              db user)
-         (map (fn [[req-eid inst]]
-                (assoc (req-get req-eid) :req/time inst))))))
+(defn recur-marshal
+  "recursively marshal out the {HashMap} of data"
+  [db m]
+  (cond
+    (string? m) m
+    (number? m) m
+    (= (class m) java.util.Date) m ;; for #inst
+    (vector? m) (mapv #(recur-marshal db %) m) ;; for vector
+    (and (= (class m) clojure.lang.PersistentArrayMap) (= (count m) 1)) (d/ident db (:db/id m)) ;; for enumeration
+    :else (reduce (fn [acc [k v]]
+                    (into acc {(marshal-field-name k) (recur-marshal db v)}))
+                  {} m)))
 
-(defn marshal-customer
-  "for input's field, remove the namespace of keyword, replace :db/id as :eid
-   Also, for the enumeration like :customer/business-type and :customer/inventory-type, do the necessary marshalling
-   Input:
-
-   {CUSTOMER-MAP}"
-  [db customer]
-  (let [erase-namespace #(keyword (name %))
-        eid (:db/id customer)
-        c (dissoc customer :db/id)]
-    (reduce (fn [acc [k v]]
-              (if-let [enum (:db/id v)]
-                (into acc {(erase-namespace k) (d/ident db enum)}) ;; handle the :business-type/:inventory-type
-                (into acc {(erase-namespace k) v})))
-            {:eid eid}
-            c)))
-
-(defn marshal-sales
-  "Input:
-   {:user/name \"sales name A1\"
-    :user/team {:db/id     ...
-                :team/name ...} }
-
-   Outupt:
-   {:name AAA
-    :team BBB }"
-  [db sales]
-  (let [sname (:user/name sales)
-        tname (get-in sales [:user/team :team/name])]
-    (when sname
-      {:name sname
-       :team tname})))
-
-(defn marshal-request
-  "for input's field, remove the namespace of keyword
-   Input:
-
-   {:req/add-customer-list    [{CUSTOMER-MAP} ...]
-    :req/remove-customer-list [{CUSTOMER-MAP} ...]
-    :req/time #inst ...}
-
-   {:req/add-customer-list    [{CUSTOMER-MAP} ...]
-    :req/remove-customer-list [{CUSTOMER-MAP} ...]
-    :req/time #inst
-    :req/status ...
-    :db/id      ...
-    :req/sales  ... }
-
-   There may be two forms of request"
-  [req]
-  (let [db (d/db conn)
-        erase-namespace #(keyword (name %))
-        t (:req/time req)
-        eid (:db/id req)
-        stamp (:req/stamp req)
-        sales (:req/sales req)
-        status-enum (get-in req [:req/status :db/id])]
-    (reduce (fn [acc [k v]]
-              (into acc {(erase-namespace k) (mapv #(marshal-customer db  %) v)}))
-            {:allotime t
-             :eid eid
-             :stamp stamp
-             :sales (marshal-sales db sales)
-             :status (d/ident db status-enum)}
-            (dissoc req :req/time :db/id :req/stamp :req/sales :req/status))))
-
-(defn marshal-left-joined-customer
-  "Input is  database and `{LJ-CUSTOMER-MAP}`"
-  [db lj-c]
-  (let [sid  (get-in lj-c [:allo/_customer 0 :allo/sales :db/id])
-        sname (get-in lj-c [:allo/_customer 0 :allo/sales :user/name])
-        team-id (get-in lj-c [:allo/_customer 0 :allo/sales :user/team :db/id])
-        team-name (get-in lj-c [:allo/_customer 0 :allo/sales :user/team :team/name])
-        atime (get-in lj-c [:allo/_customer 0 :allo/time])
-        c (dissoc lj-c :allo/_customer)
-        c-with-sales (assoc c :sales {:eid sid
-                                      :name sname
-                                      :team {:name team-name
-                                             :eid team-id}
-                                      :allotime atime})]
-    (if sid
-      (marshal-customer db c-with-sales)
-      (marshal-customer db c))))
-
-(defn get-customer-eids
-  "get all the customer eids"
+(defn customer-eids
+  "all the customer eids"
   [db]
   (d/q '[:find [?c ...]
          :in $
@@ -235,7 +152,7 @@
          [?c :customer/id]]
        db))
 
-(defn get-customer-eids-by-user
+(defn user-customer-eids
   "get the customers list currently allocated by user -- sales' own customer list"
   [db user]
   (d/q '[:find [?c ...]
@@ -245,7 +162,7 @@
          [?e :allo/customer ?c]]
        db user))
 
-(defn c-eid->cust+sales
+(defn c-eid->cust+sales+prod
   "Transform customer eid -> {HashMap} with customer fields and sales fields
 
    the {HashMap} is in the form of
@@ -263,42 +180,12 @@
   (d/pull db '[{:allo/_customer [{:allo/sales [:user/name
                                                :db/id
                                                {:user/team [:team/name :db/id]}]}
-                                 :allo/time]}
+                                 :allo/time
+                                 :allo/product]}
                *] c-eid))
 
-(defn get-open-requests-by-user
-  "get the open request currently submitted by user -- sales' own request
-   e.g.:
-   (map d/touch (get-open-requests-by-user (d/db conn) [:user/email \"userA1@example.com\"]))
-
-   Output is `(entity ...)`
-   () or (#:db{:id 17592186045470} ...) "
-  [db user]
-  (->> (d/q '[:find [?e ...]
-              :in $ ?u
-              :where
-              [?e :req/sales ?u]
-              [?e :req/status :req.status/open]]
-            db user)
-       (map #(d/entity db %))))
-
-(defn get-requests-by-status
-  "
-  get the ([request-entity, #inst] ... ) or () when there is no requests
-  example usage: (get-requests-by-status (d/db conn) :req.status/open)
-  Note: This query will bring request's created time along with request entity.
-  "
-  [db status]
-  (->>  (d/q '[:find ?e ?inst
-               :in $ ?v
-               :where
-               [?e :req/status ?v ?tx true]
-               [?tx :db/txInstant ?inst]]
-             db status)
-        (map (fn [[req-eid inst]] [(d/entity db req-eid) inst]))))
-
-;; (request-open-time-by-eid (d/history (d/db conn)) 17592186045481))
-(defn- request-open-time-by-eid
+;; (r-eid->request-open-time (d/history (d/db conn)) 17592186045481))
+(defn r-eid->request-open-time
   "
   input is:
   hdb -> historyDB of the database,
@@ -310,13 +197,14 @@
   "
   [hdb eid]
   (d/q '[:find ?inst .
-         :in $ ?v
+         :in $ ?e
          :where
-         [?v :req/status :req.status/open ?tx true]
+         [?e :req/status :req.status/open ?tx true]
          [?tx :db/txInstant ?inst]]
        hdb eid))
 
-(defn- active-request-eids
+;; (active-request-eids [[45 :req/status :req.status/modified] [46 :req/status :req.status/open] [47 :req/status :req.status/rejected
+(defn active-request-eids
   "Output is `(req-eid ...)`"
   [db]
   (let [active-status [:req.status/open :req.status/modified]]
@@ -326,28 +214,27 @@
            [?e :req/status ?status]]
          db active-status)))
 
-(defn get-active-requests
-  "Output is `({REQ} ...)` or `()`
+(defn user-active-request-eids
+  "Output is `(req-eid ...)`"
+  [db user]
+  (let [active-status [:req.status/open :req.status/modified]]
+    (d/q '[:find [?e ...]
+           :in $ ?u  [?status ...]
+           :where
+           [?e :req/sales ?u]
+           [?e :req/status ?status]]
+         db user active-status)))
 
-  {REQ} is of the form:
-  {:req/add-customer-list    [{CUSTOMER-MAP} ...]
-   :req/remove-customer-list [{CUSTOMER-MAP} ...]
-   :req/status
-   :req/sales ...
-   :req/time ...}"
-  [db]
-  (let [hdb (d/history db)
-        aq-eids (active-request-eids db)
-        txInsts (map #(request-open-time-by-eid hdb %) aq-eids)
-        join-req-fn #(d/pull db '[:db/id
-                                  :req/status
-                                  :req/stamp
-                                  {:req/add-customer-list [*]}
-                                  {:req/remove-customer-list [*]}
-                                  {:req/sales [:user/name
-                                               {:user/team [*]}]}] %)
-        aq-maps (map join-req-fn aq-eids)]
-    (map #(assoc %1 :req/time %2) aq-maps txInsts)))
+(defn r-eid->req
+  "Transform request eid -> {HashMap}"
+  [db eid]
+  (d/pull db '[:db/id
+               :req/status
+               :req/stamp
+               {:req/add-customer-items [{:customerItem/customer [*]} *]}
+               {:req/remove-customer-items [{:customerItem/customer [*]} *]}
+               {:req/sales [:user/name
+                            {:user/team [*]}]}] eid))
 
 (defn marshal-entity
   "Input: data of class 'datomic.query.EntityMap'
@@ -368,11 +255,11 @@
             (seq c))))
 
 (defn tx-modify-request
-  "for request e, modify its add-list and remove-list
-   Note that: add-list and remove-list can be nil"
-  [^long e stamp add-list remove-list]
-  [[:fn/replace-to-many e :req/add-customer-list add-list]
-   [:fn/replace-to-many e :req/remove-customer-list remove-list]
+  "for request e, modify its add-customer-items and remove-customer-items
+   Note that: add-items and remove-items can be nil"
+  [^long e stamp add-items remove-items]
+  [[:fn/replace-to-many e :req/add-customer-items add-items]
+   [:fn/replace-to-many e :req/remove-customer-items remove-items]
    [:db.fn/cas e :req/stamp stamp (inc stamp)]
    [:db/add e :req/status :req.status/modified]])
 
@@ -382,47 +269,57 @@
   [[:db.fn/cas e :req/stamp stamp (inc stamp)]
    [:db/add e :req/status :req.status/rejected]])
 
-(defn- add-allo-table
+(defn- tx-add-allo-table
   "add the allo table by vector of map
 
    Output is tx-data"
-  [sid customer-list txInst]
+  [db sid customer-items txInst]
   (let [sids (repeat sid)
-        txInsts (repeat txInst)]
-    (mapv (fn [s c t]
+        txInsts (repeat txInst)
+        c-p-rels (d/q '[:find ?c ?p
+                        :in $ [?ci ...]
+                        :where
+                        [?ci :customerItem/customer ?c]
+                        [?ci :customerItem/product ?p]]
+                      db customer-items)]
+    (mapv (fn [s c-p-tuple t]
             {:allo/sales s
-             :allo/customer c
+             :allo/customer (first c-p-tuple)
+             :allo/product  (second c-p-tuple)
              :allo/time t})
           sids
-          customer-list
+          c-p-rels
           txInsts)))
 
-(defn- retract-allo-table
+(defn- tx-retract-allo-table
   "retract the allo table by :db.fn/retractEntity
    d/q -> calcaute the entity id as vector
 
    Output is tx-data"
-  [db sid customer-list]
+  [db sid customer-items]
   (->> (d/q '[:find [?e ...]
-              :in $ ?sid [?cid ...]
+              :in $ ?sid [?ci ...]
               :where
               [?e :allo/sales ?sid]
-              [?e :allo/customer ?cid]]
-            db sid customer-list)
+              [?e :allo/customer ?c]
+              [?e :allo/product ?p]
+              [?ci :customerItem/customer ?c]
+              [?ci :customerItem/product ?p]]
+            db sid customer-items)
        (mapv (fn [x] [:db.fn/retractEntity x]))))
 
-(defn- request-content-by-eid
+(defn- r-eid->request-content
   "input is:
    eid -> eid of a request.
 
-   outuput is: [sid add-customer-list remove-customer-list]
-   add-customer-list     - [eid ...]
-   remove-customer-list  - [eid ...]
+   outuput is: [sid add-customer-items remove-customer-items]
+   add-customer-items     - [eid ...]
+   remove-customer-items  - [eid ...]
   "
   [db eid]
   [(d/q '[:find ?s .        :in $ ?e :where [?e :req/sales ?s]] db eid)
-   (d/q '[:find [?list ...] :in $ ?e :where [?e :req/add-customer-list ?list]] db eid)
-   (d/q '[:find [?list ...] :in $ ?e :where [?e :req/remove-customer-list ?list]] db eid)])
+   (d/q '[:find [?ci ...] :in $ ?e :where [?e :req/add-customer-items ?ci]] db eid)
+   (d/q '[:find [?ci ...] :in $ ?e :where [?e :req/remove-customer-items ?ci]] db eid)])
 
 ;; (tx-approve-request 17592186045489 0))
 (defn tx-approve-request
@@ -432,15 +329,15 @@
   [^long e stamp]
   (let [db (d/db conn)
         ;; prepare eids, txInst
-        txInst (request-open-time-by-eid (d/history db) e)
-        [sid add-list remove-list] (request-content-by-eid db e)
+        txInst (r-eid->request-open-time (d/history db) e)
+        [sid add-list remove-list] (r-eid->request-content db e)
         ;; prepare tx-add-allo, tx-retract-allo
-        tx-add-allo (add-allo-table sid add-list txInst)
-        tx-retract-allo (retract-allo-table db sid remove-list)
-        ;; prepare tx-app-req
-        tx-app-req [[:db.fn/cas e :req/stamp stamp (inc stamp)]
-                    [:db/add e :req/status :req.status/approved]]
-        tx-data (into [] (concat tx-add-allo tx-retract-allo tx-app-req))]
+        tx-add-allo (tx-add-allo-table db sid add-list txInst)
+        tx-retract-allo (tx-retract-allo-table db sid remove-list)
+        ;; prepare tx-req-status
+        tx-req-status [[:db.fn/cas e :req/stamp stamp (inc stamp)]
+                       [:db/add e :req/status :req.status/approved]]
+        tx-data (into [] (concat tx-add-allo tx-retract-allo tx-req-status))]
     tx-data))
 
 ;; 要設法測完 :

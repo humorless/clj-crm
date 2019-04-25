@@ -47,6 +47,20 @@
          :ok (ok {:result result})
          :error (bad-request {:reason result}))))
 
+   (GET "/api/uers" req
+     :summary     "Return all the user names and related data."
+     (let [[status result] (dq/all-users)]
+       (case status
+         :ok (ok {:result result})
+         :error (bad-request {:reason result}))))
+
+   (GET "/api/products" req
+     :summary     "Return all the product enumerations"
+     (let [[status result] (dq/all-products)]
+       (case status
+         :ok (ok {:result result})
+         :error (bad-request {:reason result}))))
+
    (POST "/api/register" req
      :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str, role :- s/Str, team-id :- Long]
      :summary     "User uses email/password to register, UI default role is sales"

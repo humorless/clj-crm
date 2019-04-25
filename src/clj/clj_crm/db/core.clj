@@ -143,6 +143,19 @@
                     (into acc {(marshal-field-name k) (recur-marshal db v)}))
                   {} m)))
 
+(defn product-enum-eids
+  "all the product enubmeration eids"
+  [db]
+  (d/q '[:find [?e ...]
+         :in $ ?nsp
+         :where [?e :db/ident ?attr]
+         [(namespace ?attr) ?nsp]]     ;;Datomic Function expression binds the ?nsp variable
+       db "product.type"))
+
+(defn p-eid->enum
+  [db eid]
+  (d/pull db '[:db/id] eid))
+
 (defn customer-eids
   "all the customer eids"
   [db]

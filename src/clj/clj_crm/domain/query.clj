@@ -19,6 +19,20 @@
 (defn all-teams []
   [:ok (map dcore/marshal-entity (dcore/find-all-by (d/db conn) :team/name))])
 
+(defn all-users []
+  (let [db (d/db conn)
+        eids (d/q '[:find [?e ...] :in $ ?a :where [?e ?a]] db :user/name)
+        query-result (map #(d/pull db '[:user/email :user/name :user/roles {:user/team [*]} :db/id]  %) eids)
+        data (mapv #(dcore/recur-marshal db %) query-result)]
+    [:ok data]))
+
+(defn all-products []
+  (let [db (d/db conn)
+        eids (dcore/product-enum-eids db)
+        query-result (map #(dcore/p-eid->enum db %) eids)
+        data (mapv #(dcore/recur-marshal db %) query-result)]
+    [:ok data]))
+
 (defmethod dispatch-q :all-requests
   [user-q]
   (log/info "at all-requests, user-q as" user-q)

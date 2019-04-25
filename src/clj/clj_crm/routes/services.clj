@@ -5,7 +5,7 @@
             [clj-crm.domain.auth :refer [user-datum user-auth register-user]]
             [clj-crm.domain.query :as dq]
             [clj-crm.domain.command :as dc]
-            [clj-crm.etl.lamp :as lamp]
+            [clj-crm.etl.core :as etl]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]))
@@ -84,9 +84,10 @@
      (ok {:user (user-datum (:user user))}))
 
    (POST "/api/sync" req
-     :body-params [note :- s/Str]
-     :summary     "Forcely invoke LAMP data sync right away."
-     (if-let [r (lamp/sync-data)]
+     :body-params [filename :- s/Str, cmd :- s/Str]
+     :summary     "Sync data from excel file."
+     :description "filename refers to the excel filename. cmd can be lamp or user"
+     (if-let [r (etl/sync-data cmd filename)]
        (ok {:result :insert-done})
        (ok {:result :already-sync})))
 

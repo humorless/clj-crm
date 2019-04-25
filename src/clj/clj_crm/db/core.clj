@@ -143,6 +143,15 @@
                     (into acc {(marshal-field-name k) (recur-marshal db v)}))
                   {} m)))
 
+(defn user-eids
+  [db]
+  (d/q '[:find [?e ...] :in $ ?a :where [?e ?a]] db :user/name))
+
+(defn u-eid->user+team
+  "Transfrom user eid -> {HashMap with user fields}"
+  [db eid]
+  (d/pull db '[:user/email :user/name :user/roles {:user/team [*]}] eid))
+
 (defn product-enum-eids
   "all the product enubmeration eids"
   [db]

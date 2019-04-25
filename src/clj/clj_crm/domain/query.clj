@@ -21,8 +21,8 @@
 
 (defn all-users []
   (let [db (d/db conn)
-        eids (d/q '[:find [?e ...] :in $ ?a :where [?e ?a]] db :user/name)
-        query-result (map #(d/pull db '[:user/email :user/name :user/roles {:user/team [*]} :db/id]  %) eids)
+        eids (dcore/user-eids db)
+        query-result (map #(dcore/u-eid->user+team db %) eids)
         data (mapv #(dcore/recur-marshal db %) query-result)]
     [:ok data]))
 

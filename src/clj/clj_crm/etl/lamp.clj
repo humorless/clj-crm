@@ -84,8 +84,8 @@
   Implementation details:
   rest - remove the title row
   set  - remove duplicated rows"
-  [addr]
-  (with-open [stream (io/input-stream (str addr "/clist.xlsx"))]
+  [addr filename]
+  (with-open [stream (io/input-stream (str addr filename))]
     (->> (spreadsheet/load-workbook stream)
          (spreadsheet/select-sheet "Sheet0")
          (spreadsheet/select-columns {:A :customer/id
@@ -106,9 +106,9 @@
    From DB, get the customers inside DB.
    Calculate the difference. Find out the new customers in LAMP but not in DB.
    Write into database"
-  []
+  [filename]
   (log/info "etl.lamp sync-data triggered!")
-  (let [l-customer-rel (get-customers-from-excel url)
+  (let [l-customer-rel (get-customers-from-excel url filename)
         d-customer-rel (get-customers-from-db (d/db conn))
         tx-data (vec (cs/difference l-customer-rel d-customer-rel))]
     (do (log/info "etl.lamp tx-data write into db, length: " (count tx-data))

@@ -1,7 +1,7 @@
 {:dev true
  :port 3000
  :nrepl-port 7000
- :lamp-url "http://127.0.0.1:5001"
+ :lamp-url "http://127.0.0.1:5001/"
  :cors-regex-str "http://10.20.30.40:4100"
  ;; :database-url "datomic:free://localhost:4334/clj_crm_dev"
  :database-url "datomic:mem://tmp_datomic_dev"}

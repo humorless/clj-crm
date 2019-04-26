@@ -371,7 +371,13 @@
         tx-data (into [] (concat tx-add-allo tx-retract-allo tx-req-status))]
     tx-data))
 
-;; 要設法測完 :
-;; (1) request with add-customer-list, remove-customer-list
-;; (2) request with add-customer-list only
-;; (3) request with remove-customer-list only
+(defn name2enum-table
+  "lookup enumeration from string name
+   return nil when nothing found"
+  [db]
+  (into {}  (d/q '[:find ?k ?enum
+                   :where
+                   [?e :enum/name ?k]
+                   [?e :enum/value ?v]
+                   [?v :db/ident ?enum]]
+                 db)))

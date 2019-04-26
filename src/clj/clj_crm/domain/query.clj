@@ -17,19 +17,23 @@
 (defmulti dispatch-q query-command-switch)
 
 (defn all-teams []
-  [:ok (map dcore/marshal-entity (dcore/find-all-by (d/db conn) :team/name))])
+  (let [db (d/db conn)
+        eids (dcore/team-enum-eids db)
+        query-result (map #(dcore/eid->enum db %) eids)
+        data (mapv #(dcore/recur-marshal db %) query-result)]
+    [:ok data]))
 
 (defn all-users []
   (let [db (d/db conn)
         eids (dcore/user-eids db)
-        query-result (map #(dcore/u-eid->user+team db %) eids)
+        query-result (map #(dcore/u-eid->user db %) eids)
         data (mapv #(dcore/recur-marshal db %) query-result)]
     [:ok data]))
 
 (defn all-products []
   (let [db (d/db conn)
         eids (dcore/product-enum-eids db)
-        query-result (map #(dcore/p-eid->enum db %) eids)
+        query-result (map #(dcore/eid->enum db %) eids)
         data (mapv #(dcore/recur-marshal db %) query-result)]
     [:ok data]))
 

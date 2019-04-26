@@ -11,11 +11,11 @@
   "m is of the {HashMap} form that just reading the data from excel.
    However, we need to do certain transformation to get tx-map."
   [db m]
-  (let [team-name (:user/team m)
-        t-eid (d/q '[:find ?e . :in $ ?n :where [?e :team/name ?n]] db team-name)
+  (let [t-str (:user/team m)
+        t-ident (keyword t-str)
         r-str (:user/roles m)
-        r-keyword (keyword r-str)]
-    (assoc m :user/team t-eid :user/roles r-keyword)))
+        r-ident (keyword r-str)]
+    (assoc m :user/team t-ident :user/roles r-ident)))
 
 (defn- get-users-from-excel
   "Read the excel file, retrieve the user data,
@@ -44,10 +44,10 @@
 (defn- tx-user
   "transform the {HashMap} data into db-transaction-form"
   [m]
-  (let [r-keyword (get-in m [:user/roles :db/ident])
-        t-eid (get-in m [:user/team :db/id])]
-    (assoc m :user/roles r-keyword
-           :user/team t-eid)))
+  (let [r-ident (get-in m [:user/roles :db/ident])
+        t-ident (get-in m [:user/team :db/ident])]
+    (assoc m :user/roles r-ident
+           :user/team t-ident)))
 
 (defn- get-users-from-db [db]
   (let [eids (dcore/user-eids db)

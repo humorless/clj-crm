@@ -62,10 +62,10 @@
          :error (bad-request {:reason result}))))
 
    (POST "/api/register" req
-     :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str, role :- s/Str, team-id :- Long]
+     :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str, role :- s/Str, team-id :- s/Str]
      :summary     "User uses email/password to register, UI default role is sales"
      :description "possilbe value of role could be: sales, lead, manager"
-     (if (register-user screenname email password (keyword "user.roles" role) team-id)
+     (if (register-user screenname email password (keyword "user.roles" role) (keyword team-id))
        (ok {:user (user-datum email)})
        (bad-request)))
 
@@ -111,5 +111,4 @@
        (let [[status result] (dc/command c user req)]
          (case status
            :ok (ok {:result result})
-           :error (bad-request {:reason result}))))
-     )))
+           :error (bad-request {:reason result})))))))

@@ -44,13 +44,10 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "Team name"
-    :db/ident :team/name
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one
-    :db/unique :db.unique/identity
-    :db/id #db/id [:db.part/db]
-    :db.install/_attribute :db.part/db}
+   [:db/add #db/id [:db.part/user] :db/ident :user.team/team0]
+   [:db/add #db/id [:db.part/user] :db/ident :user.team/team1]
+   [:db/add #db/id [:db.part/user] :db/ident :user.team/team2]
+   [:db/add #db/id [:db.part/user] :db/ident :user.team/team3]
 
    [:db/add #db/id [:db.part/user] :db/ident :user.status/pending]
    [:db/add #db/id [:db.part/user] :db/ident :user.status/active]

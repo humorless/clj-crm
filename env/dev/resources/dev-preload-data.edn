@@ -1,25 +1,13 @@
 {
 ;; data1 installs certain user init data into Datomic for testing purpose
 :clj-crm/data1 {:txes [[
-   {:db/id     "t0"
-    :team/name "Team Null"}
-
-   {:db/id     "t1"
-    :team/name "Team 1"}
-
-   {:db/id     "t2"
-    :team/name "Team 2"}
-
-   {:db/id     "t3"
-    :team/name "Team 3"}
-
    {:db/id     "A1"
     :user/name "sales name A1"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userA1@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t1"}
+    :user/team   :user.team/team1}
 
    {:db/id     "A2"
     :user/name "sales name A2"
@@ -27,7 +15,7 @@
     :user/email "userA2@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t1"}
+    :user/team   :user.team/team1}
 
    {:db/id     "A3"
     :user/name "sales name A3"
@@ -35,7 +23,7 @@
     :user/email "userA3@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t1"}
+    :user/team   :user.team/team1}
 
    {:db/id     "A"
     :user/name "lead name A"
@@ -43,7 +31,7 @@
     :user/email "leadA@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/lead
-    :user/team "t1"}
+    :user/team   :user.team/team1}
 
    {:db/id     "Q"
     :user/name "Annie"
@@ -51,7 +39,7 @@
     :user/email "manager@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/manager
-    :user/team "t1"}
+    :user/team   :user.team/team1}
 
    {:db/id     "B1"
     :user/name "sales name B1"
@@ -59,7 +47,7 @@
     :user/email "userB1@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t2"}
+    :user/team   :user.team/team2}
 
    {:db/id     "B2"
     :user/name "sales name B2"
@@ -67,7 +55,7 @@
     :user/email "userB2@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t2"}
+    :user/team   :user.team/team2}
 
    {:db/id     "B3"
     :user/name "sales name B3"
@@ -75,7 +63,7 @@
     :user/email "userB3@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t2"}
+    :user/team   :user.team/team2}
 
    {:db/id     "B"
     :user/name "lead name B"
@@ -83,7 +71,7 @@
     :user/email "leadB@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/lead
-    :user/team "t2"}
+    :user/team   :user.team/team2}
 
    {:db/id     "C1"
     :user/name "sales name C1"
@@ -91,7 +79,7 @@
     :user/email "userC1@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t3"}
+    :user/team   :user.team/team3}
 
    {:db/id     "C2"
     :user/name "sales name C2"
@@ -99,7 +87,7 @@
     :user/email "userC2@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t3"}
+    :user/team   :user.team/team3}
 
    {:db/id     "C3"
     :user/name "sales name C3"
@@ -107,7 +95,7 @@
     :user/email "userC3@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t3"}
+    :user/team   :user.team/team3}
 
    {:db/id     "C"
     :user/name "lead name C"
@@ -115,7 +103,7 @@
     :user/email "leadC@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/lead
-    :user/team "t3"}
+    :user/team   :user.team/team3}
    ]]}
 
 ;; data2 installs certain fake customer/request/allocation data into Datomic for testing purpose

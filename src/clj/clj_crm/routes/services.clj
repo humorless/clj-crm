@@ -112,9 +112,4 @@
          (case status
            :ok (ok {:result result})
            :error (bad-request {:reason result}))))
-
-     (GET "/plus" []
-       :return       Long
-       :query-params [x :- Long, {y :- Long 1}]
-       :summary      "x+y with query-parameters. y defaults to 1."
-       (ok (+ x y))))))
+     )))

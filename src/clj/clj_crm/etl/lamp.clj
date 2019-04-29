@@ -78,6 +78,14 @@
         query-result (map #(c-eid->customer db %) eids)]
     (set query-result)))
 
+(defn- select-rows [m]
+  (case (:registrationStatus m)
+    "[C]LINE TAIWAN" true
+    "[C,T]LINE TAIWAN" true
+    "[C]LINE COMPANY(TH) / [C]LINE TAIWAN" true
+    "[C]LINE CORP / [C]LINE TAIWAN" true
+    false))
+
 (defn- get-customers-from-excel
   "Read the excel file, and retrieve the customers data
 
@@ -95,7 +103,7 @@
                                       :P :customer/business-type
                                       :F :registrationStatus})
          rest
-         (filter #(= (:registrationStatus %) "[C]LINE TAIWAN"))
+         (filter select-rows)
          (map #(dissoc % :registrationStatus))
          (map #(assoc % :customer/business-type (->business-type %)))
          set)))

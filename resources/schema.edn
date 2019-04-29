@@ -244,7 +244,7 @@
    [:db/add #db/id [:db.part/user] :db/ident :product.type/OA]
    [:db/add #db/id [:db.part/user] :db/ident :product.type/SS]
    [:db/add #db/id [:db.part/user] :db/ident :product.type/line_at]
-   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_mobile_tw]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_mobile_tw]]
 
    [{:db/doc "customerItem table is a sub component of request"
      :db/ident :customerItem/product

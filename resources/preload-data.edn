@@ -1,32 +1,7 @@
 {
 ;; data1 installs certain team init data into Datomic
 :clj-crm/data1 {:txes [
-	[#:enum{:name "Finance / Insurance", :value :customer.bus/finance}
-	 #:enum{:name "Shopping / E-Commerce", :value :customer.bus/e-commerce}
-	 #:enum{:name "Wholesale / Distribution / Retail",
-					:value :customer.bus/retail}
-	 #:enum{:name "Health / Medicine", :value :customer.bus/health}
-	 #:enum{:name "Fashion", :value :customer.bus/fashion}
-	 #:enum{:name "Miscellaneous", :value :customer.bus/miscellaneous}
-	 #:enum{:name "Construction / Real Estate",
-					:value :customer.bus/construction}
-	 #:enum{:name "Food / Dining", :value :customer.bus/food}
-	 #:enum{:name "Celebrity / Artist", :value :customer.bus/celebrity}
-	 #:enum{:name "Government Services / Public Services",
-					:value :customer.bus/government}
-	 #:enum{:name "Marketing / Agency", :value :customer.bus/marketing}
-	 #:enum{:name "Games / Internet", :value :customer.bus/games}
-	 #:enum{:name "Automotive / Transportation / Energy",
-					:value :customer.bus/automotive}
-	 #:enum{:name "Travel / Leisure", :value :customer.bus/travel}
-	 #:enum{:name "Education / Publication",
-					:value :customer.bus/education}
-	 #:enum{:name "Computers / Electronics", :value :customer.bus/computer}
-	 #:enum{:name "Telecommunications / Broadcasting / Media",
-					:value :customer.bus/media}
-	 #:enum{:name "Arts / Movie / Entertainment",
-					:value :customer.bus/arts}
-	 #:enum{:name "Cosmetics / Consumer Goods",
-					:value :customer.bus/cosmetics}]
+  [
+  ]
 ]}
 }

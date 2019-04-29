@@ -4,7 +4,8 @@
             [clj-crm.db.core :as dcore :refer [conn]]
             [datomic.api :as d]
             [dk.ative.docjure.spreadsheet :as spreadsheet]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [buddy.hashers :as hs])
   (:import [java.io StringWriter]))
 
 (defn- team-m->team-tx-m
@@ -14,8 +15,11 @@
   (let [t-str (:user/team m)
         t-ident (keyword t-str)
         r-str (:user/roles m)
-        r-ident (keyword r-str)]
-    (assoc m :user/team t-ident :user/roles r-ident)))
+        r-ident (keyword r-str)
+        pwd-str (:user/pwd m)
+        pwd-hash (hs/derive pwd-str)]
+    (assoc m :user/team t-ident :user/roles r-ident
+           :user/pwd pwd-hash)))
 
 (defn- get-users-from-excel
   "Read the excel file, retrieve the user data,
@@ -31,15 +35,16 @@
          (spreadsheet/select-columns {:A :user/email
                                       :B :user/name
                                       :C :user/roles
-                                      :D :user/team})
+                                      :D :user/team
+                                      :E :user/pwd})
          rest
          (map #(team-m->team-tx-m (d/db conn) %))
          set)))
 
-(defn- u-eid->user+team+role
+(defn- u-eid->user+team+role+pwd
   "Transfrom user eid -> {HashMap with user fields}"
   [db eid]
-  (d/pull db '[:user/email :user/name  {:user/roles [*]} {:user/team [*]}] eid))
+  (d/pull db '[:user/email :user/name  {:user/roles [*]} {:user/team [*]} :user/pwd] eid))
 
 (defn- tx-user
   "transform the {HashMap} data into db-transaction-form"
@@ -51,7 +56,7 @@
 
 (defn- get-users-from-db [db]
   (let [eids (dcore/user-eids db)
-        query-result (map #(u-eid->user+team+role db %) eids)
+        query-result (map #(u-eid->user+team+role+pwd db %) eids)
         data (map tx-user  query-result)]
     (set data)))
 

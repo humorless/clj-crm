@@ -1,5 +1,27 @@
 {;; norm1 installs the user table schema into Datomic
  :clj-crm/norm1 {:txes [[
+   {:db/doc "Ref to product type"
+    :db/ident :product/type
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Ref to product category"
+    :db/ident :product/category
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "External product name"
+    :db/ident :product/name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
    {:db/doc "User email address"
     :db/ident :user/email
     :db/valueType :db.type/string
@@ -108,6 +130,31 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
+   {:db/doc "When the customer is one of agency or reseller, this field specifies the indirect type"
+    :db/ident :customer/agency-indirect
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "NEON customer ID"
+    :db/ident :customer/neon-id
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "NEON customer CODE"
+    :db/ident :customer/neon-code
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   ;; enumberation for :customer/agency-indirect
+   [:db/add #db/id [:db.part/user] :db/ident :customer.indirect/agency]
+   [:db/add #db/id [:db.part/user] :db/ident :customer.indirect/reseller]
+
    ;; enumeration for customer/business-type
    [:db/add #db/id [:db.part/user] :db/ident :customer.bus/arts]
    [:db/add #db/id [:db.part/user] :db/ident :customer.bus/automotive]
@@ -183,9 +230,21 @@
      :db/cardinality :db.cardinality/one
      :db/id #db/id [:db.part/db]
      :db.install/_attribute :db.part/db}
-    ;; enumeration for product.type
-    [:db/add #db/id [:db.part/user] :db/ident :product.type/account]
-    [:db/add #db/id [:db.part/user] :db/ident :product.type/display]]
+    ;; enumeration for product.type & product.cat
+   [:db/add #db/id [:db.part/user] :db/ident :product.cat/account]
+   [:db/add #db/id [:db.part/user] :db/ident :product.cat/display]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_now]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/timeline]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/today]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/more_tab]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_point]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_point_code_tw]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/event_banner]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/BC]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/OA]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/SS]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_at]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_mobile_tw]
 
    [{:db/doc "customerItem table is a sub component of request"
      :db/ident :customerItem/product

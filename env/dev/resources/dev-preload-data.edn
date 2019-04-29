@@ -171,44 +171,44 @@
 
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref for existing entity
     :req/add-customer-items [{:customerItem/customer "cm-1"
-                              :customerItem/product :product.type/account}
+                              :customerItem/product :product.cat/account}
                              {:customerItem/customer "cm-2"
-                              :customerItem/product :product.type/display }]
+                              :customerItem/product :product.cat/display }]
     :req/remove-customer-items #{{:customerItem/customer "cm-3"
-                                  :customerItem/product :product.type/account}}
+                                  :customerItem/product :product.cat/account}}
     :req/status :req.status/open
     :req/stamp 0}
 
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref
     :req/add-customer-items #{{:customerItem/customer "cm-3"
-                               :customerItem/product :product.type/account}
+                               :customerItem/product :product.cat/account}
                               {:customerItem/customer "cm-4"
-                               :customerItem/product :product.type/display}}
+                               :customerItem/product :product.cat/display}}
     :req/remove-customer-items #{}
     :req/status :req.status/approved
     :req/stamp 0}]
 
   [{:allo/sales [:user/email "userA1@example.com"]
     :allo/customer [:customer/id "CM0003"]
-    :allo/product :product.type/account
+    :allo/product :product.cat/account
     :allo/time #inst "2014-01-28T09:00:00Z"}
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer [:customer/id "CM0003"]
-    :allo/product :product.type/display
+    :allo/product :product.cat/display
     :allo/time #inst "2014-01-28"}
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer [:customer/id "CM0004"]
-    :allo/product :product.type/account
+    :allo/product :product.cat/account
     :allo/time #inst "2014-01-29"}
    {:allo/sales [:user/email "userA2@example.com"]
     :allo/customer [:customer/id "CM0005"]
-    :allo/product :product.type/display
+    :allo/product :product.cat/display
     :allo/time #inst "2014-02-28"}]
 
   [{:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity
     :req/add-customer-items #{}
     :req/remove-customer-items #{{:customerItem/customer [:customer/id "CM0005"]
-                                  :customerItem/product :product.type/display}}
+                                  :customerItem/product :product.cat/display}}
     :req/status :req.status/open
     :req/stamp 0}]
    ]}
@@ -216,7 +216,7 @@
 :clj-crm/data3 {:txes [[
    {:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity
     :req/add-customer-items #{{:customerItem/customer [:customer/id "CM0008"]
-                               :customerItem/product :product.type/display}}
+                               :customerItem/product :product.cat/display}}
     :req/remove-customer-items #{}
     :req/status :req.status/open
     :req/stamp 0}
@@ -224,7 +224,7 @@
 :clj-crm/data4 {:txes [[
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref for existing entity
     :req/add-customer-items #{{:customerItem/customer [:customer/id "CM0009"]
-                               :customerItem/product :product.type/display}}
+                               :customerItem/product :product.cat/display}}
     :req/remove-customer-items #{}
     :req/status :req.status/open
     :req/stamp 0}

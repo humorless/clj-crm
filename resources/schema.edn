@@ -15,8 +15,8 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "External product name"
-    :db/ident :product/name
+   {:db/doc "External product service-category name"
+    :db/ident :product/service-category
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]

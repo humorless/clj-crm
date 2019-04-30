@@ -5,7 +5,7 @@
             [clj-crm.domain.auth :refer [user-datum user-auth register-user]]
             [clj-crm.domain.query :as dq]
             [clj-crm.domain.command :as dc]
-            [clj-crm.etl.lamp :as lamp]
+            [clj-crm.etl.core :as etl]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]))
@@ -47,11 +47,25 @@
          :ok (ok {:result result})
          :error (bad-request {:reason result}))))
 
+   (GET "/api/uers" req
+     :summary     "Return all the user names and related data."
+     (let [[status result] (dq/all-users)]
+       (case status
+         :ok (ok {:result result})
+         :error (bad-request {:reason result}))))
+
+   (GET "/api/products" req
+     :summary     "Return all the product enumerations"
+     (let [[status result] (dq/all-products)]
+       (case status
+         :ok (ok {:result result})
+         :error (bad-request {:reason result}))))
+
    (POST "/api/register" req
-     :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str, role :- s/Str, team-id :- Long]
+     :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str, role :- s/Str, team-id :- s/Str]
      :summary     "User uses email/password to register, UI default role is sales"
      :description "possilbe value of role could be: sales, lead, manager"
-     (if (register-user screenname email password (keyword "user.roles" role) team-id)
+     (if (register-user screenname email password (keyword "user.roles" role) (keyword team-id))
        (ok {:user (user-datum email)})
        (bad-request)))
 
@@ -70,9 +84,10 @@
      (ok {:user (user-datum (:user user))}))
 
    (POST "/api/sync" req
-     :body-params [note :- s/Str]
-     :summary     "Forcely invoke LAMP data sync right away."
-     (if-let [r (lamp/sync-data)]
+     :body-params [filename :- s/Str, cmd :- s/Str]
+     :summary     "Sync data from excel file."
+     :description "filename refers to the excel filename. cmd can be [customer|user|direct|agency]"
+     (if-let [r (etl/sync-data cmd filename)]
        (ok {:result :insert-done})
        (ok {:result :already-sync})))
 
@@ -96,10 +111,4 @@
        (let [[status result] (dc/command c user req)]
          (case status
            :ok (ok {:result result})
-           :error (bad-request {:reason result}))))
-
-     (GET "/plus" []
-       :return       Long
-       :query-params [x :- Long, {y :- Long 1}]
-       :summary      "x+y with query-parameters. y defaults to 1."
-       (ok (+ x y))))))
+           :error (bad-request {:reason result})))))))

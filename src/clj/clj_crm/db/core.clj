@@ -143,6 +143,37 @@
                     (into acc {(marshal-field-name k) (recur-marshal db v)}))
                   {} m)))
 
+(defn user-eids
+  [db]
+  (d/q '[:find [?e ...] :in $ ?a :where [?e ?a]] db :user/name))
+
+(defn u-eid->user
+  "Transfrom user eid -> {HashMap with user fields}"
+  [db eid]
+  (d/pull db '[:user/email :user/name :user/roles :user/team] eid))
+
+(defn team-enum-eids
+  "all the team enumeration eids"
+  [db]
+  (d/q '[:find [?e ...]
+         :in $ ?nsp
+         :where [?e :db/ident ?attr]
+         [(namespace ?attr) ?nsp]]     ;;Datomic Function expression binds the ?nsp variable
+       db "user.team"))
+
+(defn product-enum-eids
+  "all the product enumeration eids"
+  [db]
+  (d/q '[:find [?e ...]
+         :in $ ?nsp
+         :where [?e :db/ident ?attr]
+         [(namespace ?attr) ?nsp]]     ;;Datomic Function expression binds the ?nsp variable
+       db "product.type"))
+
+(defn eid->enum
+  [db eid]
+  (d/pull db '[:db/id] eid))
+
 (defn customer-eids
   "all the customer eids"
   [db]
@@ -179,7 +210,7 @@
   [db c-eid]
   (d/pull db '[{:allo/_customer [{:allo/sales [:user/name
                                                :db/id
-                                               {:user/team [:team/name :db/id]}]}
+                                               :user/team]}
                                  :allo/time
                                  :allo/product]}
                *] c-eid))
@@ -234,7 +265,7 @@
                {:req/add-customer-items [{:customerItem/customer [*]} *]}
                {:req/remove-customer-items [{:customerItem/customer [*]} *]}
                {:req/sales [:user/name
-                            {:user/team [*]}]}] eid))
+                            :user/team]}] eid))
 
 (defn marshal-entity
   "Input: data of class 'datomic.query.EntityMap'

@@ -1,25 +1,13 @@
 {
 ;; data1 installs certain user init data into Datomic for testing purpose
 :clj-crm/data1 {:txes [[
-   {:db/id     "t0"
-    :team/name "Team Null"}
-
-   {:db/id     "t1"
-    :team/name "Team 1"}
-
-   {:db/id     "t2"
-    :team/name "Team 2"}
-
-   {:db/id     "t3"
-    :team/name "Team 3"}
-
    {:db/id     "A1"
     :user/name "sales name A1"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userA1@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t1"}
+    :user/team   :user.team/team1}
 
    {:db/id     "A2"
     :user/name "sales name A2"
@@ -27,7 +15,7 @@
     :user/email "userA2@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t1"}
+    :user/team   :user.team/team1}
 
    {:db/id     "A3"
     :user/name "sales name A3"
@@ -35,7 +23,7 @@
     :user/email "userA3@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t1"}
+    :user/team   :user.team/team1}
 
    {:db/id     "A"
     :user/name "lead name A"
@@ -43,7 +31,7 @@
     :user/email "leadA@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/lead
-    :user/team "t1"}
+    :user/team   :user.team/team1}
 
    {:db/id     "Q"
     :user/name "Annie"
@@ -51,7 +39,7 @@
     :user/email "manager@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/manager
-    :user/team "t1"}
+    :user/team   :user.team/team1}
 
    {:db/id     "B1"
     :user/name "sales name B1"
@@ -59,7 +47,7 @@
     :user/email "userB1@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t2"}
+    :user/team   :user.team/team2}
 
    {:db/id     "B2"
     :user/name "sales name B2"
@@ -67,7 +55,7 @@
     :user/email "userB2@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t2"}
+    :user/team   :user.team/team2}
 
    {:db/id     "B3"
     :user/name "sales name B3"
@@ -75,7 +63,7 @@
     :user/email "userB3@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t2"}
+    :user/team   :user.team/team2}
 
    {:db/id     "B"
     :user/name "lead name B"
@@ -83,7 +71,7 @@
     :user/email "leadB@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/lead
-    :user/team "t2"}
+    :user/team   :user.team/team2}
 
    {:db/id     "C1"
     :user/name "sales name C1"
@@ -91,7 +79,7 @@
     :user/email "userC1@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t3"}
+    :user/team   :user.team/team3}
 
    {:db/id     "C2"
     :user/name "sales name C2"
@@ -99,7 +87,7 @@
     :user/email "userC2@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t3"}
+    :user/team   :user.team/team3}
 
    {:db/id     "C3"
     :user/name "sales name C3"
@@ -107,7 +95,7 @@
     :user/email "userC3@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/sales
-    :user/team "t3"}
+    :user/team   :user.team/team3}
 
    {:db/id     "C"
     :user/name "lead name C"
@@ -115,7 +103,7 @@
     :user/email "leadC@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/lead
-    :user/team "t3"}
+    :user/team   :user.team/team3}
    ]]}
 
 ;; data2 installs certain fake customer/request/allocation data into Datomic for testing purpose
@@ -183,44 +171,44 @@
 
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref for existing entity
     :req/add-customer-items [{:customerItem/customer "cm-1"
-                              :customerItem/product :product.type/account}
+                              :customerItem/product :product.cat/account}
                              {:customerItem/customer "cm-2"
-                              :customerItem/product :product.type/display }]
+                              :customerItem/product :product.cat/display }]
     :req/remove-customer-items #{{:customerItem/customer "cm-3"
-                                  :customerItem/product :product.type/account}}
+                                  :customerItem/product :product.cat/account}}
     :req/status :req.status/open
     :req/stamp 0}
 
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref
     :req/add-customer-items #{{:customerItem/customer "cm-3"
-                               :customerItem/product :product.type/account}
+                               :customerItem/product :product.cat/account}
                               {:customerItem/customer "cm-4"
-                               :customerItem/product :product.type/display}}
+                               :customerItem/product :product.cat/display}}
     :req/remove-customer-items #{}
     :req/status :req.status/approved
     :req/stamp 0}]
 
   [{:allo/sales [:user/email "userA1@example.com"]
     :allo/customer [:customer/id "CM0003"]
-    :allo/product :product.type/account
+    :allo/product :product.cat/account
     :allo/time #inst "2014-01-28T09:00:00Z"}
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer [:customer/id "CM0003"]
-    :allo/product :product.type/display
+    :allo/product :product.cat/display
     :allo/time #inst "2014-01-28"}
    {:allo/sales [:user/email "userA1@example.com"]
     :allo/customer [:customer/id "CM0004"]
-    :allo/product :product.type/account
+    :allo/product :product.cat/account
     :allo/time #inst "2014-01-29"}
    {:allo/sales [:user/email "userA2@example.com"]
     :allo/customer [:customer/id "CM0005"]
-    :allo/product :product.type/display
+    :allo/product :product.cat/display
     :allo/time #inst "2014-02-28"}]
 
   [{:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity
     :req/add-customer-items #{}
     :req/remove-customer-items #{{:customerItem/customer [:customer/id "CM0005"]
-                                  :customerItem/product :product.type/display}}
+                                  :customerItem/product :product.cat/display}}
     :req/status :req.status/open
     :req/stamp 0}]
    ]}
@@ -228,7 +216,7 @@
 :clj-crm/data3 {:txes [[
    {:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity
     :req/add-customer-items #{{:customerItem/customer [:customer/id "CM0008"]
-                               :customerItem/product :product.type/display}}
+                               :customerItem/product :product.cat/display}}
     :req/remove-customer-items #{}
     :req/status :req.status/open
     :req/stamp 0}
@@ -236,9 +224,23 @@
 :clj-crm/data4 {:txes [[
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref for existing entity
     :req/add-customer-items #{{:customerItem/customer [:customer/id "CM0009"]
-                               :customerItem/product :product.type/display}}
+                               :customerItem/product :product.cat/display}}
     :req/remove-customer-items #{}
     :req/status :req.status/open
     :req/stamp 0}
   ]]}
+:clj-crm/data5 {:txes [
+  [{:product/type :product.type/line_now           :product/category :product.cat/account :product/name "LINE NOW"}
+   {:product/type :product.type/timeline           :product/category :product.cat/display :product/name "TIMELINE"}
+   {:product/type :product.type/today              :product/category :product.cat/display :product/name "TODAY"}
+   {:product/type :product.type/more_tab           :product/category :product.cat/display :product/name "More tab"}
+   {:product/type :product.type/line_point         :product/category :product.cat/account :product/name "LINE Point"}
+   {:product/type :product.type/line_point_code_tw :product/category :product.cat/account :product/name "LINE Point Code(TW)"}
+   {:product/type :product.type/event_banner       :product/category :product.cat/display :product/name "Event Banner"}
+   {:product/type :product.type/BC                 :product/category :product.cat/account :product/name "BC"}
+   {:product/type :product.type/OA                 :product/category :product.cat/account :product/name "OA"}
+   {:product/type :product.type/SS                 :product/category :product.cat/account :product/name "SS"}
+   {:product/type :product.type/line_at            :product/category :product.cat/account :product/name "LINE@"}
+   {:product/type :product.type/line_mobile_tw     :product/category :product.cat/account :product/name "LINE Mobile TW"}]
+]}
 }

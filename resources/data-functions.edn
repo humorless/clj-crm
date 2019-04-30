@@ -1,13 +1,5 @@
 [
  {:db/id #db/id [:db.part/user]
-  :db/ident :fn/inc
-  :db/doc "Data function that increments value of attribute a by amount."
-  :db/fn #db/fn {:lang "clojure"
-                 :params [db e a amount]
-                 :code [[:db/add e a
-                         (-> (d/entity db e) a (+ amount))]]}}
-
- {:db/id #db/id [:db.part/user]
   :db/ident :fn/replace-to-many
   :db/doc "Given an entity e, a to-many attribute, and a list of new values, yields a transaction that replaces the old values by new ones"
   :db/fn #db/fn {:lang "clojure"

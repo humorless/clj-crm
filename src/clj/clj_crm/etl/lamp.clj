@@ -78,14 +78,22 @@
         query-result (map #(c-eid->customer db %) eids)]
     (set query-result)))
 
+(defn- select-rows [m]
+  (case (:registrationStatus m)
+    "[C]LINE TAIWAN" true
+    "[C,T]LINE TAIWAN" true
+    "[C]LINE COMPANY(TH) / [C]LINE TAIWAN" true
+    "[C]LINE CORP / [C]LINE TAIWAN" true
+    false))
+
 (defn- get-customers-from-excel
   "Read the excel file, and retrieve the customers data
 
   Implementation details:
   rest - remove the title row
   set  - remove duplicated rows"
-  [addr]
-  (with-open [stream (io/input-stream (str addr "/clist.xlsx"))]
+  [addr filename]
+  (with-open [stream (io/input-stream (str addr filename))]
     (->> (spreadsheet/load-workbook stream)
          (spreadsheet/select-sheet "Sheet0")
          (spreadsheet/select-columns {:A :customer/id
@@ -95,7 +103,7 @@
                                       :P :customer/business-type
                                       :F :registrationStatus})
          rest
-         (filter #(= (:registrationStatus %) "[C]LINE TAIWAN"))
+         (filter select-rows)
          (map #(dissoc % :registrationStatus))
          (map #(assoc % :customer/business-type (->business-type %)))
          set)))
@@ -106,13 +114,13 @@
    From DB, get the customers inside DB.
    Calculate the difference. Find out the new customers in LAMP but not in DB.
    Write into database"
-  []
-  (log/info "etl.lamp sync-data triggered!")
-  (let [l-customer-rel (get-customers-from-excel url)
+  [filename]
+  (log/info "sync-data triggered!")
+  (let [l-customer-rel (get-customers-from-excel url filename)
         d-customer-rel (get-customers-from-db (d/db conn))
         tx-data (vec (cs/difference l-customer-rel d-customer-rel))]
-    (do (log/info "etl.lamp tx-data write into db, length: " (count tx-data))
-        (log/info "etl.lamp first item of tx-data" (first tx-data))
+    (do (log/info "tx-data write into db, length: " (count tx-data))
+        (log/info "first item of tx-data" (first tx-data))
         (when (seq tx-data)
           @(d/transact conn tx-data)))))
 

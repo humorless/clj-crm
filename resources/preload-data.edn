@@ -1,18 +1,17 @@
 {
 ;; data1 installs certain team init data into Datomic
 :clj-crm/data1 {:txes [
-  [
-     {:db/id     "t0"
-      :team/name "Team Null"}
-
-     {:db/id     "t1"
-      :team/name "Team 1"}
-
-     {:db/id     "t2"
-      :team/name "Team 2"}
-
-     {:db/id     "t3"
-      :team/name "Team 3"}
-  ]
+  [{:product/type :product.type/line_now           :product/category :product.cat/account :product/name "LINE NOW"}
+   {:product/type :product.type/timeline           :product/category :product.cat/display :product/name "TIMELINE"}
+   {:product/type :product.type/today              :product/category :product.cat/display :product/name "TODAY"}
+   {:product/type :product.type/more_tab           :product/category :product.cat/display :product/name "More tab"}
+   {:product/type :product.type/line_point         :product/category :product.cat/account :product/name "LINE Point"}
+   {:product/type :product.type/line_point_code_tw :product/category :product.cat/account :product/name "LINE Point Code(TW)"}
+   {:product/type :product.type/event_banner       :product/category :product.cat/display :product/name "Event Banner"}
+   {:product/type :product.type/BC                 :product/category :product.cat/account :product/name "BC"}
+   {:product/type :product.type/OA                 :product/category :product.cat/account :product/name "OA"}
+   {:product/type :product.type/SS                 :product/category :product.cat/account :product/name "SS"}
+   {:product/type :product.type/line_at            :product/category :product.cat/account :product/name "LINE@"}
+   {:product/type :product.type/line_mobile_tw     :product/category :product.cat/account :product/name "LINE Mobile TW"}]
 ]}
 }

@@ -3,7 +3,8 @@
             [clj-time.periodic :refer [periodic-seq]]
             [chime :as chime]
             [clj-crm.etl.lamp :as lamp]
-            [clj-crm.etl.user :as user])
+            [clj-crm.etl.user :as user]
+            [clj-crm.etl.direct :as direct])
   (:import [org.joda.time DateTimeZone]))
 
 (defn init-etl
@@ -26,5 +27,6 @@
   "Switch on cmd to decide which `sync-data` function to use"
   [cmd filename]
   (case cmd
-    "lamp" (lamp/sync-data filename)
-    "user" (user/sync-data lamp/url filename)))
+    "customer" (lamp/sync-data filename)
+    "user" (user/sync-data lamp/url filename)
+    "direct" (direct/sync-data lamp/url filename)))

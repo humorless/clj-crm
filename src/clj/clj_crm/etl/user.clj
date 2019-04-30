@@ -66,11 +66,11 @@
    Calculate the difference. Find out the new users in Excel but not in DB.
    Write into database"
   [url filename]
-  (log/info "etl.user sync-data triggered!")
+  (log/info "sync-data triggered!")
   (let [e-user-rel (get-users-from-excel url filename)
         d-user-rel (get-users-from-db (d/db conn))
         tx-data (vec (cs/difference e-user-rel d-user-rel))]
-    (do (log/info "etl.user tx-data write into db, length: " (count tx-data))
-        (log/info "etl.user first item of tx-data" (first tx-data))
+    (do (log/info "tx-data write into db, length: " (count tx-data))
+        (log/info "first item of tx-data" (first tx-data))
         (when (seq tx-data)
           @(d/transact conn tx-data)))))

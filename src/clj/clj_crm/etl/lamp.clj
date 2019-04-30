@@ -115,12 +115,12 @@
    Calculate the difference. Find out the new customers in LAMP but not in DB.
    Write into database"
   [filename]
-  (log/info "etl.lamp sync-data triggered!")
+  (log/info "sync-data triggered!")
   (let [l-customer-rel (get-customers-from-excel url filename)
         d-customer-rel (get-customers-from-db (d/db conn))
         tx-data (vec (cs/difference l-customer-rel d-customer-rel))]
-    (do (log/info "etl.lamp tx-data write into db, length: " (count tx-data))
-        (log/info "etl.lamp first item of tx-data" (first tx-data))
+    (do (log/info "tx-data write into db, length: " (count tx-data))
+        (log/info "first item of tx-data" (first tx-data))
         (when (seq tx-data)
           @(d/transact conn tx-data)))))
 

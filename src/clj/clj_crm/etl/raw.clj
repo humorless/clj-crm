@@ -58,15 +58,17 @@
   { :io-writing-time   XXX
     :product-unique-id XXX
     :service-category  XXX
-    :accounting-data      [\"2019-03\", 45]  }
+    :accounting-data   [\"2019-03\", 45]  }
   ...
   ]"
-  [months m]
+  [title-table m]
   (let [part-m (select-keys m [:io-writing-time :product-unique-id :service-category])
-        gen-order (fn gen-order [k month-str]
-                    (prn "debug gen-order" k month-str)
-                    (assoc part-m :accounting-data [month-str (get m k)]))]
-    (mapv gen-order month-fields months)))
+        gen-order (fn gen-order [k]
+                    (assoc part-m :accounting-data [(k title-table) (k m)]))]
+    (mapv gen-order month-fields)))
+
+(defn revenue-number? [m]
+  (number? (second (:accounting-data m))))
 
 ;; (get-orders-from-excel (d/db conn) "http://127.0.0.1:5001/" "raw.xlsx")
 (defn- get-orders-from-excel
@@ -79,11 +81,12 @@
   [db addr filename]
   (let [p-table (service-category->enum db)
         sheet-data (get-raw-excel (str addr filename))
-        titles (first sheet-data)
-        title-months (mapv #(get titles %) month-fields)]
+        title-table (first sheet-data)]
     (->> sheet-data
          rest
-         (map #(expand-orders title-months)))))
+         (mapcat #(expand-orders title-table %))
+         (filter revenue-number?)
+         set)))
 
 (defn- order-eids [db]
   (d/q '[:find [?e ...] :where [?e :order/product-unique-id]] db))

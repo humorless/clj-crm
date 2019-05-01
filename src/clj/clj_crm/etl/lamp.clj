@@ -14,7 +14,7 @@
   (:import [java.io StringWriter]))
 
 (defstate url
-  :start (-> env :lamp-url)
+  :start (:lamp-url env)
   :stop "")
 
 (defn- lamp-path [base]

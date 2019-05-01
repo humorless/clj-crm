@@ -59,7 +59,7 @@
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-immutant "2.1.0"]
-            [lein-kibit "0.1.2"]]
+            [lein-kibit "0.1.6"]]
   :clean-targets ^{:protect false}
   [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel

@@ -86,7 +86,7 @@
    (POST "/api/sync" req
      :body-params [filename :- s/Str, cmd :- s/Str]
      :summary     "Sync data from excel file."
-     :description "filename refers to the excel filename. cmd can be [customer|user|direct|agency]"
+     :description "filename refers to the excel filename. cmd can be [customer|user|direct|agency|raw]"
      (if-let [r (etl/sync-data cmd filename)]
        (ok {:result :insert-done})
        (ok {:result :already-sync})))

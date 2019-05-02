@@ -243,4 +243,19 @@
    {:product/type :product.type/line_at            :product/category :product.cat/account :product/service-category "LINE@"}
    {:product/type :product.type/line_mobile_tw     :product/category :product.cat/account :product/service-category "LINE Mobile TW"}]
 ]}
+:clj-crm/data6 {:txes [
+  [{:order/product-unique-id "pui-001"
+    :order/customer [:customer/id "CM0004"]
+    :order/service-category-enum :product.type/BC
+    :order/io-writing-time #inst "2019-02-28"
+    :order/accounting-data #{{:accounting/month "2019-02" :accounting/revenue 100}
+                             {:accounting/month "2019-03" :accounting/revenue 200}}}]
+  [{:order/product-unique-id "pui-002"
+    :order/customer [:customer/id "CM0004"]
+    :order/service-category-enum :product.type/BC
+    :order/io-writing-time #inst "2019-03-29"
+    :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue 300}
+                             {:accounting/month "2019-06" :accounting/revenue 400}}}]
+
+]}
 }

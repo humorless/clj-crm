@@ -1,6 +1,6 @@
 {;; norm1 installs the user table schema into Datomic
  :clj-crm/norm1 {:txes [[
-   {:db/doc "Mapping to lamp-raw product-unique-id"
+   {:db/doc "Mapping to lamp-raw product-unique-id|External unique key of order"
     :db/ident :order/product-unique-id
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
@@ -8,7 +8,14 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "Ref to product type"
+   {:db/doc "Ref to eid to customer table"
+    :db/ident :order/customer
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Ref to enumeration of product.type, but not product.cat"
     :db/ident :order/service-category-enum
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one
@@ -44,7 +51,7 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "Ref to product type"
+   {:db/doc "Ref to product.type enumeration"
     :db/ident :product/type
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one
@@ -52,7 +59,7 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "Ref to product category"
+   {:db/doc "Ref to product.cat enumeration"
     :db/ident :product/category
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one
@@ -223,14 +230,14 @@
 ]]}
 ;; norm4 installs request table schema into Datomic
 :clj-crm/norm4 {:txes [
-  [{:db/doc "reference points to user. The user should be sales"
+  [{:db/doc "Ref to eid of user table. The user should be sales"
     :db/ident :req/sales
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "list of reference tuple points to (customer, product)."
+   {:db/doc "List of tuple of (eid, enumeration) --- (customer, product)."
     :db/ident :req/add-customer-items
     :db/isComponent true
     :db/valueType :db.type/ref
@@ -240,7 +247,7 @@
 
    ;; :customer-item/product   ref type
    ;; :customer-item/customer  ref type
-   {:db/doc "list of reference tuple points to (customer, product)."
+   {:db/doc "List of tuple of (eid, enumeration) ---- (customer, product)."
     :db/ident :req/remove-customer-items
     :db/isComponent true
     :db/valueType :db.type/ref
@@ -248,14 +255,14 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "the status of this request: open, approved, rejected"
+   {:db/doc "Enumerations of open/modified/approved/rejected"
     :db/ident :req/status
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "how many times this req has been written."
+   {:db/doc "How many times this req has been written."
     :db/ident :req/stamp
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one
@@ -268,14 +275,8 @@
    [:db/add #db/id [:db.part/user] :db/ident :req.status/approved]
    [:db/add #db/id [:db.part/user] :db/ident :req.status/rejected]]
 
-   [{:db/doc "Currently, the only schema of product entity."
-     :db/ident :product/type
-     :db/valueType :db.type/ref
-     :db/cardinality :db.cardinality/one
-     :db/id #db/id [:db.part/db]
-     :db.install/_attribute :db.part/db}
     ;; enumeration for product.type & product.cat
-   [:db/add #db/id [:db.part/user] :db/ident :product.cat/account]
+  [[:db/add #db/id [:db.part/user] :db/ident :product.cat/account]
    [:db/add #db/id [:db.part/user] :db/ident :product.cat/display]
    [:db/add #db/id [:db.part/user] :db/ident :product.type/line_now]
    [:db/add #db/id [:db.part/user] :db/ident :product.type/timeline]
@@ -290,14 +291,14 @@
    [:db/add #db/id [:db.part/user] :db/ident :product.type/line_at]
    [:db/add #db/id [:db.part/user] :db/ident :product.type/line_mobile_tw]]
 
-   [{:db/doc "customerItem table is a sub component of request"
+   [{:db/doc "Ref of enumerations of product.type or product.cat"
      :db/ident :customerItem/product
      :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/one
      :db/id #db/id [:db.part/db]
      :db.install/_attribute :db.part/db}
 
-    {:db/doc "customerItem table is a sub component of request"
+    {:db/doc "Ref to eid of customer table"
      :db/ident :customerItem/customer
      :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/one
@@ -306,21 +307,21 @@
 ]}
 ;; norm5 installs allocation table schema into Datomic
 :clj-crm/norm5 {:txes [[
-   {:db/doc "reference points to user. The user should be sales"
+   {:db/doc "Ref to eid of user table. The user should be sales"
     :db/ident :allo/sales
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "reference points to customer table"
+   {:db/doc "Ref to eid of customer table"
     :db/ident :allo/customer
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "reference points to product table"
+   {:db/doc "Ref of enumerations of product.type or product.cat"
     :db/ident :allo/product
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one

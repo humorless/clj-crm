@@ -3,6 +3,7 @@
             [io.rkn.conformity :as c]
             [mount.core :refer [defstate]]
             [clojure.string :as string]
+            [clojure.walk :as walk]
             [clj-crm.config :refer [env]]))
 
 ;; create datomic database is idempotent operation
@@ -427,9 +428,12 @@
         year-str (first (string/split date-str #"-"))]
     (keyword year-str)))
 
-(defn update-map [m f]
+(defn- update-map [m f]
   (reduce-kv (fn [m k v]
                (assoc m k (f v))) {} m))
+
+(defn- sum-over-tuples [tuples]
+  (walk/walk last #(apply + %) tuples))
 
 (defn u-eid->revenue
   [db u-eid]
@@ -437,5 +441,7 @@
         o-eids (map first orders)
         revenues (mapcat #(o-eid->revenues db %) o-eids)
         y-revenues (group-by year-lookup revenues)
-        y-m-revenues (update-map y-revenues #(group-by quater-lookup %))]
-    y-m-revenues))
+        y-m-revenues (update-map y-revenues #(group-by quater-lookup %))
+        sum-and-raw (juxt sum-over-tuples identity)
+        data (update-map y-m-revenues #(update-map % sum-and-raw))]
+    data))

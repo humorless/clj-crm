@@ -52,7 +52,7 @@
 ;; [:1 :2 :3 :4 ... :12]
 (def month-fields (mapv #(keyword (str %)) (range 1 13)))
 
-(defn- expand-orders
+(defn- expand-order
   "make a single order expand to 12 orders
 
   m is of the {HashMap} form that just reading the data from excel.
@@ -135,7 +135,7 @@
         title-table (first sheet-data)]
     (->> sheet-data
          rest
-         (mapcat #(expand-orders title-table %))
+         (mapcat #(expand-order title-table %))
          (filter revenue-number?)
          (map #(order-m->revenue-tx c-table p-table %))
          (filter :order/service-category-enum)            ;; remove service-category "TV"
@@ -154,9 +154,41 @@
         tx-order (map #(eid->order db %) eids)]
     (set tx-order)))
 
-(defn- sync-existing-data
-  ""
-  [db tx-update-data])
+;; [:fn/update-accounting-data [:order/product-unique-id 5722-1] [[2019-01 127379] [2019-02 115052]]]
+(comment
+  (d/q '[:find ?m ?r
+         :in $ ?e
+         :where [?e :order/accounting-data ?d]
+         [?d :accounting/month ?m]
+         [?d :accounting/revenue ?r]]
+       (d/db conn) [:order/product-unique-id "5722-1"]))
+
+(defn- accounting-data-diff?
+  [db m]
+  (let [u-i (:order/product-unique-id m)
+        new-ad (set (map #(vector (:accounting/month %)
+                                  (:accounting/revenue %)) (:order/accounting-data m)))
+        old-ad (set (d/q '[:find ?m ?r
+                           :in $ ?e
+                           :where [?e :order/accounting-data ?d]
+                           [?d :accounting/month ?m]
+                           [?d :accounting/revenue ?r]]
+                         db [:order/product-unique-id u-i]))]
+    (not= new-ad old-ad)))
+
+(defn- retract-and-add [db m]
+  (let [u-i (:order/product-unique-id m)
+        eid [:order/product-unique-id u-i]
+        ad-refs (d/q '[:find [?d ...]
+                       :in $ ?e
+                       :where [?e :order/accounting-data ?d]]
+                     db eid)
+        retracts (mapcat (fn [r] [[:db/retractEntity r]
+                                  [:db/retract eid :order/accounting-data r]]) ad-refs)]
+    (conj (vec retracts) m)))
+
+(defn- ->update-tx [db txes]
+  (mapcat #(retract-and-add db %) txes))
 
 (defn sync-data
   "From Excel file, get the current order table.
@@ -174,10 +206,25 @@
                          (contains? rel primary-m)))
         tx-group (group-by #(exist-in-set d-rel %) e-rel)
         tx-create-data (get tx-group false)
-        tx-update-data (get tx-group true)]
+        tx-to-sync-data (get tx-group true)
+        tx-update-data (->update-tx db (filter #(accounting-data-diff? db %) tx-to-sync-data))]
+    (log/info "tx-create-data length:" (count tx-create-data))
+    (log/info "tx-update-data length:" (count tx-update-data))
     (when (seq tx-create-data)
       (log/info "tx-create-data write into db, length: " (count tx-create-data))
       (log/info "first item of tx-create-data" (first tx-create-data))
       @(d/transact conn tx-create-data))
     (when (seq tx-update-data)
-      (sync-existing-data db tx-update-data))))
+      (log/info "tx-update-data write into db, length: " (count tx-update-data))
+      (log/info "first item of tx-update-data" (first tx-update-data))
+      @(d/transact conn tx-update-data))
+    (when (or (seq tx-create-data) (seq tx-update-data))
+      :insert-data)))
+
+(comment
+  (def temp-datum #:order{:product-unique-id "5722-1"
+                          :io-writing-time #inst "2018-08-20T10:46:00.000-00:00"
+                          :customer 17592186046462
+                          :service-category-enum :product.type/OA
+                          :accounting-data (list {:accounting/month "2019-04" :accounting/revenue -3}
+                                                 {:accounting/month "2019-05" :accounting/revenue -2})}))

@@ -94,29 +94,15 @@
            (map #(allo-m->allo-tx-m db c-table u-table %))
            set))))
 
-(defn- allo-eids [db]
-  (d/q '[:find [?e ...] :where [?e :allo/sales]] db))
-
-(defn- eid->allo [db eid]
-  (d/pull db '[*] eid))
-
-(defn- get-allos-from-db [db]
-  (let [eids (allo-eids db)
-        tx-allo (map #(eid->allo db %) eids)]
-    (set tx-allo)))
-
 (defn sync-data
   "A <= allocations table
    From Excel file, get the current $A
-   From DB, get the $A inside DB.
-   Calculate the difference. Find out the new $A in Excel but not in DB.
    Write into database"
   [url filename]
   (log/info "sync-data triggered!")
   (let [db (d/db conn)
         e-rel (get-allos-from-excel db url filename)
-        d-rel (get-allos-from-db db)
-        tx-data (vec (cs/difference e-rel d-rel))]
+        tx-data (vec e-rel)]
     (do (log/info "tx-data write into db, length: " (count tx-data))
         (log/info "first item of tx-data" (first tx-data))
         (when (seq tx-data)

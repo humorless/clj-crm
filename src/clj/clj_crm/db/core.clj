@@ -2,6 +2,7 @@
   (:require [datomic.api :as d]
             [io.rkn.conformity :as c]
             [mount.core :refer [defstate]]
+            [clojure.string :as string]
             [clj-crm.config :refer [env]]))
 
 ;; create datomic database is idempotent operation
@@ -371,7 +372,70 @@
         tx-data (into [] (concat tx-add-allo tx-retract-allo tx-req-status))]
     tx-data))
 
-;; 要設法測完 :
-;; (1) request with add-customer-list, remove-customer-list
-;; (2) request with add-customer-list only
-;; (3) request with remove-customer-list only
+(defn- u-eid->order-tuples [db u-eid]
+  (d/q '[:find ?o ?a-t ?o-t ?pui  ;; deliberately show ?a-t ?o-t ?pui for debug/audit
+         :in $ ?s ?less
+         :where
+         [?a :allo/sales ?s]
+         [?a :allo/customer ?c]
+         [?o :order/customer ?c]
+         ;; above 3 lines -> match the customer
+         [?a :allo/product ?p-category]
+         [?p :product/category ?p-category]
+         [?p :product/type ?sc]
+         [?o :order/service-category-enum ?sc]
+         ;; above 4 lines -> match the product
+         [?a :allo/time ?a-t]
+         [?o :order/io-writing-time ?o-t]
+         [(compare ?a-t ?o-t) ?less]
+         ;; above 3 lines -> match the time
+         [?o :order/product-unique-id ?pui]]
+       db u-eid -1))
+
+(defn- o-eid->revenues
+  "Example output: #{[17592186045536 \"2019-02\" 100] [17592186045536 \"2019-03\" 200]}"
+  [db o-eid]
+  (d/q '[:find ?pui ?m ?r
+         :in $ ?o
+         :where
+         [?o :order/product-unique-id ?pui]
+         [?o :order/accounting-data ?ad]
+         [?ad :accounting/month ?m]
+         [?ad :accounting/revenue ?r]] db o-eid))
+
+(def quater-table
+  {"01" :q1
+   "02" :q1
+   "03" :q1
+   "04" :q2
+   "05" :q2
+   "06" :q2
+   "07" :q3
+   "08" :q3
+   "09" :q3
+   "10" :q4
+   "11" :q4
+   "12" :q4})
+
+(defn- quater-lookup [tuple]
+  (let [date-str (second tuple)
+        month-str (second (string/split date-str #"-"))]
+    (get quater-table month-str)))
+
+(defn- year-lookup [tuple]
+  (let [date-str (second tuple)
+        year-str (first (string/split date-str #"-"))]
+    (keyword year-str)))
+
+(defn update-map [m f]
+  (reduce-kv (fn [m k v]
+               (assoc m k (f v))) {} m))
+
+(defn u-eid->revenue
+  [db u-eid]
+  (let [orders (u-eid->order-tuples db u-eid)
+        o-eids (map first orders)
+        revenues (mapcat #(o-eid->revenues db %) o-eids)
+        y-revenues (group-by year-lookup revenues)
+        y-m-revenues (update-map y-revenues #(group-by quater-lookup %))]
+    y-m-revenues))

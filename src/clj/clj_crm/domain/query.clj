@@ -88,6 +88,16 @@
         data (mapv #(dcore/recur-marshal db %) query-result)]
     data))
 
+(defmethod dispatch-q :all-user-revenues
+  [user-q]
+  (log/info "at all-user-revenues, user-q as" user-q)
+  (let [db (d/db conn)
+        eids (dcore/user-eids db)
+        u-names (map #(second (dcore/u-eid->user db %)) eids)
+        revenues (map #(dcore/u-eid->revenue db %) eids)
+        data (zipmap u-names revenues)]
+    data))
+
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword})
 
 (defn query

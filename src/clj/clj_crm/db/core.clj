@@ -4,6 +4,9 @@
             [mount.core :refer [defstate]]
             [clojure.string :as string]
             [clojure.walk :as walk]
+            [clj-time.core :as time.core]
+            [clj-time.format :as time.format]
+            [clj-time.periodic :as time.periodic]
             [clj-crm.config :refer [env]]))
 
 ;; create datomic database is idempotent operation
@@ -374,7 +377,7 @@
     tx-data))
 
 (defn- u-eid->order-tuples [db u-eid]
-  (d/q '[:find ?o ?a-t ?o-t ?pui  ;; deliberately show ?a-t ?o-t ?pui for debug/audit
+  (d/q '[:find ?o ?p-keyword ?a-t ?o-t ?pui  ;; deliberately show ?a-t ?o-t ?pui for debug/audit
          :in $ ?s ?less
          :where
          [?a :allo/sales ?s]
@@ -385,6 +388,7 @@
          [?p :product/category ?p-category]
          [?p :product/type ?sc]
          [?o :order/service-category-enum ?sc]
+         [?sc :db/ident ?p-keyword]
          ;; above 4 lines -> match the product
          [?a :allo/time ?a-t]
          [?o :order/io-writing-time ?o-t]
@@ -393,8 +397,7 @@
          [?o :order/product-unique-id ?pui]]
        db u-eid -1))
 
-(defn- o-eid->revenues
-  "Example output: #{[17592186045536 \"2019-02\" 100] [17592186045536 \"2019-03\" 200]}"
+(defn- o-eid->normal-revenues
   [db o-eid]
   (d/q '[:find ?pui ?m ?r
          :in $ ?o
@@ -403,6 +406,75 @@
          [?o :order/accounting-data ?ad]
          [?ad :accounting/month ?m]
          [?ad :accounting/revenue ?r]] db o-eid))
+
+(defn- o-eid->delta-revenues
+  "specify net-revenue at the starting month, just like a delta revenue"
+  [db o-eid]
+  (let [date->month (fn [s]
+                      (string/join "-" (butlast (string/split s #"-"))))
+        transform-tuple  (fn [[pui sd r]] (vector pui (date->month sd) r))]
+    (->>  (d/q '[:find ?pui ?sd ?np
+                 :in $ ?o
+                 :where
+                 [?o :order/product-unique-id ?pui]
+                 [?o :order/product-net-price ?np]
+                 [?o :order/terms-start-date ?sd]] db o-eid)
+          (mapv transform-tuple))))
+
+(def td-fmt-date (time.format/formatter "yyyy-MM-dd"))
+
+(def td-fmt-y-m (time.format/formatter "yyyy-MM"))
+
+(defn- date-str->dt [date-str]
+  (time.format/parse td-fmt-date date-str))
+
+(defn- dt->y-m-str [dt]
+  (time.format/unparse td-fmt-y-m dt))
+
+(defn- days-of-closed-closed-dt
+  [s-dt e-dt]
+  (time.core/in-days (time.core/interval s-dt (time.core/plus e-dt (time.core/days 1)))))
+
+(defn- revenue-per-day
+  [total-revenue days]
+  (/ total-revenue days))
+
+(defn- month-dts->month-revenue-tuple
+  [pui r-p-d [k v]]
+  (let [days (count v)
+        revenue (* r-p-d days)
+        r (Math/round (double revenue))]
+    [pui k r]))
+
+(defn- o-eid->day-revenues
+  "specify net-revenue according to how many days per month has"
+  [db o-eid]
+  (let [[pui np sd ed]  (d/q '[:find  [?pui ?np ?sd ?ed]
+                               :in $ ?o
+                               :where
+                               [?o :order/product-unique-id ?pui]
+                               [?o :order/product-net-price ?np]
+                               [?o :order/terms-start-date ?sd]
+                               [?o :order/terms-end-date ?ed]] db o-eid)
+        s-dt (date-str->dt sd) ;; dt stands for class #clj-time/date-time
+        e-dt (date-str->dt ed)
+        span-days-int (days-of-closed-closed-dt s-dt e-dt)
+        r-p-d  (revenue-per-day np span-days-int)]
+    (->> (time.periodic/periodic-seq s-dt (time.core/days 1))
+         (take span-days-int)
+         (group-by #(dt->y-m-str %))
+         (map #(month-dts->month-revenue-tuple pui r-p-d %))
+         (sort-by second))))
+
+(defn- o-entity->revenues
+  "Example output: #{[17592186045536 \"2019-02\" 100] [17592186045536 \"2019-03\" 200] ...}"
+  [db {o-eid :o-eid p-type :p-type}]
+  (case p-type
+    :product.type/line_point (o-eid->delta-revenues db o-eid)
+    :product.type/SS (o-eid->delta-revenues db o-eid)
+    :product.type/line_point_code_tw (o-eid->day-revenues db o-eid)
+    :product.type/today (o-eid->day-revenues db o-eid)
+    (o-eid->normal-revenues db o-eid)))
 
 (def quarter-table
   {"01" :q1
@@ -443,8 +515,9 @@
 (defn u-eid->revenue-report
   [db u-eid]
   (let [orders (u-eid->order-tuples db u-eid)
-        o-eids (map first orders)
-        revenues (mapcat #(o-eid->revenues db %) o-eids) ;; vector of revenue tuple
+        o-entities (map (fn [[eid p-type & more]] {:o-eid eid
+                                                   :p-type p-type}) orders)
+        revenues (mapcat #(o-entity->revenues db %) o-entities) ;; vector of revenue tuple
         group-by-year #(group-by year-lookup %)
         group-by-quarter #(group-by quarter-lookup %)
         group-by-month #(group-by month-lookup %)

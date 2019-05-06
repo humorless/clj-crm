@@ -270,16 +270,30 @@
                                {:accounting/month "2019-08" :accounting/revenue 400}}}]
   [{:order/product-unique-id "pui-005"
     :order/customer [:customer/id "CM0004"]
-    :order/service-category-enum :product.type/OA
+    :order/service-category-enum :product.type/SS
     :order/io-writing-time #inst "2019-02-28"
+    :order/product-net-price 1950
+    :order/terms-start-date "2019-02-26"
+    :order/terms-end-date "2020-05-05"
     :order/accounting-data #{{:accounting/month "2019-02" :accounting/revenue -50}
-                             {:accounting/month "2019-05" :accounting/revenue 2000}}}]
+                             {:accounting/month "2019-03" :accounting/revenue 100}
+                             {:accounting/month "2019-04" :accounting/revenue -150}
+                             {:accounting/month "2019-05" :accounting/revenue 50}
+                             {:accounting/month "2019-06" :accounting/revenue 2000}}}]
   [{:order/product-unique-id "pui-006"
     :order/customer [:customer/id "CM0004"]
     :order/service-category-enum :product.type/OA
     :order/io-writing-time #inst "2019-02-28"
     :order/accounting-data #{{:accounting/month "2020-02" :accounting/revenue -30}
                              {:accounting/month "2020-05" :accounting/revenue 1000}}}]
-
+  [{:order/product-unique-id "pui-007"
+    :order/customer [:customer/id "CM0005"]
+    :order/service-category-enum :product.type/today
+    :order/io-writing-time #inst "2019-02-28"
+    :order/product-net-price 970
+    :order/terms-start-date "2019-03-26"
+    :order/terms-end-date "2020-08-05"
+    :order/accounting-data #{{:accounting/month "2020-02" :accounting/revenue -30}
+                             {:accounting/month "2020-05" :accounting/revenue 1000}}}]
 ]}
 }

@@ -94,7 +94,7 @@
   (let [db (d/db conn)
         eids (dcore/user-eids db)
         u-names (map #(second (dcore/u-eid->user db %)) eids)
-        revenues (map #(dcore/u-eid->revenue db %) eids)
+        revenues (map #(dcore/u-eid->revenue-report db %) eids)
         data (zipmap u-names revenues)]
     data))
 

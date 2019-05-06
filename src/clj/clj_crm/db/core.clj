@@ -404,7 +404,7 @@
          [?ad :accounting/month ?m]
          [?ad :accounting/revenue ?r]] db o-eid))
 
-(def quater-table
+(def quarter-table
   {"01" :q1
    "02" :q1
    "03" :q1
@@ -418,10 +418,15 @@
    "11" :q4
    "12" :q4})
 
-(defn- quater-lookup [tuple]
+(defn- month-lookup [tuple]
   (let [date-str (second tuple)
         month-str (second (string/split date-str #"-"))]
-    (get quater-table month-str)))
+    (keyword month-str)))
+
+(defn- quarter-lookup [tuple]
+  (let [date-str (second tuple)
+        month-str (second (string/split date-str #"-"))]
+    (get quarter-table month-str)))
 
 (defn- year-lookup [tuple]
   (let [date-str (second tuple)
@@ -435,13 +440,22 @@
 (defn- sum-over-tuples [tuples]
   (walk/walk last #(apply + %) tuples))
 
-(defn u-eid->revenue
+(defn u-eid->revenue-report
   [db u-eid]
   (let [orders (u-eid->order-tuples db u-eid)
         o-eids (map first orders)
-        revenues (mapcat #(o-eid->revenues db %) o-eids)
-        y-revenues (group-by year-lookup revenues)
-        y-m-revenues (update-map y-revenues #(group-by quater-lookup %))
-        sum-and-raw (juxt sum-over-tuples identity)
-        data (update-map y-m-revenues #(update-map % sum-and-raw))]
-    data))
+        revenues (mapcat #(o-eid->revenues db %) o-eids) ;; vector of revenue tuple
+        group-by-year #(group-by year-lookup %)
+        group-by-quarter #(group-by quarter-lookup %)
+        group-by-month #(group-by month-lookup %)
+        y-revenues   (group-by-year revenues)
+        y-q-revenues (update-map y-revenues group-by-quarter)
+        y-m-revenues (update-map y-revenues group-by-month)
+        sum-and-raw (fn [tuples]
+                      {:sum (sum-over-tuples tuples)
+                       :raw tuples})
+        y-q-sum-revenues (update-map y-q-revenues
+                                     #(update-map % sum-over-tuples))
+        y-m-sum-revenues (update-map y-m-revenues
+                                     #(update-map % sum-and-raw))]
+    (merge-with conj y-q-sum-revenues y-m-sum-revenues)))

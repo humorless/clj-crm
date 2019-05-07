@@ -36,6 +36,9 @@
                                       :J :tax-id
                                       :O :product-unique-id
                                       :V :service-category
+                                      :AC :terms-start-date
+                                      :AD :terms-end-date
+                                      :AG :product-net-price
                                       :AI :1
                                       :AJ :2
                                       :AK :3
@@ -75,7 +78,8 @@
   ...
   ]"
   [title-table m]
-  (let [part-m (select-keys m [:io-writing-time :tax-id :product-unique-id :service-category])
+  (let [part-m (select-keys m [:io-writing-time :tax-id :product-unique-id
+                               :service-category :terms-start-date :terms-end-date :product-net-price])
         gen-order (fn gen-order [k]
                     (assoc part-m :accounting-data [(k title-table) (k m)]))]
     (mapv gen-order month-fields)))
@@ -94,13 +98,18 @@
         c-eid (get c-table (:tax-id m))
         p-enum (get p-table (:service-category m))
         [month revenue-double] (:accounting-data m)
-        revenue-long (long revenue-double)]
+        revenue-long (long revenue-double)
+        np-double (:product-net-price m)
+        np-long (long np-double)]
     (when (nil? c-eid) (log/info (:tax-id m) "has no mapping in c-table"))
     (when (nil? p-enum) (log/info (:service-category m) "has no mapping in p-table"))
     (assoc {} :order/product-unique-id (:product-unique-id m)
            :order/io-writing-time t
            :order/customer c-eid
            :order/service-category-enum p-enum
+           :order/terms-start-date (:terms-start-date m)
+           :order/terms-end-date (:terms-end-date m)
+           :order/product-net-price np-long
            :order/accounting-data {:accounting/month month :accounting/revenue revenue-long})))
 
 (defn- revenue-txes->order-tx
@@ -115,7 +124,9 @@
               left))
         m (apply merge-with f v)
         part-m (select-keys m [:order/product-unique-id :order/io-writing-time
-                               :order/customer :order/service-category-enum])
+                               :order/customer :order/service-category-enum
+                               :order/terms-start-date :order/terms-end-date
+                               :order/product-net-price])
         revenue-item-or-items  (:order/accounting-data m)
         revenue-items    (flatten (list revenue-item-or-items))
         order-tx-m       (assoc part-m :order/accounting-data revenue-items)]
@@ -201,10 +212,7 @@
   (let [db (d/db conn)
         e-rel (get-orders-from-excel db url filename)
         d-rel (get-orders-from-db db)
-        exist-in-set (fn [rel m]
-                       (let [primary-m (select-keys m [:order/product-unique-id])]
-                         (contains? rel primary-m)))
-        tx-group (group-by #(exist-in-set d-rel %) e-rel)
+        tx-group (group-by #(contains? d-rel (select-keys % [:order/product-unique-id])) e-rel)
         tx-create-data (get tx-group false)
         tx-to-sync-data (get tx-group true)
         tx-update-data (->update-tx db (filter #(accounting-data-diff? db %) tx-to-sync-data))]
@@ -226,5 +234,8 @@
                           :io-writing-time #inst "2018-08-20T10:46:00.000-00:00"
                           :customer 17592186046462
                           :service-category-enum :product.type/OA
+                          :terms-start-date "2019-05-14"
+                          :terms-end-date "2020-06-15"
+                          :product-net-price 19500
                           :accounting-data (list {:accounting/month "2019-04" :accounting/revenue -3}
                                                  {:accounting/month "2019-05" :accounting/revenue -2})}))

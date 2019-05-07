@@ -439,10 +439,13 @@
   [total-revenue days]
   (/ total-revenue days))
 
+(defn- frequencies-by [f coll]
+  (let [gp (group-by f coll)]
+    (zipmap (keys gp)  (map #(count (second %)) gp))))
+
 (defn- month-dts->month-revenue-tuple
   [pui r-p-d [k v]]
-  (let [days (count v)
-        revenue (* r-p-d days)
+  (let [revenue (* r-p-d v)
         r (Math/round (double revenue))]
     [pui k r]))
 
@@ -462,7 +465,7 @@
         r-p-d  (revenue-per-day np span-days-int)]
     (->> (time.periodic/periodic-seq s-dt (time.core/days 1))
          (take span-days-int)
-         (group-by #(dt->y-m-str %))
+         (frequencies-by #(dt->y-m-str %))
          (map #(month-dts->month-revenue-tuple pui r-p-d %))
          (sort-by second))))
 

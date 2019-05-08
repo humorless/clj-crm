@@ -174,7 +174,7 @@
          [?d :accounting/revenue ?r]]
        (d/db conn) [:order/product-unique-id "5722-1"]))
 
-(defn- accounting-data-diff?
+(defn- accounting-data-not=?
   [db m]
   (let [u-i (:order/product-unique-id m)
         new-ad (set (map #(vector (:accounting/month %)
@@ -186,6 +186,20 @@
                            [?d :accounting/revenue ?r]]
                          db [:order/product-unique-id u-i]))]
     (not= new-ad old-ad)))
+
+(defn- date-revenue-not=?
+  [db m]
+  (let [u-i (:order/product-unique-id m)
+        key-tuple [:order/terms-start-date :order/terms-end-date :order/product-net-price]
+        new-d-r (select-keys m key-tuple)
+        old-d-r-tuple (d/q '[:find [?sd ?ed ?np]
+                             :in $ ?o
+                             :where [?o :order/terms-start-date ?sd]
+                             [?o :order/terms-end-date ?ed]
+                             [?o :order/product-net-price ?np]]
+                           db [:order/product-unique-id u-i])
+        old-d-r (zipmap key-tuple old-d-r-tuple)]
+    (not= new-d-r old-d-r)))
 
 (defn- retract-and-add [db m]
   (let [u-i (:order/product-unique-id m)
@@ -215,7 +229,8 @@
         tx-group (group-by #(contains? d-rel (select-keys % [:order/product-unique-id])) e-rel)
         tx-create-data (get tx-group false)
         tx-to-sync-data (get tx-group true)
-        tx-update-data (->update-tx db (filter #(accounting-data-diff? db %) tx-to-sync-data))]
+        tx-not=? (some-fn #(accounting-data-not=? db %) #(date-revenue-not=? db %))
+        tx-update-data (->update-tx db (filter tx-not=? tx-to-sync-data))]
     (log/info "tx-create-data length:" (count tx-create-data))
     (log/info "tx-update-data length:" (count tx-update-data))
     (when (seq tx-create-data)

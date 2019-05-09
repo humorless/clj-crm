@@ -297,7 +297,8 @@
    [:db/add #db/id [:db.part/user] :db/ident :req.status/rejected]]
 
     ;; enumeration for product.type & product.cat
-  [[:db/add #db/id [:db.part/user] :db/ident :product.cat/account]
+  [[:db/add #db/id [:db.part/user] :db/ident :product.cat/all]
+   [:db/add #db/id [:db.part/user] :db/ident :product.cat/account]
    [:db/add #db/id [:db.part/user] :db/ident :product.cat/display]
    [:db/add #db/id [:db.part/user] :db/ident :product.type/line_now]
    [:db/add #db/id [:db.part/user] :db/ident :product.type/timeline]

@@ -138,6 +138,13 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
+   {:db/doc "The customer channel type that the user is in charge of: direct, reseller, agency"
+    :db/ident :user/channel
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
    [:db/add #db/id [:db.part/user] :db/ident :user.team/team0]
    [:db/add #db/id [:db.part/user] :db/ident :user.team/team1]
    [:db/add #db/id [:db.part/user] :db/ident :user.team/team2]
@@ -151,6 +158,8 @@
    [:db/add #db/id [:db.part/user] :db/ident :user.roles/manager]
    [:db/add #db/id [:db.part/user] :db/ident :user.roles/sales]
    [:db/add #db/id [:db.part/user] :db/ident :user.roles/lead]
+   [:db/add #db/id [:db.part/user] :db/ident :user.roles/account-executive]
+   [:db/add #db/id [:db.part/user] :db/ident :user.roles/operator]
    ]]}
 
 ;; norm3 installs customer table schema into Datomic
@@ -202,13 +211,6 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   {:db/doc "When the customer is one of agency or reseller, this field specifies the indirect type"
-    :db/ident :customer/agency-indirect
-    :db/valueType :db.type/ref
-    :db/cardinality :db.cardinality/one
-    :db/id #db/id [:db.part/db]
-    :db.install/_attribute :db.part/db}
-
    {:db/doc "NEON customer ID"
     :db/ident :customer/neon-id
     :db/valueType :db.type/string
@@ -223,9 +225,10 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
-   ;; enumberation for :customer/agency-indirect
-   [:db/add #db/id [:db.part/user] :db/ident :customer.indirect/agency]
-   [:db/add #db/id [:db.part/user] :db/ident :customer.indirect/reseller]
+   ;; enumberation for :user/channel
+   [:db/add #db/id [:db.part/user] :db/ident :user.channel/agency]
+   [:db/add #db/id [:db.part/user] :db/ident :user.channel/reseller]
+   [:db/add #db/id [:db.part/user] :db/ident :user.channel/direct]
 
    ;; enumeration for customer/business-type
    [:db/add #db/id [:db.part/user] :db/ident :customer.bus/arts]

@@ -174,8 +174,7 @@
                               :customerItem/product :product.cat/all}
                              {:customerItem/customer "cm-2"
                               :customerItem/product :product.cat/all }]
-    :req/remove-customer-items #{{:customerItem/customer "cm-3"
-                                  :customerItem/product :product.cat/all}}
+    :req/remove-customer-items #{}
     :req/status :req.status/open
     :req/stamp 0}
 

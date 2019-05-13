@@ -2,10 +2,11 @@
   (:require [ring.util.http-response :refer :all]
             [compojure.api.sweet :refer :all]
             [schema.core :as s]
-            [clj-crm.domain.auth :refer [user-datum user-auth register-user]]
+            [clj-crm.domain.auth :refer [user-datum user-auth register-user modify-password]]
             [clj-crm.domain.query :as dq]
             [clj-crm.domain.command :as dc]
             [clj-crm.etl.core :as etl]
+            [clojure.tools.logging :as log]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]))
@@ -82,6 +83,17 @@
      :current-user user
      :summary     "User use jwe token to get the user-datum"
      (ok {:user (user-datum (:user user))}))
+
+   (PUT "/api/user" req
+     :auth-rules authenticated?
+     :header-params [authorization :- s/Str]
+     :current-user user
+     :body-params [username :- s/Str, password :- s/Str]
+     :summary     "modify new password"
+     (log/info "debug /api/user" req)
+     (if (modify-password user password)
+       (ok {:result :password-changed})
+       (ok {:result :password-not-changed})))
 
    (POST "/api/sync" req
      :body-params [filename :- s/Str, cmd :- s/Str]

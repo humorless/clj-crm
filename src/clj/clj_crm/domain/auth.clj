@@ -5,6 +5,13 @@
             [datomic.api :as d]
             [buddy.hashers :as hs]))
 
+(defn modify-password
+  "user is {:user \"userA1@example.com\", :exp 1557735934} "
+  [user pass]
+  (let [tx-user {:user/email (:user user)
+                 :user/pwd (hs/derive pass)}]
+    @(d/transact conn [tx-user])))
+
 (defn register-user
   "if not exists email, store (email, hash(pass)) into db"
   [screenname email pass role team-id]

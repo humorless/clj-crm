@@ -5,7 +5,7 @@
             [clj-crm.etl.lamp :as lamp]
             [clj-crm.etl.user :as user]
             [clj-crm.etl.raw :as raw]
-            [clj-crm.etl.direct :as direct])
+            [clj-crm.etl.allocation :as allocation])
   (:import [org.joda.time DateTimeZone]))
 
 (defn init-etl
@@ -31,4 +31,4 @@
     "customer" (lamp/sync-data filename)
     "user" (user/sync-data lamp/url filename)
     "raw" (raw/sync-data lamp/url filename)
-    "direct" (direct/sync-data lamp/url filename)))
+    "allocation" (allocation/sync-data lamp/url filename)))

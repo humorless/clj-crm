@@ -14,7 +14,7 @@
   [db]
   (into {}  (d/q '[:find ?name ?enum
                    :where
-                   [?e :product/service-category ?name]
+                   [?e :product/type-id ?name]
                    [?e :product/type ?t]
                    [?t :db/ident ?enum]]
                  db)))

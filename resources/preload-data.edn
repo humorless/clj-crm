@@ -1,17 +1,41 @@
 {
 ;; data1 installs certain team init data into Datomic
 :clj-crm/data1 {:txes [
-  [{:product/type :product.type/line_now           :product/category :product.cat/account :product/service-category "LINE NOW"}
-   {:product/type :product.type/timeline           :product/category :product.cat/display :product/service-category "TIMELINE"}
-   {:product/type :product.type/today              :product/category :product.cat/display :product/service-category "TODAY"}
-   {:product/type :product.type/more_tab           :product/category :product.cat/display :product/service-category "More tab"}
-   {:product/type :product.type/line_point         :product/category :product.cat/account :product/service-category "LINE Point"}
-   {:product/type :product.type/line_point_code_tw :product/category :product.cat/account :product/service-category "LINE Point Code(TW)"}
-   {:product/type :product.type/event_banner       :product/category :product.cat/display :product/service-category "Event Banner"}
-   {:product/type :product.type/BC                 :product/category :product.cat/account :product/service-category "BC"}
-   {:product/type :product.type/OA                 :product/category :product.cat/account :product/service-category "OA"}
-   {:product/type :product.type/SS                 :product/category :product.cat/account :product/service-category "SS"}
-   {:product/type :product.type/line_at            :product/category :product.cat/account :product/service-category "LINE@"}
-   {:product/type :product.type/line_mobile_tw     :product/category :product.cat/account :product/service-category "LINE Mobile TW"}]
+  [{:product/type :product.type/line_now           :product/category :product.cat/all}
+   {:product/type :product.type/timeline           :product/category :product.cat/all}
+   {:product/type :product.type/today              :product/category :product.cat/all}
+   {:product/type :product.type/more_tab           :product/category :product.cat/all}
+   {:product/type :product.type/line_point         :product/category :product.cat/all}
+   {:product/type :product.type/line_point_code_tw :product/category :product.cat/all}
+   {:product/type :product.type/event_banner       :product/category :product.cat/all}
+   {:product/type :product.type/BC                 :product/category :product.cat/all}
+   {:product/type :product.type/OA                 :product/category :product.cat/all}
+   {:product/type :product.type/SS                 :product/category :product.cat/all}
+   {:product/type :product.type/line_at            :product/category :product.cat/all}
+   {:product/type :product.type/line_mobile_tw     :product/category :product.cat/all}]
+  [{:product/type :product.type/line_now           :product/category :product.cat/account}
+   {:product/type :product.type/timeline           :product/category :product.cat/display}
+   {:product/type :product.type/today              :product/category :product.cat/display}
+   {:product/type :product.type/more_tab           :product/category :product.cat/display}
+   {:product/type :product.type/line_point         :product/category :product.cat/account}
+   {:product/type :product.type/line_point_code_tw :product/category :product.cat/account}
+   {:product/type :product.type/event_banner       :product/category :product.cat/display}
+   {:product/type :product.type/BC                 :product/category :product.cat/account}
+   {:product/type :product.type/OA                 :product/category :product.cat/account}
+   {:product/type :product.type/SS                 :product/category :product.cat/account}
+   {:product/type :product.type/line_at            :product/category :product.cat/account}
+   {:product/type :product.type/line_mobile_tw     :product/category :product.cat/account}]
+  [{:product/type :product.type/line_now           :product/type-id "LINE NOW"}
+   {:product/type :product.type/timeline           :product/type-id "TIMELINE"}
+   {:product/type :product.type/today              :product/type-id "TODAY"}
+   {:product/type :product.type/more_tab           :product/type-id "More tab"}
+   {:product/type :product.type/line_point         :product/type-id "LINE Point"}
+   {:product/type :product.type/line_point_code_tw :product/type-id "LINE Point Code(TW)"}
+   {:product/type :product.type/event_banner       :product/type-id "Event Banner"}
+   {:product/type :product.type/BC                 :product/type-id "BC"}
+   {:product/type :product.type/OA                 :product/type-id "OA"}
+   {:product/type :product.type/SS                 :product/type-id "SS"}
+   {:product/type :product.type/line_at            :product/type-id "LINE@"}
+   {:product/type :product.type/line_mobile_tw     :product/type-id "LINE Mobile TW"}]
 ]}
 }

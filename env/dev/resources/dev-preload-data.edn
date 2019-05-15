@@ -279,6 +279,9 @@
     :order/customer [:customer/id "CM0004"]
     :order/service-category-enum :product.type/today
     :order/io-writing-time #inst "2019-02-28"
+    :order/product-net-price 700
+    :order/terms-start-date "2019-07-26"
+    :order/terms-end-date "2019-08-05"
     :order/accounting-data #{{:accounting/month "2019-07" :accounting/revenue 300}
                              {:accounting/month "2019-08" :accounting/revenue 400}}}]
   [{:order/product-unique-id "pui-004"

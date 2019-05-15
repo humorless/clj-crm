@@ -377,7 +377,7 @@
     tx-data))
 
 (defn- u-eid->order-tuples [db u-eid]
-  (d/q '[:find ?o ?p-keyword ?a-t ?o-t ?pui  ;; deliberately show ?a-t ?o-t ?pui for debug/audit
+  (d/q '[:find ?o ?p-keyword
          :in $ ?s ?less
          :where
          [?a :allo/sales ?s]
@@ -389,7 +389,7 @@
          [?p :product/type ?sc]
          [?o :order/service-category-enum ?sc]
          [?sc :db/ident ?p-keyword]
-         ;; above 4 lines -> match the product
+         ;; above 5 lines -> match the product
          [?a :allo/time ?a-t]
          [?o :order/io-writing-time ?o-t]
          [(compare ?a-t ?o-t) ?less]
@@ -399,11 +399,13 @@
 
 (defn- o-eid->normal-revenues
   [db o-eid]
-  (d/q '[:find ?pui ?m ?r
+  (d/q '[:find ?pui ?m ?p-keyword ?r
          :in $ ?o
          :where
          [?o :order/product-unique-id ?pui]
          [?o :order/accounting-data ?ad]
+         [?o :order/service-category-enum ?sc]
+         [?sc :db/ident ?p-keyword]
          [?ad :accounting/month ?m]
          [?ad :accounting/revenue ?r]] db o-eid))
 
@@ -411,15 +413,16 @@
   "specify net-revenue at the starting month, just like a delta revenue"
   [db o-eid]
   (let [date->month (fn [s]
-                      (string/join "-" (butlast (string/split s #"-"))))
-        transform-tuple  (fn [[pui sd r]] (vector pui (date->month sd) r))]
-    (->>  (d/q '[:find ?pui ?sd ?np
+                      (string/join "-" (butlast (string/split s #"-"))))]
+    (->>  (d/q '[:find ?pui ?sd ?p-keyword ?np
                  :in $ ?o
                  :where
                  [?o :order/product-unique-id ?pui]
+                 [?o :order/service-category-enum ?sc]
+                 [?sc :db/ident ?p-keyword]
                  [?o :order/product-net-price ?np]
                  [?o :order/terms-start-date ?sd]] db o-eid)
-          (mapv transform-tuple))))
+          (mapv #(update % 1 date->month)))))
 
 (def td-fmt-date (time.format/formatter "yyyy-MM-dd"))
 
@@ -444,21 +447,23 @@
     (zipmap (keys gp)  (map #(count (second %)) gp))))
 
 (defn- month-dts->month-revenue-tuple
-  [pui r-p-d [k v]]
-  (let [revenue (* r-p-d v)
+  [pui p-name r-p-d [y-m-str number-of-day]]
+  (let [revenue (* r-p-d number-of-day)
         r (Math/round (double revenue))]
-    [pui k r]))
+    [pui y-m-str p-name r]))
 
 (defn- o-eid->day-revenues
   "specify net-revenue according to how many days per month has"
   [db o-eid]
-  (let [[pui np sd ed]  (d/q '[:find  [?pui ?np ?sd ?ed]
-                               :in $ ?o
-                               :where
-                               [?o :order/product-unique-id ?pui]
-                               [?o :order/product-net-price ?np]
-                               [?o :order/terms-start-date ?sd]
-                               [?o :order/terms-end-date ?ed]] db o-eid)
+  (let [[pui p-name np sd ed]  (d/q '[:find  [?pui ?p-keyword ?np ?sd ?ed]
+                                      :in $ ?o
+                                      :where
+                                      [?o :order/product-unique-id ?pui]
+                                      [?o :order/service-category-enum ?sc]
+                                      [?sc :db/ident ?p-keyword]
+                                      [?o :order/product-net-price ?np]
+                                      [?o :order/terms-start-date ?sd]
+                                      [?o :order/terms-end-date ?ed]] db o-eid)
         s-dt (date-str->dt sd) ;; dt stands for class #clj-time/date-time
         e-dt (date-str->dt ed)
         span-days-int (days-of-closed-closed-dt s-dt e-dt)
@@ -466,11 +471,12 @@
     (->> (time.periodic/periodic-seq s-dt (time.core/days 1))
          (take span-days-int)
          (frequencies-by #(dt->y-m-str %))
-         (map #(month-dts->month-revenue-tuple pui r-p-d %))
+         (map #(month-dts->month-revenue-tuple pui p-name r-p-d %))
          (sort-by second))))
 
 (defn- o-entity->revenues
-  "Example output: #{[17592186045536 \"2019-02\" 100] [17592186045536 \"2019-03\" 200] ...}"
+  "Example output: #{[17592186045536 \"2019-02\" :product.type/line_now 100]
+                     [17592186045536 \"2019-03\" :product.type/more_tab 200] ...}"
   [db {o-eid :o-eid p-type :p-type}]
   (case p-type
     :product.type/line_point (o-eid->delta-revenues db o-eid)
@@ -518,8 +524,7 @@
 (defn u-eid->revenue-report
   [db u-eid]
   (let [orders (u-eid->order-tuples db u-eid)
-        o-entities (map (fn [[eid p-type & more]] {:o-eid eid
-                                                   :p-type p-type}) orders)
+        o-entities (map #(zipmap [:o-eid :p-type] %) orders)
         revenues (mapcat #(o-entity->revenues db %) o-entities) ;; vector of revenue tuple
         group-by-year #(group-by year-lookup %)
         group-by-quarter #(group-by quarter-lookup %)
@@ -531,7 +536,7 @@
                       {:sum (sum-over-tuples tuples)
                        :raw tuples})
         y-q-sum-revenues (update-map y-q-revenues
-                                     #(update-map % sum-over-tuples))
+                                     #(update-map % sum-and-raw))
         y-m-sum-revenues (update-map y-m-revenues
                                      #(update-map % sum-and-raw))]
-    (merge-with conj y-q-sum-revenues y-m-sum-revenues)))
+    [y-q-sum-revenues y-m-sum-revenues]))

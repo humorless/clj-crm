@@ -376,14 +376,63 @@
         tx-data (into [] (concat tx-add-allo tx-retract-allo tx-req-status))]
     tx-data))
 
-(defn- u-eid->order-tuples [db u-eid]
-  (d/q '[:find ?o ?p-keyword
+(defn- agency-u-eid->orders [db u-eid]
+  (d/q '[:find ?o ?p-keyword ?pui
+         :in $ ?s ?less
+         :where
+         [?a :allo/sales ?s]
+         [?a :allo/customer ?c]
+         [?o :order/channel ?c]
+         ;; above 3 lines -> match the customer
+         [?a :allo/product ?sc]
+         [?o :order/service-category-enum ?sc]
+         [?sc :db/ident ?p-keyword]
+         ;; above 3 lines -> match the product
+         [?a :allo/time ?a-t]
+         [?o :order/io-writing-time ?o-t]
+         [(compare ?a-t ?o-t) ?less]
+         ;; above 3 lines -> match the time
+         (not-join [?o ?less]
+                   [?o :order/customer ?o-c]
+                   [?b :allo/customer ?o-c]
+                   [?o :order/service-category-enum ?o-sc]
+                   [?p :product/type ?o-sc]
+                   [?p :product/category ?p-category]
+                   [?b :allo/product ?p-category]
+                   [?o :order/io-writing-time ?o-tt]
+                   [?b :allo/customer ?b-t]
+                   [(compare ?b-t ?o-tt) ?less])
+         ;; above not-join clause -> not match any direct sales
+         [?o :order/product-unique-id ?pui]]
+       db u-eid -1))
+
+(defn- reseller-u-eid->orders [db u-eid]
+  (d/q '[:find ?o ?p-keyword ?pui
+         :in $ ?s ?less
+         :where
+         [?a :allo/sales ?s]
+         [?a :allo/customer ?c]
+         [?o :order/channel ?c]
+         ;; above 2 lines -> match the customer
+         [?a :allo/product ?sc]
+         [?o :order/service-category-enum ?sc]
+         [?sc :db/ident ?p-keyword]
+         ;; above 3 lines -> match the product
+         [?a :allo/time ?a-t]
+         [?o :order/io-writing-time ?o-t]
+         [(compare ?a-t ?o-t) ?less]
+         ;; above 3 lines -> match the time
+         [?o :order/product-unique-id ?pui]]
+       db u-eid -1))
+
+(defn- direct-u-eid->orders [db u-eid]
+  (d/q '[:find ?o ?p-keyword ?pui
          :in $ ?s ?less
          :where
          [?a :allo/sales ?s]
          [?a :allo/customer ?c]
          [?o :order/customer ?c]
-         ;; above 3 lines -> match the customer
+         ;; above 2 lines -> match the customer
          [?a :allo/product ?p-category]
          [?p :product/category ?p-category]
          [?p :product/type ?sc]
@@ -474,10 +523,10 @@
          (map #(month-dts->month-revenue-tuple pui p-name r-p-d %))
          (sort-by second))))
 
-(defn- o-entity->revenues
+(defn- o-tuple->revenues
   "Example output: #{[17592186045536 \"2019-02\" :product.type/line_now 100]
                      [17592186045536 \"2019-03\" :product.type/more_tab 200] ...}"
-  [db {o-eid :o-eid p-type :p-type}]
+  [db [o-eid p-type & more]]
   (case p-type
     :product.type/line_point (o-eid->delta-revenues db o-eid)
     :product.type/SS (o-eid->delta-revenues db o-eid)
@@ -521,20 +570,26 @@
 (defn- sum-over-tuples [tuples]
   (walk/walk last #(apply + %) tuples))
 
+(defn- group-by-year [coll]
+  (group-by year-lookup coll))
+
+(defn- group-by-quarter [coll]
+  (group-by quarter-lookup coll))
+
+(defn- group-by-month [coll]
+  (group-by month-lookup coll))
+
+(defn- sum-and-raw [tuples]
+  {:sum (sum-over-tuples tuples)
+   :raw tuples})
+
 (defn u-eid->revenue-report
-  [db u-eid]
-  (let [orders (u-eid->order-tuples db u-eid)
-        o-entities (map #(zipmap [:o-eid :p-type] %) orders)
-        revenues (mapcat #(o-entity->revenues db %) o-entities) ;; vector of revenue tuple
-        group-by-year #(group-by year-lookup %)
-        group-by-quarter #(group-by quarter-lookup %)
-        group-by-month #(group-by month-lookup %)
+  [db u-eid u-eid->order-tuples]
+  (let [orders       (u-eid->order-tuples db u-eid)
+        revenues     (mapcat #(o-tuple->revenues db %) orders) ;; vector of revenue tuple
         y-revenues   (group-by-year revenues)
         y-q-revenues (update-map y-revenues group-by-quarter)
         y-m-revenues (update-map y-revenues group-by-month)
-        sum-and-raw (fn [tuples]
-                      {:sum (sum-over-tuples tuples)
-                       :raw tuples})
         y-q-sum-revenues (update-map y-q-revenues
                                      #(update-map % sum-and-raw))
         y-m-sum-revenues (update-map y-m-revenues

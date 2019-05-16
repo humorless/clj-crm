@@ -36,6 +36,13 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
+   {:db/doc "Ref to eid to customer table"
+    :db/ident :order/channel
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
    {:db/doc "Ref to enumeration of product.type, but not product.cat"
     :db/ident :order/service-category-enum
     :db/valueType :db.type/ref

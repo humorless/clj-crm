@@ -34,6 +34,7 @@
          (spreadsheet/select-sheet "Sheet0")
          (spreadsheet/select-columns {:E :io-writing-time
                                       :J :tax-id
+                                      :N :debtor-tax-id
                                       :O :product-unique-id
                                       :V :service-category
                                       :AC :terms-start-date
@@ -54,6 +55,9 @@
 
 ;; [:1 :2 :3 :4 ... :12]
 (def month-fields (mapv #(keyword (str %)) (range 1 13)))
+
+(def property-fields [:io-writing-time :tax-id :debtor-tax-id :product-unique-id
+                      :service-category :terms-start-date :terms-end-date :product-net-price])
 
 (defn- expand-order
   "make a single order expand to 12 orders
@@ -78,8 +82,7 @@
   ...
   ]"
   [title-table m]
-  (let [part-m (select-keys m [:io-writing-time :tax-id :product-unique-id
-                               :service-category :terms-start-date :terms-end-date :product-net-price])
+  (let [part-m (select-keys m property-fields)
         gen-order (fn gen-order [k]
                     (assoc part-m :accounting-data [(k title-table) (k m)]))]
     (mapv gen-order month-fields)))
@@ -96,6 +99,7 @@
   (let [[date clock-time time-zone] (string/split (:io-writing-time m) #" ")
         t (instant/read-instant-date (str date "T" clock-time "+08:00"))  ;; Default: Use Taipei TimeZone
         c-eid (get c-table (:tax-id m))
+        chan-eid (get c-table (:debtor-tax-id m))
         p-enum (get p-table (:service-category m))
         [month revenue-double] (:accounting-data m)
         revenue-long (long revenue-double)
@@ -106,6 +110,7 @@
     (assoc {} :order/product-unique-id (:product-unique-id m)
            :order/io-writing-time t
            :order/customer c-eid
+           :order/channel chan-eid
            :order/service-category-enum p-enum
            :order/terms-start-date (:terms-start-date m)
            :order/terms-end-date (:terms-end-date m)
@@ -123,10 +128,7 @@
               (vector left right)
               left))
         m (apply merge-with f v)
-        part-m (select-keys m [:order/product-unique-id :order/io-writing-time
-                               :order/customer :order/service-category-enum
-                               :order/terms-start-date :order/terms-end-date
-                               :order/product-net-price])
+        part-m (select-keys m property-fields)
         revenue-item-or-items  (:order/accounting-data m)
         revenue-items    (flatten (list revenue-item-or-items))
         order-tx-m       (assoc part-m :order/accounting-data revenue-items)]
@@ -248,6 +250,7 @@
   (def temp-datum #:order{:product-unique-id "5722-1"
                           :io-writing-time #inst "2018-08-20T10:46:00.000-00:00"
                           :customer 17592186046462
+                          :channel  17592186046462
                           :service-category-enum :product.type/OA
                           :terms-start-date "2019-05-14"
                           :terms-end-date "2020-06-15"

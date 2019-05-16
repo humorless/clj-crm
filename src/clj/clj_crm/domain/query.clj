@@ -88,12 +88,22 @@
         data (mapv #(dcore/recur-marshal db %) query-result)]
     data))
 
-(defmethod dispatch-q :all-user-revenues
+(defmethod dispatch-q :my-revenues
   [user-q]
-  (log/info "at all-user-revenues, user-q as" user-q)
+  (log/info "at my-revenues, user-q as" user-q)
+  (let [db (d/db conn)
+        email (:user user-q)
+        user-lookup-ref [:user/email email]
+        orders (dcore/u-eid->orders db user-lookup-ref)
+        revenues (dcore/orders->revenue-report db orders)]
+    revenues))
+
+(defmethod dispatch-q :all-revenues
+  [user-q]
+  (log/info "at all-revenues, user-q as" user-q)
   (let [db (d/db conn)
         eids (dcore/user-eids db)
-        u-names (map #(second (dcore/u-eid->user db %)) eids)
+        u-names (map #(second (second (dcore/u-eid->user db %))) eids)
         orderss (map #(dcore/u-eid->orders db %) eids)
         revenuess (map #(dcore/orders->revenue-report db %) orderss)
         data (zipmap u-names revenuess)]

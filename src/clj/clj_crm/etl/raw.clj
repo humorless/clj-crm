@@ -59,6 +59,11 @@
 (def property-fields [:io-writing-time :tax-id :debtor-tax-id :product-unique-id
                       :service-category :terms-start-date :terms-end-date :product-net-price])
 
+(def order-property-fields
+  (mapv #(keyword (str "order") (name %))
+        [:product-unique-id :customer :channel :service-category-enum
+         :io-writing-time :product-net-price :terms-start-date :terms-end-date]))
+
 (defn- expand-order
   "make a single order expand to 12 orders
 
@@ -105,8 +110,9 @@
         revenue-long (long revenue-double)
         np-double (:product-net-price m)
         np-long (long np-double)]
-    (when (nil? c-eid) (log/info (:tax-id m) "has no mapping in c-table"))
-    (when (nil? p-enum) (log/info (:service-category m) "has no mapping in p-table"))
+    (when (nil? c-eid) (log/info :tax-id (:tax-id m) "has no mapping in c-table"))
+    (when (nil? chan-eid) (log/info :debtor-tax-id (:debtor-tax-id m) "has no mapping in c-table"))
+    (when (nil? p-enum) (log/info :service-category (:service-category m) "has no mapping in p-table"))
     (assoc {} :order/product-unique-id (:product-unique-id m)
            :order/io-writing-time t
            :order/customer c-eid
@@ -117,18 +123,27 @@
            :order/product-net-price np-long
            :order/accounting-data {:accounting/month month :accounting/revenue revenue-long})))
 
+(defn- revenue-merger
+  " Test Case
+    (apply merge-with revenue-merger [{:a 5 :b {:c 1}} {:a 6 :b {:c 2} } {:a 7 :b {:c 3}} {:a 8 :b {:c 4}}])
+    => {:a 5, :b [{:c 1} {:c 2} {:c 3} {:c 4}]}
+    (apply merge-with revenue-merger [{:a 5 :b {:c 1}}])
+    => {:a 5, :b {:c 1}} "
+  [left right]
+  (if (map? right)
+    (if (vector? left)
+      (conj left right)
+      (conj [] left right))
+    left))
+
 (defn- revenue-txes->order-tx
   "Merge the revenue into revenue-item-or-items.
 
    k -> \"product-unique-id\"
    v -> revenue-txes, a vector of {HashMap}, which each represents an item of revenue"
   [coll k v]
-  (let [f (fn revenue-merge-f [left right]
-            (if (map? left)
-              (vector left right)
-              left))
-        m (apply merge-with f v)
-        part-m (select-keys m property-fields)
+  (let [m (apply merge-with revenue-merger v)
+        part-m (select-keys m order-property-fields)
         revenue-item-or-items  (:order/accounting-data m)
         revenue-items    (flatten (list revenue-item-or-items))
         order-tx-m       (assoc part-m :order/accounting-data revenue-items)]

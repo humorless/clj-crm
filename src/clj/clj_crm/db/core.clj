@@ -376,75 +376,77 @@
         tx-data (into [] (concat tx-add-allo tx-retract-allo tx-req-status))]
     tx-data))
 
+(def order-match-rules
+  '[[(direct-allo-customer-order ?a ?o)
+     [?a :allo/customer ?c]
+     [?o :order/customer ?c]]
+    [(direct-allo-product-order ?a ?o ?p-keyword)
+     [?a :allo/product ?p-category]
+     [?p :product/category ?p-category]
+     [?p :product/type ?sc]
+     [?o :order/service-category-enum ?sc]
+     [?sc :db/ident ?p-keyword]]
+    [(allo-time-order ?a ?o ?less)
+     [?a :allo/time ?a-t]
+     [?o :order/io-writing-time ?o-t]
+     [(compare ?a-t ?o-t) ?less]]
+    [(indirect-allo-customer-order ?a ?o)
+     [?a :allo/customer ?c]
+     [?o :order/channel ?c]]
+    [(indirect-allo-product-order ?a ?o ?p-keyword)
+     [?a :allo/product ?sc]
+     [?o :order/service-category-enum ?sc]
+     [?sc :db/ident ?p-keyword]]])
+
 (defn- agency-u-eid->orders [db u-eid]
   (d/q '[:find ?o ?p-keyword ?pui
-         :in $ ?s ?less
+         :in $ % ?s ?less
          :where
          [?a :allo/sales ?s]
-         [?a :allo/customer ?c]
-         [?o :order/channel ?c]
-         ;; above 3 lines -> match the customer
-         [?a :allo/product ?sc]
-         [?o :order/service-category-enum ?sc]
-         [?sc :db/ident ?p-keyword]
-         ;; above 3 lines -> match the product
-         [?a :allo/time ?a-t]
-         [?o :order/io-writing-time ?o-t]
-         [(compare ?a-t ?o-t) ?less]
-         ;; above 3 lines -> match the time
+         (indirect-allo-customer-order ?a ?o)
+         (indirect-allo-product-order ?a ?o ?p-keyword)
+         (allo-time-order ?a ?o ?less)
+         [?o :order/product-unique-id ?pui]
          (not-join [?o ?less]
-                   [?o :order/customer ?o-c]
-                   [?b :allo/customer ?o-c]
-                   [?o :order/service-category-enum ?o-sc]
-                   [?p :product/type ?o-sc]
-                   [?p :product/category ?p-category]
-                   [?b :allo/product ?p-category]
-                   [?o :order/io-writing-time ?o-tt]
-                   [?b :allo/customer ?b-t]
-                   [(compare ?b-t ?o-tt) ?less])
-         ;; above not-join clause -> not match any direct sales
-         [?o :order/product-unique-id ?pui]]
-       db u-eid -1))
+                   (direct-allo-customer-order ?b ?o)
+                   (direct-allo-product-order ?b ?o _)
+                   (allo-time-order ?b ?o ?less))]
+       db order-match-rules u-eid -1))
 
 (defn- reseller-u-eid->orders [db u-eid]
   (d/q '[:find ?o ?p-keyword ?pui
-         :in $ ?s ?less
+         :in $ % ?s ?less
          :where
          [?a :allo/sales ?s]
-         [?a :allo/customer ?c]
-         [?o :order/channel ?c]
-         ;; above 2 lines -> match the customer
-         [?a :allo/product ?sc]
-         [?o :order/service-category-enum ?sc]
-         [?sc :db/ident ?p-keyword]
-         ;; above 3 lines -> match the product
-         [?a :allo/time ?a-t]
-         [?o :order/io-writing-time ?o-t]
-         [(compare ?a-t ?o-t) ?less]
-         ;; above 3 lines -> match the time
+         (indirect-allo-customer-order ?a ?o)
+         (indirect-allo-product-order ?a ?o ?p-keyword)
+         (allo-time-order ?a ?o ?less)
          [?o :order/product-unique-id ?pui]]
-       db u-eid -1))
+       db order-match-rules u-eid -1))
 
 (defn- direct-u-eid->orders [db u-eid]
   (d/q '[:find ?o ?p-keyword ?pui
-         :in $ ?s ?less
+         :in $ % ?s ?less
          :where
          [?a :allo/sales ?s]
-         [?a :allo/customer ?c]
-         [?o :order/customer ?c]
-         ;; above 2 lines -> match the customer
-         [?a :allo/product ?p-category]
-         [?p :product/category ?p-category]
-         [?p :product/type ?sc]
-         [?o :order/service-category-enum ?sc]
-         [?sc :db/ident ?p-keyword]
-         ;; above 5 lines -> match the product
-         [?a :allo/time ?a-t]
-         [?o :order/io-writing-time ?o-t]
-         [(compare ?a-t ?o-t) ?less]
-         ;; above 3 lines -> match the time
+         (direct-allo-customer-order ?a ?o)
+         (direct-allo-product-order ?a ?o ?p-keyword)
+         (allo-time-order ?a ?o ?less)
          [?o :order/product-unique-id ?pui]]
-       db u-eid -1))
+       db order-match-rules u-eid -1))
+
+(defn u-eid->orders [db u-eid]
+  (let [chan  (d/q '[:find ?chan-keyword .
+                     :in $ ?u
+                     :where
+                     [?u :user/channel ?chan]
+                     [?chan :db/ident ?chan-keyword]]
+                   db u-eid)]
+    (case chan
+      :user.channel/direct (direct-u-eid->orders db u-eid)
+      :user.channel/reseller (reseller-u-eid->orders db u-eid)
+      :user.channel/agency (agency-u-eid->orders db u-eid)
+      [])))
 
 (defn- o-eid->normal-revenues
   [db o-eid]
@@ -583,10 +585,9 @@
   {:sum (sum-over-tuples tuples)
    :raw tuples})
 
-(defn u-eid->revenue-report
-  [db u-eid u-eid->order-tuples]
-  (let [orders       (u-eid->order-tuples db u-eid)
-        revenues     (mapcat #(o-tuple->revenues db %) orders) ;; vector of revenue tuple
+(defn orders->revenue-report
+  [db orders]
+  (let [revenues     (mapcat #(o-tuple->revenues db %) orders) ;; vector of revenue tuple
         y-revenues   (group-by-year revenues)
         y-q-revenues (update-map y-revenues group-by-quarter)
         y-m-revenues (update-map y-revenues group-by-month)

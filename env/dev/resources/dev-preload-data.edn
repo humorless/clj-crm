@@ -6,6 +6,7 @@
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userA1@example.com"
     :user/status :user.status/active
+    :user/channel :user.channel/direct
     :user/roles  :user.roles/sales
     :user/team   :user.team/team1}
 
@@ -14,6 +15,7 @@
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userA2@example.com"
     :user/status :user.status/active
+    :user/channel :user.channel/direct
     :user/roles  :user.roles/sales
     :user/team   :user.team/team1}
 
@@ -22,6 +24,7 @@
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userA3@example.com"
     :user/status :user.status/active
+    :user/channel :user.channel/direct
     :user/roles  :user.roles/sales
     :user/team   :user.team/team1}
 
@@ -46,6 +49,7 @@
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userB1@example.com"
     :user/status :user.status/active
+    :user/channel :user.channel/reseller
     :user/roles  :user.roles/sales
     :user/team   :user.team/team2}
 
@@ -54,6 +58,7 @@
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userB2@example.com"
     :user/status :user.status/active
+    :user/channel :user.channel/agency
     :user/roles  :user.roles/sales
     :user/team   :user.team/team2}
 
@@ -310,6 +315,7 @@
                              {:accounting/month "2020-05" :accounting/revenue 1000}}}]
   [{:order/product-unique-id "pui-007"
     :order/customer [:customer/id "CM0005"]
+    :order/channel [:customer/id "CM0008"]
     :order/service-category-enum :product.type/today
     :order/io-writing-time #inst "2019-02-28"
     :order/product-net-price 970
@@ -317,5 +323,34 @@
     :order/terms-end-date "2020-08-05"
     :order/accounting-data #{{:accounting/month "2020-02" :accounting/revenue -30}
                              {:accounting/month "2020-05" :accounting/revenue 1000}}}]
+]}
+:clj-crm/data7 {:txes [
+  [{:allo/sales [:user/email "userB1@example.com"]
+    :allo/customer [:customer/id "CM0006"]
+    :allo/product :product.type/OA
+    :allo/time #inst "2014-01-28T09:00:00Z"}
+   {:allo/sales [:user/email "userB2@example.com"]
+    :allo/customer [:customer/id "CM0007"]
+    :allo/product :product.type/SS
+    :allo/time #inst "2014-01-29"}
+   {:allo/sales [:user/email "userB2@example.com"]
+    :allo/customer [:customer/id "CM0008"]
+    :allo/product :product.type/today
+    :allo/time #inst "2018-01-29"} ]
+  [{:order/product-unique-id "pui-008"
+    :order/channel [:customer/id "CM0006"]
+    :order/service-category-enum :product.type/OA
+    :order/io-writing-time #inst "2019-02-28"
+    :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue -300}
+                             {:accounting/month "2019-06" :accounting/revenue 400}}}]
+  [{:order/product-unique-id "pui-009"
+    :order/channel [:customer/id "CM0007"]
+    :order/service-category-enum :product.type/SS
+    :order/io-writing-time #inst "2019-02-28"
+    :order/product-net-price 700
+    :order/terms-start-date "2019-02-26"
+    :order/terms-end-date "2020-05-05"
+    :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue 300}
+                             {:accounting/month "2019-06" :accounting/revenue 400}}}]
 ]}
 }

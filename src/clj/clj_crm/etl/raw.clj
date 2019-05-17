@@ -60,7 +60,7 @@
                       :service-category :terms-start-date :terms-end-date :product-net-price])
 
 (def order-property-fields
-  (mapv #(keyword (str "order") (name %))
+  (mapv #(keyword "order" (name %))
         [:product-unique-id :customer :channel :service-category-enum
          :io-writing-time :product-net-price :terms-start-date :terms-end-date]))
 
@@ -123,6 +123,9 @@
            :order/product-net-price np-long
            :order/accounting-data {:accounting/month month :accounting/revenue revenue-long})))
 
+(defn- trim-debtor-field [m]
+  (update m :debtor-tax-id string/trim))
+
 (defn- revenue-merger
   " Test Case
     (apply merge-with revenue-merger [{:a 5 :b {:c 1}} {:a 6 :b {:c 2} } {:a 7 :b {:c 3}} {:a 8 :b {:c 4}}])
@@ -165,6 +168,7 @@
          rest
          (mapcat #(expand-order title-table %))
          (filter revenue-number?)
+         (map trim-debtor-field)
          (map #(order-m->revenue-tx c-table p-table %))
          (filter :order/service-category-enum)            ;; remove service-category "TV"
          (group-by :order/product-unique-id)

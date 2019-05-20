@@ -2,11 +2,17 @@
   (:require [clj-time.core :as t]
             [clj-time.periodic :refer [periodic-seq]]
             [chime :as chime]
-            [clj-crm.etl.lamp :as lamp]
+            [clj-crm.etl.customer :as customer]
             [clj-crm.etl.user :as user]
             [clj-crm.etl.raw :as raw]
-            [clj-crm.etl.allocation :as allocation])
+            [clj-crm.etl.allocation :as allocation]
+            [clj-crm.config :refer [env]]
+            [mount.core :as mount])
   (:import [org.joda.time DateTimeZone]))
+
+(mount/defstate url
+  :start (:etl-url env)
+  :stop "")
 
 (defn init-etl
   "Trigger timer to run ETL periodically.
@@ -16,11 +22,10 @@
                                            (withZone (DateTimeZone/forID "Asia/Taipei"))
                                            (withTime 13 0 0 0))
                                        (t/days 1)))]
-    ;; (lamp/sync-data)
     (chime/chime-at events-seq
                     (fn [ts]
                       (prn "at " ts "sync data")
-                      (lamp/sync-data))
+                      (customer/sync-data))
                     {:on-finished (fn []
                                     (println "Schedule finished."))})))
 
@@ -28,7 +33,7 @@
   "Switch on cmd to decide which `sync-data` function to use"
   [cmd filename]
   (case cmd
-    "customer" (lamp/sync-data filename)
-    "user" (user/sync-data lamp/url filename)
-    "raw" (raw/sync-data lamp/url filename)
-    "allocation" (allocation/sync-data lamp/url filename)))
+    "customer" (customer/sync-data url filename)
+    "user" (user/sync-data url filename)
+    "raw" (raw/sync-data url filename)
+    "allocation" (allocation/sync-data url filename)))

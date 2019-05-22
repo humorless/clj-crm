@@ -446,7 +446,7 @@
       :user.channel/direct (direct-u-eid->orders db u-eid)
       :user.channel/reseller (reseller-u-eid->orders db u-eid)
       :user.channel/agency (agency-u-eid->orders db u-eid)
-      [])))
+      #{})))
 
 (defn- o-eid->normal-revenues
   [db o-eid]
@@ -595,4 +595,5 @@
                                      #(update-map % sum-and-raw))
         y-m-sum-revenues (update-map y-m-revenues
                                      #(update-map % sum-and-raw))]
-    [y-q-sum-revenues y-m-sum-revenues]))
+    {:quarterly y-q-sum-revenues
+     :monthly   y-m-sum-revenues}))

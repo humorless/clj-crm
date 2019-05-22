@@ -98,15 +98,27 @@
         revenues (dcore/orders->revenue-report db orders)]
     revenues))
 
+(defn- fmt-user-team-revenue
+  [db eid revenue]
+  (let [[u t] (d/q '[:find [?u-name ?t-keyword]
+                     :in $ ?u-eid
+                     :where
+                     [?u-eid :user/name ?u-name]
+                     [?u-eid :user/team ?t-eid]
+                     [?t-eid :db/ident ?t-keyword]]
+                   db eid)]
+    {:salesName u
+     :teamName (name t)
+     :revenue revenue}))
+
 (defmethod dispatch-q :all-revenues
   [user-q]
   (log/info "at all-revenues, user-q as" user-q)
   (let [db (d/db conn)
         eids (dcore/user-eids db)
-        u-names (map #(second (second (dcore/u-eid->user db %))) eids)
         orderss (map #(dcore/u-eid->orders db %) eids)
         revenuess (map #(dcore/orders->revenue-report db %) orderss)
-        data (zipmap u-names revenuess)]
+        data (mapv #(fmt-user-team-revenue db %1 %2) eids revenuess)]
     data))
 
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword})

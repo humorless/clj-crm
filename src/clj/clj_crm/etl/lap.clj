@@ -8,6 +8,7 @@
             [clojure.java.io :as io]
             [clojure.spec.alpha :as spec]
             [clj-time.format :as time.format]
+            [clj-time.coerce :as time.coerce]
             [clj-time.core :as time.core])
   (:import [java.io StringWriter]))
 
@@ -82,9 +83,21 @@
      :order/customer c-eid
      :order/channel chan-eid
      :order/service-category-enum :product.type/timeline
-     :order/io-writing-time m-last-day
-     :order/accouning-data {:accounting/month y-m-str
-                            :accounting/revenue revenue}}))
+     :order/io-writing-time (time.coerce/to-date m-last-day)
+     :order/accounting-data {:accounting/month y-m-str
+                             :accounting/revenue (long revenue)}}))
+
+(defn- not-nil-entry [[k v]]
+  (if (some? v)
+    true
+    false))
+
+(defn- remove-nil-entry
+  ":order/customer and :order/channel may be nil"
+  [order-tx]
+  (->> order-tx
+       (filter not-nil-entry)
+       (into {})))
 
 (defn- raw-orders->order-txes
   [state db]
@@ -94,7 +107,8 @@
         mapping-table (into {} mapping-vals)
         c-table (tax-id->c-eid db)]
     (->> orders
-         (map #(order->tx mapping-table c-table y-m-str %)))))
+         (map #(order->tx mapping-table c-table y-m-str %))
+         (map #(remove-nil-entry %)))))
 
 (defn- process-excel [db addr filename]
   (-> {}

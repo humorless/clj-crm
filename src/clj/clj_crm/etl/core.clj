@@ -4,8 +4,9 @@
             [chime :as chime]
             [clj-crm.etl.customer :as customer]
             [clj-crm.etl.user :as user]
-            [clj-crm.etl.raw :as raw]
             [clj-crm.etl.allocation :as allocation]
+            [clj-crm.etl.raw :as raw]
+            [clj-crm.etl.lap :as lap]
             [clj-crm.config :refer [env]]
             [mount.core :as mount])
   (:import [org.joda.time DateTimeZone]))
@@ -36,4 +37,5 @@
     "customer" (customer/sync-data url filename)
     "user" (user/sync-data url filename)
     "raw" (raw/sync-data url filename)
+    "lap" (lap/sync-data url filename)
     "allocation" (allocation/sync-data url filename)))

@@ -98,17 +98,46 @@
         revenues (dcore/orders->revenue-report db orders)]
     revenues))
 
-(defn- fmt-user-team-revenue
-  [db eid revenue]
-  (let [[u t] (d/q '[:find [?u-name ?t-keyword]
-                     :in $ ?u-eid
-                     :where
-                     [?u-eid :user/name ?u-name]
-                     [?u-eid :user/team ?t-eid]
-                     [?t-eid :db/ident ?t-keyword]]
-                   db eid)]
+(defn- u-eid->teamName
+  [db eid]
+  (-> (d/q '[:find ?t-keyword .
+             :in $ ?u-eid
+             :where
+             [?u-eid :user/team ?t-eid]
+             [?t-eid :db/ident ?t-keyword]]
+           db eid)
+      name))
+
+(defn- t-u-entry->revenue
+  [db [teamName eids]]
+  (let [orders (mapcat #(dcore/u-eid->orders db %) eids)
+        revenue (dcore/orders->revenue-report db orders)]
+    {:salesName "total"
+     :teamName teamName
+     :revenue revenue}))
+
+(defn- fmt-user-tuple
+  [[u-name t-keyword]]
+  (vector u-name (name t-keyword)))
+
+(defn- u-eid->userName-teamName-tuple
+  [db eid]
+  (-> (d/q '[:find [?u-name ?t-keyword]
+             :in $ ?u-eid
+             :where
+             [?u-eid :user/name ?u-name]
+             [?u-eid :user/team ?t-eid]
+             [?t-eid :db/ident ?t-keyword]]
+           db eid)
+      fmt-user-tuple))
+
+(defn- user-eid->revenue
+  [db eid]
+  (let [orders (dcore/u-eid->orders db eid)
+        revenue (dcore/orders->revenue-report db orders)
+        [u t] (u-eid->userName-teamName-tuple db eid)]
     {:salesName u
-     :teamName (name t)
+     :teamName t
      :revenue revenue}))
 
 (defmethod dispatch-q :all-revenues
@@ -116,9 +145,10 @@
   (log/info "at all-revenues, user-q as" user-q)
   (let [db (d/db conn)
         eids (dcore/user-eids db)
-        orderss (map #(dcore/u-eid->orders db %) eids)
-        revenuess (map #(dcore/orders->revenue-report db %) orderss)
-        data (mapv #(fmt-user-team-revenue db %1 %2) eids revenuess)]
+        team-user-m (group-by #(u-eid->teamName db %) eids)
+        team-data (map #(t-u-entry->revenue db %) team-user-m)
+        sales-data (map #(user-eid->revenue db %) eids)
+        data (concat team-data sales-data)]
     data))
 
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword})

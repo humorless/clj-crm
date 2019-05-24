@@ -48,7 +48,7 @@
          :ok (ok {:result result})
          :error (bad-request {:reason result}))))
 
-   (GET "/api/uers" req
+   (GET "/api/users" req
      :summary     "Return all the user names and related data."
      (let [[status result] (dq/all-users)]
        (case status

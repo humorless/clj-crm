@@ -41,5 +41,6 @@
         eid (:db/id u)
         jwe-token (token (:user/email u))
         username (:user/name u)
-        r (:user/roles u)]
-    {:token jwe-token :email email :username username :eid eid :role r}))
+        r (:user/roles u)
+        t (:user/team u)]
+    {:token jwe-token :email email :username username :eid eid :role r :team t}))

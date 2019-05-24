@@ -88,16 +88,6 @@
         data (mapv #(dcore/recur-marshal db %) query-result)]
     data))
 
-(defmethod dispatch-q :my-revenues
-  [user-q]
-  (log/info "at my-revenues, user-q as" user-q)
-  (let [db (d/db conn)
-        email (:user user-q)
-        user-lookup-ref [:user/email email]
-        orders (dcore/u-eid->orders db user-lookup-ref)
-        revenues (dcore/orders->revenue-report db orders)]
-    revenues))
-
 (defn- u-eid->teamName
   [db eid]
   (-> (d/q '[:find ?t-keyword .
@@ -149,6 +139,27 @@
         team-data (map #(t-u-entry->revenue db %) team-user-m)
         sales-data (map #(user-eid->revenue db %) eids)
         data (concat team-data sales-data)]
+    data))
+
+(defn- t-eid->u-eids
+  [db eid]
+  (d/q '[:find [?u-eid ...]
+         :in $ ?t-eid
+         :where
+         [?u-eid :user/team ?t-eid]]
+       db eid))
+
+(defmethod dispatch-q :my-revenues
+  [user-q]
+  (log/info "at my-revenues, user-q as" user-q)
+  (let [db (d/db conn)
+        email (:user user-q)
+        user-lookup-ref [:user/email email]
+        teamName (u-eid->teamName db user-lookup-ref)
+        eids (t-eid->u-eids db (keyword "user.team" teamName)) ;; eids belongs to the same team
+        sales-data (map #(user-eid->revenue db %) eids)
+        team-datum (t-u-entry->revenue db [teamName eids])
+        data (concat [team-datum] sales-data)]
     data))
 
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword})

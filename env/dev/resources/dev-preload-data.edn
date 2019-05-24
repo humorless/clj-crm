@@ -318,11 +318,11 @@
     :order/channel [:customer/id "CM0008"]
     :order/service-category-enum :product.type/today
     :order/io-writing-time #inst "2019-02-28"
-    :order/product-net-price 970
+    :order/product-net-price 97000
     :order/terms-start-date "2019-03-26"
     :order/terms-end-date "2020-08-05"
-    :order/accounting-data #{{:accounting/month "2020-02" :accounting/revenue -30}
-                             {:accounting/month "2020-05" :accounting/revenue 1000}}}]
+    :order/accounting-data #{{:accounting/month "2020-02" :accounting/revenue -3000}
+                             {:accounting/month "2020-05" :accounting/revenue 100000}}}]
 ]}
 :clj-crm/data7 {:txes [
   [{:allo/sales [:user/email "userB1@example.com"]

@@ -42,7 +42,7 @@
     :user/email "manager@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/manager
-    :user/team   :user.team/team1}
+    :user/team   :user.team/null}
 
    {:db/id     "B1"
     :user/name "sales name B1"

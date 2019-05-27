@@ -162,6 +162,14 @@
         data (concat [team-datum] sales-data)]
     data))
 
+(defmethod dispatch-q :all-orders
+  [user-q]
+  (log/info "at all-orders, user-q as" user-q)
+  (let [db (d/db conn)
+        o-eids (dcore/order-eids db)
+        data (map #(dcore/o-eid->order db %) o-eids)]
+    data))
+
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword})
 
 (defn query

@@ -603,3 +603,24 @@
                                      #(update-map % statistics))]
     {:quarterly y-q-sum-revenues
      :monthly   y-m-sum-revenues}))
+
+(defn order-eids
+  [db]
+  (d/q '[:find [?o-eid ...]
+         :in $
+         :where
+         [?o-eid :order/product-unique-id]]
+       db))
+
+(defn o-eid->order
+  "Transfrom order eid -> {HashMap with order fields}"
+  [db eid]
+  (d/pull db '[:order/product-unique-id
+               {:order/customer [:customer/name :customer/id]}
+               {:order/channel [:customer/name :customer/id]}
+               :order/service-category-enum
+               :order/io-writing-time
+               :order/accounting-data
+               :order/product-net-price
+               :order/terms-start-date
+               :order/terms-end-date] eid))

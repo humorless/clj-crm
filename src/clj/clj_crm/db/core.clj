@@ -581,9 +581,15 @@
 (defn- group-by-month [coll]
   (group-by month-lookup coll))
 
-(defn- sum-and-raw [tuples]
+(defn- sum-by-product-over-tuples [tuples]
+  (->> tuples
+       (group-by #(nth % 2))
+       (map (fn [[k v]] (vector k (sum-over-tuples v))))
+       (into {})))
+
+(defn- statistics [tuples]
   {:sum (sum-over-tuples tuples)
-   :raw tuples})
+   :sum-by-product (sum-by-product-over-tuples tuples)})
 
 (defn orders->revenue-report
   [db orders]
@@ -592,8 +598,8 @@
         y-q-revenues (update-map y-revenues group-by-quarter)
         y-m-revenues (update-map y-revenues group-by-month)
         y-q-sum-revenues (update-map y-q-revenues
-                                     #(update-map % sum-and-raw))
+                                     #(update-map % statistics))
         y-m-sum-revenues (update-map y-m-revenues
-                                     #(update-map % sum-and-raw))]
+                                     #(update-map % statistics))]
     {:quarterly y-q-sum-revenues
      :monthly   y-m-sum-revenues}))

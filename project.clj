@@ -26,7 +26,7 @@
                  [metosin/muuntaja "0.6.3"]
                  [metosin/ring-http-response "0.9.1"]
                  [mount "0.1.16"]
-                 [nrepl "0.5.3"]
+                 [nrepl "0.6.0"]
                  [org.clojure/clojure "1.10.0"]
                  [org.clojure/clojurescript "1.10.516" :scope "provided"]
                  [org.clojure/tools.cli "0.4.1"]
@@ -99,7 +99,7 @@
 
    :project/dev  {:jvm-opts ["-Dconf=dev-config.edn"]
                   :dependencies [[binaryage/devtools "0.9.10"]
-                                 [cider/piggieback "0.3.10"]
+                                 [cider/piggieback "0.4.0"]
                                  [doo "0.1.11"]
                                  [expound "0.7.2"]
                                  [figwheel-sidecar "0.5.18"]

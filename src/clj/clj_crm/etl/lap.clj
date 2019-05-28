@@ -99,6 +99,25 @@
        (filter not-nil-entry)
        (into {})))
 
+(defn- find-order-accounting-data-by-pui-date
+  "Return `[e r]` when find order successfully.
+   Return `nil` when find no orders."
+  [db pui date]
+  (d/q '[:find [?e ?r]
+         :in $ ?pui ?y-m-str
+         :where [?e :order/product-unique-id ?pui]
+         [?e :order/accounting-data ?r]
+         [?r :accounting/month ?y-m-str]] db pui date))
+
+(defn- update-tx-for-accounting-data
+  "checking accounting-data in existing db"
+  [db order-tx-m]
+  (let [pui (:order/product-unique-id order-tx-m)
+        y-m-str (get-in order-tx-m [:order/accounting-data :accounting/month])]
+    (if-some [[e r] (find-order-accounting-data-by-pui-date db pui y-m-str)]
+      [[:db/retractEntity r] [:db/retract e :order/accounting-data r] order-tx-m]
+      [order-tx-m])))
+
 (defn- raw-orders->order-txes
   [state db]
   (let [{:keys [mappings orders order-title]} state
@@ -108,7 +127,8 @@
         c-table (tax-id->c-eid db)]
     (->> orders
          (map #(order->tx mapping-table c-table y-m-str %))
-         (map #(remove-nil-entry %)))))
+         (map #(remove-nil-entry %))
+         (mapcat #(update-tx-for-accounting-data db %)))))
 
 (defn- process-excel [db addr filename]
   (-> {}

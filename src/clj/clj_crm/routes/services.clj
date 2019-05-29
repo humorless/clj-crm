@@ -99,9 +99,11 @@
      :body-params [filename :- s/Str, cmd :- s/Str]
      :summary     "Sync data from excel file."
      :description "filename refers to the excel filename. cmd can be [customer|user|allocation|raw|lap]"
-     (if-let [r (etl/sync-data cmd filename)]
-       (ok {:result :insert-done})
-       (ok {:result :already-sync})))
+     (try (if-let [r (etl/sync-data cmd filename)]
+            (ok {:result :insert-done})
+            (ok {:result :already-sync}))
+          (catch Exception e
+            (bad-request {:reason (ex-data e)}))))
 
    (context "/api" []
      :auth-rules authenticated?

@@ -52,7 +52,9 @@
                     :allo/product p-enum
                     :allo/sales u-eid
                     :allo/time (:time m))]
-    (if (nil? c-eid) (do (prn "c-eid is nil" m) (log/info "c-eid is nil " m)))
+    (if (nil? c-eid) (do
+                       (log/info "c-eid is nil " m)
+                       (throw (ex-info "c-eid is nil" {:causes m :desc "customer not matched"}))))
     (if (nil? u-eid) (do (prn "u-eid is nil " m) (log/info "u-eid is nil " m)))
     (if (nil? p-enum) (do (prn "p-enum is nil " m) (log/info "p-enum is nil " m)))
     tx-m))

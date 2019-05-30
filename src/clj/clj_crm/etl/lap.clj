@@ -52,12 +52,14 @@
 (defn- check-mappings [state]
   (if (every? #(spec/valid? ::mapping %) (:mappings state))
     state
-    (throw (Exception. "schema error of mapping"))))
+    (throw (ex-info "schema error of mapping" {:causes (:mappings state)
+                                               :desc "mapping schema error"}))))
 
 (defn- check-orders [state]
   (if (every? #(spec/valid? ::order %) (:orders state))
     state
-    (throw (Exception. "schema error of order"))))
+    (throw (ex-info "schema error of order" {:causes (:orders state)
+                                             :desc "orders schema error"}))))
 
 (defn- tax-id->c-eid
   "create a mapping table that can lookup customer-eid from customer tax-id."

@@ -54,9 +54,11 @@
                     :allo/time (:time m))]
     (if (nil? c-eid) (do
                        (log/info "c-eid is nil " m)
-                       (throw (ex-info "c-eid is nil" {:causes m :desc "customer not matched"}))))
-    (if (nil? u-eid) (do (prn "u-eid is nil " m) (log/info "u-eid is nil " m)))
-    (if (nil? p-enum) (do (prn "p-enum is nil " m) (log/info "p-enum is nil " m)))
+                       (throw (ex-info "c-eid is nil" {:causes m :desc "customer-id not matched"}))))
+    (if (nil? u-eid) (do (log/info "u-eid is nil " m)
+                         (throw (ex-info "u-eid is nil" {:causes m :desc "sales not matched"}))))
+    (if (nil? p-enum) (do (log/info "p-enum is nil " m)
+                          (throw (ex-info "p-enum is nil" {:causes m :desc "product not matched"}))))
     tx-m))
 
 ;; (get-allos-from-excel (d/db conn) "http://127.0.0.1:5001/" "allocation.xlsx")

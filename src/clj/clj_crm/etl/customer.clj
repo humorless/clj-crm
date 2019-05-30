@@ -40,6 +40,7 @@
   (case (:registrationStatus m)
     "[C]LINE TAIWAN" true
     "[C,T]LINE TAIWAN" true
+    "[C,R]LINE TAIWAN" true
     "[C]LINE COMPANY(TH) / [C]LINE TAIWAN" true
     "[C]LINE CORP / [C]LINE TAIWAN" true
     false))

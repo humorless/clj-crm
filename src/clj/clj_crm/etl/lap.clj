@@ -31,7 +31,7 @@
   [addr filename]
   (with-open [stream (io/input-stream (str addr filename))]
     (let [title+orders (->> (spreadsheet/load-workbook stream)
-                            (spreadsheet/select-sheet "Sheet0")
+                            (spreadsheet/select-sheet "order")
                             (spreadsheet/select-columns {:B :adaccount-id
                                                          :F :billing-tax-id
                                                          :K :revenue}))]
@@ -44,7 +44,7 @@
   [addr filename]
   (with-open [stream (io/input-stream (str addr filename))]
     (->> (spreadsheet/load-workbook stream)
-         (spreadsheet/select-sheet "Sheet1")
+         (spreadsheet/select-sheet "mapping")
          (spreadsheet/select-columns {:D :adaccount-id
                                       :G :advertiser-tax-id})
          rest)))

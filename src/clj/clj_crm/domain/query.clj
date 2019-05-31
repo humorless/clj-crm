@@ -134,7 +134,9 @@
   [user-q]
   (log/info "at all-revenues, user-q as" user-q)
   (let [tx (:tx user-q)
-        db (d/as-of (d/db conn) tx)
+        db (if (some? tx)
+             (d/as-of (d/db conn) tx)
+             (d/db conn))
         eids (dcore/user-eids db)
         team-user-m (group-by #(u-eid->teamName db %) eids)
         team-data (map #(t-u-entry->revenue db %) team-user-m)
@@ -154,7 +156,9 @@
   [user-q]
   (log/info "at my-revenues, user-q as" user-q)
   (let [tx (:tx user-q)
-        db (d/as-of (d/db conn) tx)
+        db (if (some? tx)
+             (d/as-of (d/db conn) tx)
+             (d/db conn))
         email (:user user-q)
         user-lookup-ref [:user/email email]
         teamName (u-eid->teamName db user-lookup-ref)
@@ -176,8 +180,8 @@
   [user-q]
   (log/info "at tag-tx-history, user-q as" user-q)
   (let [db (d/db conn)
-        history (dcore/tag-tx-m db)
-        data (conj history ["now" (d/t->tx (d/basis-t db))])]
+        tag-txes (dcore/tag-tx-list db)
+        data (conj tag-txes ["now" (d/t->tx (d/basis-t db))])]
     data))
 
 (defmethod dispatch-q :allocation

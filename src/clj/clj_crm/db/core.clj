@@ -626,14 +626,16 @@
                :order/terms-end-date] eid))
 
 (defn transact-tag-tx [date-str]
-  @(d/transact conn [{:transaction/doc date-str}]))
+  (if (= date-str "now")
+    (throw ex-info "date-str as now is not allowed" {:causes "date-str equal now"})
+    @(d/transact conn [{:transaction/doc date-str}])))
 
-(defn tag-tx-m
+(defn tag-tx-list
   [db]
   (->> (d/q '[:find ?tag ?tx
               :in $
               :where [_ :transaction/doc ?tag ?tx]] db)
-       (into {})))
+       seq))
 
 (defn allo-eids [db]
   (d/q '[:find [?e ...]

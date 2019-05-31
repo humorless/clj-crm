@@ -268,6 +268,7 @@
    {:product/type :product.type/line_mobile_tw     :product/type-id "LINE Mobile TW"}]
 ]}
 :clj-crm/data6 {:txes [
+  [{:transaction/doc "empty-db-status"}]
   [{:order/product-unique-id "pui-001"
     :order/customer [:customer/id "CM0004"]
     :order/service-category-enum :product.type/BC
@@ -289,6 +290,7 @@
     :order/terms-end-date "2019-08-05"
     :order/accounting-data #{{:accounting/month "2019-07" :accounting/revenue 300}
                              {:accounting/month "2019-08" :accounting/revenue 400}}}]
+  [{:transaction/doc "pui-01-02-03"}]
   [{:order/product-unique-id "pui-004"
     :order/customer [:customer/id "CM0004"]
     :order/service-category-enum :product.type/BC

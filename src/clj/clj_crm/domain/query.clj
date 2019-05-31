@@ -133,7 +133,8 @@
 (defmethod dispatch-q :all-revenues
   [user-q]
   (log/info "at all-revenues, user-q as" user-q)
-  (let [db (d/db conn)
+  (let [tx (:tx user-q)
+        db (d/as-of (d/db conn) tx)
         eids (dcore/user-eids db)
         team-user-m (group-by #(u-eid->teamName db %) eids)
         team-data (map #(t-u-entry->revenue db %) team-user-m)
@@ -152,7 +153,8 @@
 (defmethod dispatch-q :my-revenues
   [user-q]
   (log/info "at my-revenues, user-q as" user-q)
-  (let [db (d/db conn)
+  (let [tx (:tx user-q)
+        db (d/as-of (d/db conn) tx)
         email (:user user-q)
         user-lookup-ref [:user/email email]
         teamName (u-eid->teamName db user-lookup-ref)
@@ -170,7 +172,16 @@
         data (map #(dcore/o-eid->order db %) o-eids)]
     data))
 
-(s/defschema QuerySchema {(s/required-key :q) s/Keyword})
+(defmethod dispatch-q :tag-tx-history
+  [user-q]
+  (log/info "at tag-tx-history, user-q as" user-q)
+  (let [db (d/db conn)
+        history (dcore/tag-tx-m db)
+        data (conj history ["now" (d/t->tx (d/basis-t db))])]
+    data))
+
+(s/defschema QuerySchema {(s/required-key :q) s/Keyword
+                          (s/optional-key :tx) s/Int})
 
 (defn query
   " Input:

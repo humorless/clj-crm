@@ -5,6 +5,7 @@
             [clj-crm.domain.auth :refer [user-datum user-auth register-user modify-password]]
             [clj-crm.domain.query :as dq]
             [clj-crm.domain.command :as dc]
+            [clj-crm.db.core :as db.core]
             [clj-crm.etl.core :as etl]
             [clojure.tools.logging :as log]
             [compojure.api.meta :refer [restructure-param]]
@@ -102,6 +103,15 @@
      (try (if-let [r (etl/sync-data cmd filename)]
             (ok {:result :insert-done})
             (ok {:result :already-sync}))
+          (catch Exception e
+            (bad-request {:reason (ex-data e)}))))
+
+   (POST "/api/transaction" req
+     :body-params [date-str :- s/Str]
+     :summary     "record the transaction tag, which is represented by date-str"
+     :description "date-str denotes the date string showing on the UI. Example: 2019-05-23-v1"
+     (try (if-let [r (db.core/transact-tag-tx date-str)]
+            (ok {:result :tag-tx-written}))
           (catch Exception e
             (bad-request {:reason (ex-data e)}))))
 

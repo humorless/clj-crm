@@ -624,3 +624,13 @@
                :order/product-net-price
                :order/terms-start-date
                :order/terms-end-date] eid))
+
+(defn transact-tag-tx [date-str]
+  @(d/transact conn [{:transaction/doc date-str}]))
+
+(defn tag-tx-m
+  [db]
+  (->> (d/q '[:find ?tag ?tx
+              :in $
+              :where [_ :transaction/doc ?tag ?tx]] db)
+       (into {})))

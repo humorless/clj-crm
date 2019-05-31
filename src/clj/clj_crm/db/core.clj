@@ -634,3 +634,16 @@
               :in $
               :where [_ :transaction/doc ?tag ?tx]] db)
        (into {})))
+
+(defn allo-eids [db]
+  (d/q '[:find [?e ...]
+         :in $
+         :where [?e :allo/sales _]] db))
+
+(defn allo-eid->allocation
+  "Transfrom allocation eid -> {HashMap with allocation fields}"
+  [db eid]
+  (d/pull db '[{:allo/sales [:user/email]}
+               {:allo/customer [:customer/id :customer/name]}
+               {:allo/product [:db/ident]}
+               :allo/time] eid))

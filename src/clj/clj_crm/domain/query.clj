@@ -180,6 +180,14 @@
         data (conj history ["now" (d/t->tx (d/basis-t db))])]
     data))
 
+(defmethod dispatch-q :allocation
+  [user-q]
+  (log/info "at allocation, user-q as" user-q)
+  (let [db (d/db conn)
+        eids (dcore/allo-eids db)
+        allocations (map #(dcore/allo-eid->allocation db %) eids)]
+    allocations))
+
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword
                           (s/optional-key :tx) s/Int})
 

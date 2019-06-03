@@ -55,4 +55,11 @@
    {:product/type :product.type/line_at            :product/type-id "LINE@"}
    {:product/type :product.type/line_mobile_tw     :product/type-id "LINE Mobile TW"}]
 ]}
+:clj-crm/data2 {:txes [
+  ;; It requires two transactions to add a new product type
+  [[:db/add #db/id [:db.part/user] :db/ident :product.type/in_store_sales_promotion]]
+  [{:product/type :product.type/in_store_sales_promotion    :product/category :product.cat/all}
+   {:product/type :product.type/in_store_sales_promotion    :product/type-id "In Store Sales Promotion"}]
+]}
+
 }

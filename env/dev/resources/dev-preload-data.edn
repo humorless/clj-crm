@@ -372,4 +372,11 @@
     :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue 300}
                              {:accounting/month "2019-06" :accounting/revenue 400}}}]
 ]}
+
+:clj-crm/data8 {:txes [
+  ;; It requires two transactions to add a new product type
+  [[:db/add #db/id [:db.part/user] :db/ident :product.type/in_store_sales_promotion]]
+  [{:product/type :product.type/in_store_sales_promotion    :product/category :product.cat/all}
+   {:product/type :product.type/in_store_sales_promotion    :product/type-id "In Store Sales Promotion"}]
+]}
 }

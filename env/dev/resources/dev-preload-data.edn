@@ -1,4 +1,59 @@
 {
+:clj-crm/data0 {:txes [
+  ;; enumeration for product.type & product.cat
+  [[:db/add #db/id [:db.part/user] :db/ident :product.cat/all]
+   [:db/add #db/id [:db.part/user] :db/ident :product.cat/account]
+   [:db/add #db/id [:db.part/user] :db/ident :product.cat/display]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_now]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/timeline]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/today]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/more_tab]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_point]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_point_code_tw]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/event_banner]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/BC]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/OA]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/SS]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_at]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_mobile_tw]]
+
+  [{:product/type :product.type/line_now           :product/category :product.cat/all}
+   {:product/type :product.type/timeline           :product/category :product.cat/all}
+   {:product/type :product.type/today              :product/category :product.cat/all}
+   {:product/type :product.type/more_tab           :product/category :product.cat/all}
+   {:product/type :product.type/line_point         :product/category :product.cat/all}
+   {:product/type :product.type/line_point_code_tw :product/category :product.cat/all}
+   {:product/type :product.type/event_banner       :product/category :product.cat/all}
+   {:product/type :product.type/BC                 :product/category :product.cat/all}
+   {:product/type :product.type/OA                 :product/category :product.cat/all}
+   {:product/type :product.type/SS                 :product/category :product.cat/all}
+   {:product/type :product.type/line_at            :product/category :product.cat/all}
+   {:product/type :product.type/line_mobile_tw     :product/category :product.cat/all}]
+  [{:product/type :product.type/line_now           :product/category :product.cat/account}
+   {:product/type :product.type/timeline           :product/category :product.cat/display}
+   {:product/type :product.type/today              :product/category :product.cat/display}
+   {:product/type :product.type/more_tab           :product/category :product.cat/display}
+   {:product/type :product.type/line_point         :product/category :product.cat/account}
+   {:product/type :product.type/line_point_code_tw :product/category :product.cat/account}
+   {:product/type :product.type/event_banner       :product/category :product.cat/display}
+   {:product/type :product.type/BC                 :product/category :product.cat/account}
+   {:product/type :product.type/OA                 :product/category :product.cat/account}
+   {:product/type :product.type/SS                 :product/category :product.cat/account}
+   {:product/type :product.type/line_at            :product/category :product.cat/account}
+   {:product/type :product.type/line_mobile_tw     :product/category :product.cat/account}]
+  [{:product/type :product.type/line_now           :product/type-id "LINE NOW"}
+   {:product/type :product.type/timeline           :product/type-id "TIMELINE"}
+   {:product/type :product.type/today              :product/type-id "TODAY"}
+   {:product/type :product.type/more_tab           :product/type-id "More tab"}
+   {:product/type :product.type/line_point         :product/type-id "LINE Point"}
+   {:product/type :product.type/line_point_code_tw :product/type-id "LINE Point Code(TW)"}
+   {:product/type :product.type/event_banner       :product/type-id "Event Banner"}
+   {:product/type :product.type/BC                 :product/type-id "BC"}
+   {:product/type :product.type/OA                 :product/type-id "OA"}
+   {:product/type :product.type/SS                 :product/type-id "SS"}
+   {:product/type :product.type/line_at            :product/type-id "LINE@"}
+   {:product/type :product.type/line_mobile_tw     :product/type-id "LINE Mobile TW"}]
+]}
 ;; data1 installs certain user init data into Datomic for testing purpose
 :clj-crm/data1 {:txes [[
    {:db/id     "A1"
@@ -229,44 +284,6 @@
     :req/status :req.status/open
     :req/stamp 0}
   ]]}
-:clj-crm/data5 {:txes [
-  [{:product/type :product.type/line_now           :product/category :product.cat/all}
-   {:product/type :product.type/timeline           :product/category :product.cat/all}
-   {:product/type :product.type/today              :product/category :product.cat/all}
-   {:product/type :product.type/more_tab           :product/category :product.cat/all}
-   {:product/type :product.type/line_point         :product/category :product.cat/all}
-   {:product/type :product.type/line_point_code_tw :product/category :product.cat/all}
-   {:product/type :product.type/event_banner       :product/category :product.cat/all}
-   {:product/type :product.type/BC                 :product/category :product.cat/all}
-   {:product/type :product.type/OA                 :product/category :product.cat/all}
-   {:product/type :product.type/SS                 :product/category :product.cat/all}
-   {:product/type :product.type/line_at            :product/category :product.cat/all}
-   {:product/type :product.type/line_mobile_tw     :product/category :product.cat/all}]
-  [{:product/type :product.type/line_now           :product/category :product.cat/account}
-   {:product/type :product.type/timeline           :product/category :product.cat/display}
-   {:product/type :product.type/today              :product/category :product.cat/display}
-   {:product/type :product.type/more_tab           :product/category :product.cat/display}
-   {:product/type :product.type/line_point         :product/category :product.cat/account}
-   {:product/type :product.type/line_point_code_tw :product/category :product.cat/account}
-   {:product/type :product.type/event_banner       :product/category :product.cat/display}
-   {:product/type :product.type/BC                 :product/category :product.cat/account}
-   {:product/type :product.type/OA                 :product/category :product.cat/account}
-   {:product/type :product.type/SS                 :product/category :product.cat/account}
-   {:product/type :product.type/line_at            :product/category :product.cat/account}
-   {:product/type :product.type/line_mobile_tw     :product/category :product.cat/account}]
-  [{:product/type :product.type/line_now           :product/type-id "LINE NOW"}
-   {:product/type :product.type/timeline           :product/type-id "TIMELINE"}
-   {:product/type :product.type/today              :product/type-id "TODAY"}
-   {:product/type :product.type/more_tab           :product/type-id "More tab"}
-   {:product/type :product.type/line_point         :product/type-id "LINE Point"}
-   {:product/type :product.type/line_point_code_tw :product/type-id "LINE Point Code(TW)"}
-   {:product/type :product.type/event_banner       :product/type-id "Event Banner"}
-   {:product/type :product.type/BC                 :product/type-id "BC"}
-   {:product/type :product.type/OA                 :product/type-id "OA"}
-   {:product/type :product.type/SS                 :product/type-id "SS"}
-   {:product/type :product.type/line_at            :product/type-id "LINE@"}
-   {:product/type :product.type/line_mobile_tw     :product/type-id "LINE Mobile TW"}]
-]}
 :clj-crm/data6 {:txes [
   [{:transaction/doc "empty-db-status"}]
   [{:order/product-unique-id "pui-001"

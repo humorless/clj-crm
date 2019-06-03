@@ -530,9 +530,8 @@
                      [17592186045536 \"2019-03\" :product.type/more_tab 200] ...}"
   [db [o-eid p-type & more]]
   (case p-type
-    :product.type/line_point (o-eid->delta-revenues db o-eid)
     :product.type/SS (o-eid->delta-revenues db o-eid)
-    :product.type/line_point_code_tw (o-eid->day-revenues db o-eid)
+    :product.type/line_point_code_tw (o-eid->delta-revenues db o-eid)
     :product.type/today (o-eid->day-revenues db o-eid)
     (o-eid->normal-revenues db o-eid)))
 

@@ -1,6 +1,23 @@
 {
 ;; data1 installs certain team init data into Datomic
 :clj-crm/data1 {:txes [
+  ;; enumeration for product.type & product.cat
+  [[:db/add #db/id [:db.part/user] :db/ident :product.cat/all]
+   [:db/add #db/id [:db.part/user] :db/ident :product.cat/account]
+   [:db/add #db/id [:db.part/user] :db/ident :product.cat/display]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_now]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/timeline]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/today]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/more_tab]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_point]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_point_code_tw]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/event_banner]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/BC]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/OA]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/SS]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_at]
+   [:db/add #db/id [:db.part/user] :db/ident :product.type/line_mobile_tw]]
+
   [{:product/type :product.type/line_now           :product/category :product.cat/all}
    {:product/type :product.type/timeline           :product/category :product.cat/all}
    {:product/type :product.type/today              :product/category :product.cat/all}

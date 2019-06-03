@@ -79,19 +79,19 @@
     :user/team   :user.team/team2}
 
    {:db/id     "C1"
-    :user/name "sales name C1"
+    :user/name "Account-Executvie name C1"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userC1@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales
+    :user/roles  :user.roles/account-executive
     :user/team   :user.team/team3}
 
    {:db/id     "C2"
-    :user/name "sales name C2"
+    :user/name "Operator name C2"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
     :user/email "userC2@example.com"
     :user/status :user.status/active
-    :user/roles  :user.roles/sales
+    :user/roles  :user.roles/operator
     :user/team   :user.team/team3}
 
    {:db/id     "C3"

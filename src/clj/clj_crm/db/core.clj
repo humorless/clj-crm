@@ -627,7 +627,7 @@
 
 (defn transact-tag-tx [date-str]
   (if (= date-str "now")
-    (throw ex-info "date-str as now is not allowed" {:causes "date-str equal now"})
+    (throw (ex-info "date-str as now is not allowed" {:causes "date-str equal now"}))
     @(d/transact conn [{:transaction/doc date-str}])))
 
 (defn tag-tx-list

@@ -376,6 +376,8 @@
         tx-data (into [] (concat tx-add-allo tx-retract-allo tx-req-status))]
     tx-data))
 
+;; order matching API
+
 (def order-match-rules
   '[[(direct-allo-customer-order ?a ?o)
      [?a :allo/customer ?c]
@@ -407,7 +409,8 @@
          (indirect-allo-product-order ?a ?o ?p-keyword)
          (allo-time-order ?a ?o ?less)
          [?o :order/product-unique-id ?pui]
-         (not-join [?o ?less]
+         (not-join [?s ?less ?o]
+                   [?b :allo/sales ?s]
                    (direct-allo-customer-order ?b ?o)
                    (direct-allo-product-order ?b ?o _)
                    (allo-time-order ?b ?o ?less))]
@@ -648,3 +651,82 @@
                {:allo/customer [:customer/id :customer/name]}
                {:allo/product [:db/ident]}
                :allo/time] eid))
+
+;; Revenue stream matching API
+
+(def stream-match-rules
+  '[[(etl-source ?ra ?o)
+     [?ra :rev-allo/source ?s-etl]
+     [?o  :rev-stream/source ?s-etl]]
+    [(direct-allo-customer-stream ?a ?ra ?o)
+     [?a :allo/customer ?c]
+     [?ra :rev-allo/customer ?c]
+     [?ra :rev-allo/customer-id ?ci]
+     [?o :rev-stream/customer-id ?ci]]
+    [(direct-allo-product-stream ?a ?o ?p-keyword)
+     [?a :allo/product ?p-category]
+     [?p :product/category ?p-category]
+     [?p :product/type ?sc]
+     [?o :rev-stream/service-category-enum ?sc]
+     [?sc :db/ident ?p-keyword]]
+    [(rev-allo-time-stream ?ra ?o ?less)
+     [?ra :rev-allo/time ?a-t]
+     [?o  :rev-stream/writing-time ?o-t]
+     [(compare ?a-t ?o-t) ?less]]
+    [(allo-time-stream ?a ?o ?less)
+     [?a :allo/time ?a-t]
+     [?o :rev-stream/writing-time ?o-t]
+     [(compare ?a-t ?o-t) ?less]]
+    [(indirect-allo-customer-stream ?a ?o)
+     [?a :allo/customer ?c]
+     [?o :rev-stream/channel ?c]]
+    [(indirect-allo-product-stream ?a ?o ?p-keyword)
+     [?a :allo/product ?sc]
+     [?o :rev-stream/service-category-enum ?sc]
+     [?sc :db/ident ?p-keyword]]])
+
+(defn- direct-u-eid->revenues [db u-eid]
+  (d/q '[:find ?o ?p-keyword ?sui
+         :in $ % ?s ?less
+         :where
+         [?ra :rev-allo/sales ?s]
+         [?a :allo/sales ?s]
+         (or
+          (indirect-allo-customer-stream ?a ?o)
+          (and (etl-source ?ra ?o)
+               (rev-allo-time-stream ?ra ?o ?less)
+               (direct-allo-customer-stream ?a ?ra ?o)))
+         (direct-allo-product-stream ?a ?o ?p-keyword)
+         (allo-time-stream ?a ?o ?less)
+         [?o :rev-stream/stream-unique-id ?sui]]
+       db stream-match-rules u-eid -1))
+
+(defn- agency-u-eid->revenues [db u-eid]
+  (d/q '[:find ?o ?p-keyword ?sui
+         :in $ % ?s ?less
+         :where
+         [?a :allo/sales ?s]
+         (indirect-allo-customer-stream ?a ?o)
+         (indirect-allo-product-stream ?a ?o ?p-keyword)
+         (allo-time-stream ?a ?o ?less)
+         [?o :order/stream-unique-id ?sui]
+         (not-join [?s ?less ?o]
+                   [?rb :rev-allo/sales ?s]
+                   [?b :allo/sales ?s]
+                   (etl-source ?rb ?o)
+                   (rev-allo-time-stream ?rb ?o ?less)
+                   (direct-allo-customer-stream ?b ?rb ?o)
+                   (direct-allo-product-stream ?b ?o _)
+                   (allo-time-stream ?b ?o ?less))]
+       db stream-match-rules u-eid -1))
+
+(defn- reseller-u-eid->revenues [db u-eid]
+  (d/q '[:find ?o ?p-keyword ?sui
+         :in $ % ?s ?less
+         :where
+         [?a :allo/sales ?s]
+         (indirect-allo-customer-stream ?a ?o)
+         (indirect-allo-product-stream ?a ?o ?p-keyword)
+         (allo-time-stream ?a ?o ?less)
+         [?o :order/stream-unique-id ?sui]]
+       db stream-match-rules u-eid -1))

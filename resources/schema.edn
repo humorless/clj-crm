@@ -360,4 +360,90 @@
     :db.install/_attribute :db.part/db}
 ]]}
 
+;; schema for 0.1.1
+:clj-crm/norm6 {:txes [
+  [{:db/doc "The external unique id of revenue stream."
+    :db/ident :rev-stream/stream-unique-id
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "String value id that may correspond to an eid of customer table"
+    :db/ident :rev-stream/customer-id
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Ref to eid of customer table"
+    :db/ident :rev-stream/channel
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Ref to enumerations of product.type"
+    :db/ident :rev-stream/service-category-enum
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Time of revenue writing"
+    :db/ident :rev-stream/writing-time
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The monthly revenue data"
+    :db/ident :rev-stream/revenue
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The source of the ETL"
+    :db/ident :rev-stream/source
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}]
+
+  [{:db/doc "Ref to eid of user table"
+    :db/ident :rev-allo/sales
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "String value id that may correspond to an eid of customer table"
+    :db/ident :rev-allo/customer-id
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Ref to eid of customer table"
+    :db/ident :rev-allo/customer
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Record the timing that sales applied for revenue-stream customer"
+    :db/ident :rev-allo/time
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The source of the ETL"
+    :db/ident :rev-allo/source
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}]
+  ]}
 }

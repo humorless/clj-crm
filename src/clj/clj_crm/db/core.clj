@@ -362,9 +362,8 @@
   "for request e, mark it as approved
    First synchronize the allocation table.
    After sync, mark the request as approved."
-  [^long e stamp]
-  (let [db (d/db conn)
-        ;; prepare eids, txInst
+  [db ^long e stamp]
+  (let [;; prepare eids, txInst
         txInst (r-eid->request-open-time (d/history db) e)
         [sid add-list remove-list] (r-eid->request-content db e)
         ;; prepare tx-add-allo, tx-retract-allo
@@ -626,11 +625,6 @@
                :order/product-net-price
                :order/terms-start-date
                :order/terms-end-date] eid))
-
-(defn transact-tag-tx [date-str]
-  (if (= date-str "now")
-    (throw (ex-info "date-str as now is not allowed" {:causes "date-str equal now"}))
-    @(d/transact conn [{:transaction/doc date-str}])))
 
 (defn tag-tx-list
   [db]

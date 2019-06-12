@@ -4,6 +4,11 @@
             [clojure.tools.logging :as log]
             [datomic.api :as d]))
 
+(defn transact-tag-tx [date-str]
+  (if (= date-str "now")
+    (throw (ex-info "date-str as now is not allowed" {:causes "date-str equal now"}))
+    @(d/transact conn [{:transaction/doc date-str}])))
+
 (defn switch
   "Input:
    user-c is the form: {:user \"userA1@example.com\"
@@ -40,9 +45,10 @@
 (defmethod dispatch-c :approve-request
   [user-c]
   (log/info "at approve-request, user-c as" user-c)
-  (let [id (get-in user-c [:req-op :id])
+  (let [db (d/db conn)
+        id (get-in user-c [:req-op :id])
         stamp (get-in user-c [:req-op :stamp])
-        tx-data (dcore/tx-approve-request id stamp)]
+        tx-data (dcore/tx-approve-request db id stamp)]
     (log/info "at approve-request, tx-data as" tx-data)
     (do @(d/transact conn tx-data)
         :cmd-success)))

@@ -18,6 +18,7 @@
   (log/info "prepare to install db schema")
   (setup-app-db "schema.edn")
   (setup-app-db "dev-preload-data.edn")
+  (setup-app-db "dev-preload-data2.edn")
   (setup-db-fn)
   (let [f (init-etl)]
     (reset! cancel-etl-f f)))

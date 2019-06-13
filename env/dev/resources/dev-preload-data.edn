@@ -348,13 +348,25 @@
     :allo/customer [:customer/id "CM0006"]
     :allo/product :product.type/OA
     :allo/time #inst "2014-01-28T09:00:00Z"}
+   {:allo/sales [:user/email "userB1@example.com"]
+    :allo/customer [:customer/id "CM0006"]
+    :allo/product :product.type/timeline
+    :allo/time #inst "2014-01-28T09:00:00Z"}
    {:allo/sales [:user/email "userB2@example.com"]
     :allo/customer [:customer/id "CM0007"]
     :allo/product :product.type/SS
     :allo/time #inst "2014-01-29"}
    {:allo/sales [:user/email "userB2@example.com"]
+    :allo/customer [:customer/id "CM0007"]
+    :allo/product :product.type/timeline
+    :allo/time #inst "2014-01-29"}
+   {:allo/sales [:user/email "userB2@example.com"]
     :allo/customer [:customer/id "CM0008"]
     :allo/product :product.type/today
+    :allo/time #inst "2018-01-29"}
+   {:allo/sales [:user/email "userB2@example.com"]
+    :allo/customer [:customer/id "CM0008"]
+    :allo/product :product.type/timeline
     :allo/time #inst "2018-01-29"} ]
   [{:order/product-unique-id "pui-008"
     :order/channel [:customer/id "CM0006"]

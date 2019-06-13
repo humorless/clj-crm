@@ -1,0 +1,50 @@
+{
+:clj-crm/data9 {:txes [
+  [{:rev-allo/sales [:user/email "userA1@example.com"]
+    :rev-allo/customer-id "bbb"
+    :rev-allo/customer [:customer/id "CM0003"]
+    :rev-allo/time #inst "2019-03-15"
+    :rev-allo/source :etl.source/lap}
+   {:rev-allo/sales [:user/email "userA1@example.com"]
+    :rev-allo/customer-id "ccc"
+    :rev-allo/customer [:customer/id "CM0003"]
+    :rev-allo/time #inst "2019-03-15"
+    :rev-allo/source :etl.source/lap}
+  ]
+  
+  [{:rev-stream/stream-unique-id "sui-001-direct-rule=channel"
+    :rev-stream/customer-id "aaa-not-used"
+    :rev-stream/channel [:customer/id "CM0003"]
+    :rev-stream/service-category-enum :product.type/timeline
+    :rev-stream/writing-time #inst "2019-02-28"
+    :rev-stream/revenue 100
+    :rev-stream/source :etl.source/lap}
+   {:rev-stream/stream-unique-id "sui-001-direct-rule=customer"
+    :rev-stream/customer-id "bbb"
+    :rev-stream/service-category-enum :product.type/timeline
+    :rev-stream/writing-time #inst "2019-03-31"
+    :rev-stream/revenue 20
+    :rev-stream/source :etl.source/lap}
+   {:rev-stream/stream-unique-id "sui-002-direct-rule=customer-unmatch-of-time||agency"
+    :rev-stream/customer-id "ccc"
+    :rev-stream/channel [:customer/id "CM0007"]
+    :rev-stream/service-category-enum :product.type/timeline
+    :rev-stream/writing-time #inst "2019-02-28"
+    :rev-stream/revenue 5
+    :rev-stream/source :etl.source/lap}
+   {:rev-stream/stream-unique-id "sui-003-agency"
+    :rev-stream/customer-id "ddd-not-used"
+    :rev-stream/channel [:customer/id "CM0008"]
+    :rev-stream/service-category-enum :product.type/timeline
+    :rev-stream/writing-time #inst "2019-03-31"
+    :rev-stream/revenue 3000
+    :rev-stream/source :etl.source/lap}
+   {:rev-stream/stream-unique-id "sui-004-reseller"
+    :rev-stream/customer-id "eee-not-used"
+    :rev-stream/channel [:customer/id "CM0006"]
+    :rev-stream/service-category-enum :product.type/timeline
+    :rev-stream/writing-time #inst "2019-06-30"
+    :rev-stream/revenue 40000
+    :rev-stream/source :etl.source/lap}]
+]}
+}

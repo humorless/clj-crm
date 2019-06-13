@@ -674,11 +674,15 @@
     [(indirect-allo-customer-stream ?a ?o)
      [?a :allo/customer ?c]
      [?o :rev-stream/channel ?c]]
+    [(direct-allo-customer-stream-by-channel ?a ?o ?n1 ?n2)
+     [?a :allo/customer ?c]
+     [?o :rev-stream/channel ?c]]
     [(indirect-allo-product-stream ?a ?o ?p-keyword)
      [?a :allo/product ?sc]
      [?o :rev-stream/service-category-enum ?sc]
      [?sc :db/ident ?p-keyword]]])
 
+;; (direct-u-eid->revenues (d/db conn) [:user/email "userA1@example.com"]))
 (defn- direct-u-eid->revenues [db u-eid]
   (d/q '[:find ?o ?p-keyword ?sui
          :in $ % ?s ?less
@@ -686,7 +690,7 @@
          [?ra :rev-allo/sales ?s]
          [?a :allo/sales ?s]
          (or
-          (indirect-allo-customer-stream ?a ?o)
+          (direct-allo-customer-stream-by-channel ?a ?o ?ra ?less)
           (and (etl-source ?ra ?o)
                (rev-allo-time-stream ?ra ?o ?less)
                (direct-allo-customer-stream ?a ?ra ?o)))
@@ -695,6 +699,7 @@
          [?o :rev-stream/stream-unique-id ?sui]]
        db stream-match-rules u-eid -1))
 
+;; (agency-u-eid->revenues (d/db conn) [:user/email "userB2@example.com"])
 (defn- agency-u-eid->revenues [db u-eid]
   (d/q '[:find ?o ?p-keyword ?sui
          :in $ % ?s ?less
@@ -703,7 +708,7 @@
          (indirect-allo-customer-stream ?a ?o)
          (indirect-allo-product-stream ?a ?o ?p-keyword)
          (allo-time-stream ?a ?o ?less)
-         [?o :order/stream-unique-id ?sui]
+         [?o :rev-stream/stream-unique-id ?sui]
          (not-join [?s ?less ?o]
                    [?rb :rev-allo/sales ?s]
                    [?b :allo/sales ?s]
@@ -714,6 +719,7 @@
                    (allo-time-stream ?b ?o ?less))]
        db stream-match-rules u-eid -1))
 
+;; (reseller-u-eid->revenues (d/db conn) [:user/email "userB1@example.com"]))
 (defn- reseller-u-eid->revenues [db u-eid]
   (d/q '[:find ?o ?p-keyword ?sui
          :in $ % ?s ?less
@@ -722,5 +728,5 @@
          (indirect-allo-customer-stream ?a ?o)
          (indirect-allo-product-stream ?a ?o ?p-keyword)
          (allo-time-stream ?a ?o ?less)
-         [?o :order/stream-unique-id ?sui]]
+         [?o :rev-stream/stream-unique-id ?sui]]
        db stream-match-rules u-eid -1))

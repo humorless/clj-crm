@@ -408,7 +408,7 @@
          (indirect-allo-product-order ?a ?o ?p-keyword)
          (allo-time-order ?a ?o ?less)
          [?o :order/product-unique-id ?pui]
-         (not-join [?s ?less ?o]
+         (not-join [?o]
                    [?b :allo/sales ?s]
                    (direct-allo-customer-order ?b ?o)
                    (direct-allo-product-order ?b ?o _)
@@ -709,7 +709,7 @@
          (indirect-allo-product-stream ?a ?o ?p-keyword)
          (allo-time-stream ?a ?o ?less)
          [?o :rev-stream/stream-unique-id ?sui]
-         (not-join [?s ?less ?o]
+         (not-join [?o]
                    [?rb :rev-allo/sales ?s]
                    [?b :allo/sales ?s]
                    (etl-source ?rb ?o)

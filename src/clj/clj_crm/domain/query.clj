@@ -1,5 +1,7 @@
 (ns clj-crm.domain.query
   (:require [clj-crm.db.core :as dcore :refer [conn]]
+            [clj-crm.db.revenue :as drevenue]
+            [clj-crm.db.user :as duser]
             [schema.core :as s]
             [clojure.tools.logging :as log]
             [datomic.api :as d]))
@@ -88,48 +90,6 @@
         data (mapv #(dcore/recur-marshal db %) query-result)]
     data))
 
-(defn- u-eid->teamName
-  [db eid]
-  (-> (d/q '[:find ?t-keyword .
-             :in $ ?u-eid
-             :where
-             [?u-eid :user/team ?t-eid]
-             [?t-eid :db/ident ?t-keyword]]
-           db eid)
-      name))
-
-(defn- t-u-entry->revenue
-  [db [teamName eids]]
-  (let [orders (mapcat #(dcore/u-eid->orders db %) eids)
-        revenue (dcore/orders->revenue-report db orders)]
-    {:salesName "total"
-     :teamName teamName
-     :revenue revenue}))
-
-(defn- fmt-user-tuple
-  [[u-name t-keyword]]
-  (vector u-name (name t-keyword)))
-
-(defn- u-eid->userName-teamName-tuple
-  [db eid]
-  (-> (d/q '[:find [?u-name ?t-keyword]
-             :in $ ?u-eid
-             :where
-             [?u-eid :user/name ?u-name]
-             [?u-eid :user/team ?t-eid]
-             [?t-eid :db/ident ?t-keyword]]
-           db eid)
-      fmt-user-tuple))
-
-(defn- user-eid->revenue
-  [db eid]
-  (let [orders (dcore/u-eid->orders db eid)
-        revenue (dcore/orders->revenue-report db orders)
-        [u t] (u-eid->userName-teamName-tuple db eid)]
-    {:salesName u
-     :teamName t
-     :revenue revenue}))
-
 (defmethod dispatch-q :all-revenues
   [user-q]
   (log/info "at all-revenues, user-q as" user-q)
@@ -137,20 +97,12 @@
         db (if (some? tx)
              (d/as-of (d/db conn) tx)
              (d/db conn))
-        eids (dcore/user-eids db)
-        team-user-m (group-by #(u-eid->teamName db %) eids)
-        team-data (map #(t-u-entry->revenue db %) team-user-m)
-        sales-data (map #(user-eid->revenue db %) eids)
+        eids (duser/sales-eids db)
+        team-user-m (group-by #(duser/u-eid->teamName db %) eids)
+        team-data (map #(drevenue/t-u-entry->revenue db %) team-user-m)
+        sales-data (map #(drevenue/user-eid->revenue db %) eids)
         data (concat team-data sales-data)]
     data))
-
-(defn- t-eid->u-eids
-  [db eid]
-  (d/q '[:find [?u-eid ...]
-         :in $ ?t-eid
-         :where
-         [?u-eid :user/team ?t-eid]]
-       db eid))
 
 (defmethod dispatch-q :my-revenues
   [user-q]
@@ -161,10 +113,10 @@
              (d/db conn))
         email (:user user-q)
         user-lookup-ref [:user/email email]
-        teamName (u-eid->teamName db user-lookup-ref)
-        eids (t-eid->u-eids db (keyword "user.team" teamName)) ;; eids belongs to the same team
-        sales-data (map #(user-eid->revenue db %) eids)
-        team-datum (t-u-entry->revenue db [teamName eids])
+        teamName (duser/u-eid->teamName db user-lookup-ref)
+        eids (duser/t-eid->sales-eids db (keyword "user.team" teamName)) ;; eids belongs to the same team
+        sales-data (map #(drevenue/user-eid->revenue db %) eids)
+        team-datum (drevenue/t-u-entry->revenue db [teamName eids])
         data (concat [team-datum] sales-data)]
     data))
 
@@ -172,8 +124,8 @@
   [user-q]
   (log/info "at all-orders, user-q as" user-q)
   (let [db (d/db conn)
-        o-eids (dcore/order-eids db)
-        data (map #(dcore/o-eid->order db %) o-eids)]
+        o-eids (drevenue/order-eids db)
+        data (map #(drevenue/o-eid->order db %) o-eids)]
     data))
 
 (defmethod dispatch-q :tag-tx-history

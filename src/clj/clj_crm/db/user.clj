@@ -44,3 +44,12 @@
          :in $
          :where
          [?u-eid :user/roles :user.roles/sales]] db))
+
+(defn u-eid->chan-type
+  [db u-eid]
+  (d/q '[:find ?chan-keyword .
+         :in $ ?u
+         :where
+         [?u :user/channel ?c]
+         [?c :db/ident ?chan-keyword]]
+       db u-eid))

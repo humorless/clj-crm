@@ -99,8 +99,8 @@
              (d/db conn))
         eids (duser/sales-eids db)
         team-user-m (group-by #(duser/u-eid->teamName db %) eids)
-        team-data (map #(drevenue/t-u-entry->revenue db %) team-user-m)
-        sales-data (map #(drevenue/user-eid->revenue db %) eids)
+        team-data (map #(drevenue/t-u-entry->revenue-report db %) team-user-m)
+        sales-data (map #(drevenue/u-eid->revenue-report db %) eids)
         data (concat team-data sales-data)]
     data))
 
@@ -115,8 +115,8 @@
         user-lookup-ref [:user/email email]
         teamName (duser/u-eid->teamName db user-lookup-ref)
         eids (duser/t-eid->sales-eids db (keyword "user.team" teamName)) ;; eids belongs to the same team
-        sales-data (map #(drevenue/user-eid->revenue db %) eids)
-        team-datum (drevenue/t-u-entry->revenue db [teamName eids])
+        sales-data (map #(drevenue/u-eid->revenue-report db %) eids)
+        team-datum (drevenue/t-u-entry->revenue-report db [teamName eids])
         data (concat [team-datum] sales-data)]
     data))
 

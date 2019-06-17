@@ -69,12 +69,7 @@
        db order-match-rules u-eid -1))
 
 (defn- u-eid->orders [db u-eid]
-  (let [chan  (d/q '[:find ?chan-keyword .
-                     :in $ ?u
-                     :where
-                     [?u :user/channel ?chan]
-                     [?chan :db/ident ?chan-keyword]]
-                   db u-eid)]
+  (let [chan (duser/u-eid->chan-type db u-eid)]
     (case chan
       :user.channel/direct (direct-u-eid->orders db u-eid)
       :user.channel/reseller (reseller-u-eid->orders db u-eid)
@@ -223,10 +218,9 @@
   {:sum (sum-over-tuples tuples)
    :sum-by-product (sum-by-product-over-tuples tuples)})
 
-(defn- orders->revenue-report
-  [db orders]
-  (let [revenues     (mapcat #(o-tuple->revenues db %) orders) ;; vector of revenue tuple
-        y-revenues   (group-by-year revenues)
+(defn- revenues->revenue-report
+  [db revenues]
+  (let [y-revenues   (group-by-year revenues)
         y-q-revenues (update-map y-revenues group-by-quarter)
         y-m-revenues (update-map y-revenues group-by-month)
         y-q-sum-revenues (update-map y-q-revenues
@@ -271,69 +265,97 @@
      [?o :rev-stream/service-category-enum ?sc]
      [?sc :db/ident ?p-keyword]]])
 
+(defn- inst->y-m-str
+  "inst is of the type java.util.Date"
+  [inst]
+  (.format (java.text.SimpleDateFormat. "yyyy-MM") inst))
+
 ;; (direct-u-eid->revenues (d/db conn) [:user/email "userA1@example.com"]))
 (defn- direct-u-eid->revenues [db u-eid]
-  (d/q '[:find ?o ?p-keyword ?sui
-         :in $ % ?s ?less
-         :where
-         [?ra :rev-allo/sales ?s]
-         [?a :allo/sales ?s]
-         (or
-          (direct-allo-customer-stream-by-channel ?a ?o ?ra ?less)
-          (and (etl-source ?ra ?o)
-               (rev-allo-time-stream ?ra ?o ?less)
-               (direct-allo-customer-stream ?a ?ra ?o)))
-         (direct-allo-product-stream ?a ?o ?p-keyword)
-         (allo-time-stream ?a ?o ?less)
-         [?o :rev-stream/stream-unique-id ?sui]]
-       db stream-match-rules u-eid -1))
+  (->>  (d/q '[:find ?sui ?o-t ?p-keyword ?r
+               :in $ % ?s ?less
+               :where
+               [?ra :rev-allo/sales ?s]
+               [?a :allo/sales ?s]
+               (or
+                (direct-allo-customer-stream-by-channel ?a ?o ?ra ?less)
+                (and (etl-source ?ra ?o)
+                     (rev-allo-time-stream ?ra ?o ?less)
+                     (direct-allo-customer-stream ?a ?ra ?o)))
+               (direct-allo-product-stream ?a ?o ?p-keyword)
+               (allo-time-stream ?a ?o ?less)
+               [?o :rev-stream/stream-unique-id ?sui]
+               [?o :rev-stream/writing-time ?o-t]
+               [?o :rev-stream/revenue ?r]]
+             db stream-match-rules u-eid -1)
+        (mapv #(update % 1 inst->y-m-str))))
 
 ;; (agency-u-eid->revenues (d/db conn) [:user/email "userB2@example.com"])
 (defn- agency-u-eid->revenues [db u-eid]
-  (d/q '[:find ?o ?p-keyword ?sui
-         :in $ % ?s ?less
-         :where
-         [?a :allo/sales ?s]
-         (indirect-allo-customer-stream ?a ?o)
-         (indirect-allo-product-stream ?a ?o ?p-keyword)
-         (allo-time-stream ?a ?o ?less)
-         [?o :rev-stream/stream-unique-id ?sui]
-         (not-join [?o]
-                   [?rb :rev-allo/sales ?s]
-                   [?b :allo/sales ?s]
-                   (etl-source ?rb ?o)
-                   (rev-allo-time-stream ?rb ?o ?less)
-                   (direct-allo-customer-stream ?b ?rb ?o)
-                   (direct-allo-product-stream ?b ?o _)
-                   (allo-time-stream ?b ?o ?less))]
-       db stream-match-rules u-eid -1))
+  (->> (d/q '[:find ?sui ?o-t ?p-keyword ?r
+              :in $ % ?s ?less
+              :where
+              [?a :allo/sales ?s]
+              (indirect-allo-customer-stream ?a ?o)
+              (indirect-allo-product-stream ?a ?o ?p-keyword)
+              (allo-time-stream ?a ?o ?less)
+              [?o :rev-stream/stream-unique-id ?sui]
+              [?o :rev-stream/writing-time ?o-t]
+              [?o :rev-stream/revenue ?r]
+              (not-join [?o]
+                        [?rb :rev-allo/sales ?s]
+                        [?b :allo/sales ?s]
+                        (etl-source ?rb ?o)
+                        (rev-allo-time-stream ?rb ?o ?less)
+                        (direct-allo-customer-stream ?b ?rb ?o)
+                        (direct-allo-product-stream ?b ?o _)
+                        (allo-time-stream ?b ?o ?less))]
+            db stream-match-rules u-eid -1)
+       (mapv #(update % 1 inst->y-m-str))))
 
 ;; (reseller-u-eid->revenues (d/db conn) [:user/email "userB1@example.com"]))
 (defn- reseller-u-eid->revenues [db u-eid]
-  (d/q '[:find ?o ?p-keyword ?sui
-         :in $ % ?s ?less
-         :where
-         [?a :allo/sales ?s]
-         (indirect-allo-customer-stream ?a ?o)
-         (indirect-allo-product-stream ?a ?o ?p-keyword)
-         (allo-time-stream ?a ?o ?less)
-         [?o :rev-stream/stream-unique-id ?sui]]
-       db stream-match-rules u-eid -1))
+  (->>
+   (d/q '[:find ?sui ?o-t ?p-keyword ?r
+          :in $ % ?s ?less
+          :where
+          [?a :allo/sales ?s]
+          (indirect-allo-customer-stream ?a ?o)
+          (indirect-allo-product-stream ?a ?o ?p-keyword)
+          (allo-time-stream ?a ?o ?less)
+          [?o :rev-stream/stream-unique-id ?sui]
+          [?o :rev-stream/writing-time ?o-t]
+          [?o :rev-stream/revenue ?r]]
+        db stream-match-rules u-eid -1)
+   (mapv #(update % 1 inst->y-m-str))))
+
+(defn- u-eid->stream-revenues
+  [db u-eid]
+  (let [chan (duser/u-eid->chan-type db u-eid)]
+    (case chan
+      :user.channel/direct (direct-u-eid->revenues db u-eid)
+      :user.channel/reseller (reseller-u-eid->revenues db u-eid)
+      :user.channel/agency (agency-u-eid->revenues db u-eid)
+      #{})))
 
 ;; Module API for revenue
-(defn user-eid->revenue
+(defn u-eid->revenue-report
   [db eid]
   (let [orders (u-eid->orders db eid)
-        revenue (orders->revenue-report db orders)
+        order-revenues (mapcat #(o-tuple->revenues db %) orders) ;; vector of revenue tuple
+        stream-revenues (u-eid->stream-revenues db eid)
+        revenue (revenues->revenue-report db (concat order-revenues stream-revenues))
         [u t] (duser/u-eid->userName-teamName-tuple db eid)]
     {:salesName u
      :teamName t
      :revenue revenue}))
 
-(defn t-u-entry->revenue
+(defn t-u-entry->revenue-report
   [db [teamName eids]]
   (let [orders (mapcat #(u-eid->orders db %) eids)
-        revenue (orders->revenue-report db orders)]
+        order-revenues (mapcat #(o-tuple->revenues db %) orders) ;; vector of revenue tuple
+        stream-revenues (mapcat #(u-eid->stream-revenues db %) eids)
+        revenue (revenues->revenue-report db (concat order-revenues stream-revenues))]
     {:salesName "total"
      :teamName teamName
      :revenue revenue}))

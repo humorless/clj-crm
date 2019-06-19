@@ -1,6 +1,7 @@
 (ns clj-crm.domain.query
   (:require [clj-crm.db.core :as dcore :refer [conn]]
             [clj-crm.db.revenue :as drevenue]
+            [clj-crm.db.allocation :as dallo]
             [clj-crm.db.user :as duser]
             [schema.core :as s]
             [clojure.tools.logging :as log]
@@ -140,16 +141,16 @@
   [user-q]
   (log/info "at allocation, user-q as" user-q)
   (let [db (d/db conn)
-        eids (dcore/allo-eids db)
-        allocations (map #(dcore/allo-eid->allocation db %) eids)]
+        eids (dallo/allo-eids db)
+        allocations (map #(dallo/allo-eid->allocation db %) eids)]
     allocations))
 
 (defmethod dispatch-q :rev-allo
   [user-q]
   (log/info "at rev-allo, user-q as" user-q)
   (let [db (d/db conn)
-        eids (dcore/rev-allo-eids db)
-        allocations (map #(dcore/rev-allo-eid->allocation db %) eids)]
+        eids (dallo/rev-allo-eids db)
+        allocations (map #(dallo/rev-allo-eid->allocation db %) eids)]
     allocations))
 
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword

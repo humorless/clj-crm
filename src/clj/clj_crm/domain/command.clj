@@ -1,5 +1,6 @@
 (ns clj-crm.domain.command
   (:require [clj-crm.db.core :as dcore :refer [conn]]
+            [clj-crm.db.allocation :as dallo]
             [schema.core :as s]
             [clojure.tools.logging :as log]
             [datomic.api :as d]))
@@ -86,6 +87,26 @@
 (s/defschema CommandSchema {(s/required-key :c) s/Keyword
                             (s/optional-key :req) newReqSchema
                             (s/optional-key :req-op) opReqSchema})
+
+(defmethod dispatch-c :delete-rev-allo
+  [user-c]
+  (log/info "at delete-rev-allo, user-c as" user-c)
+  (let [db (d/db conn)
+        eids (dallo/rev-allo-eids db)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete-rev-allo, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
+(defmethod dispatch-c :delete-non-direct-allocation
+  [user-c]
+  (log/info "at delete-non-direct-allocation, user-c as" user-c)
+  (let [db (d/db conn)
+        eids (dallo/allo-non-direct-eids db)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete-non-direct-allocation, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
 
 (defn command
   " Input:

@@ -47,15 +47,6 @@
   Store the `source` using db.type/keyword"
   [db raw-map src])
 
-(defn- rev-allo-retract-txes
-  "find out all the rev-allo belongs to certain source"
-  [db src]
-  (->> (d/q '[:find [?e ...]
-              :in $ ?s
-              :where
-              [?e :rev-allo/source ?s]] db src)
-       (mapv #(vector :db/retractEntity %))))
-
 ;; Action with exception throwing
 (defn- get-excel [addr filename]
   (-> {}
@@ -75,5 +66,4 @@
     (do (log/info "tx-data write into db, length: " (count tx-data))
         (log/info "first item of tx-data" (first tx-data))
         (when (seq tx-data)
-          @(d/transact conn tx-retract-data)
           @(d/transact conn tx-data)))))

@@ -379,33 +379,11 @@
               :where [_ :transaction/doc ?tag ?tx]] db)
        seq))
 
-;; Allocation export service API
+;; Utility API
+(defn eid->retract-tx-v
+  "from eid -> retract-tx
 
-(defn allo-eids [db]
-  (d/q '[:find [?e ...]
-         :in $
-         :where [?e :allo/sales _]] db))
-
-(defn allo-eid->allocation
-  "Transfrom allocation eid -> {HashMap with allocation fields}"
-  [db eid]
-  (d/pull db '[{:allo/sales [:user/email]}
-               {:allo/customer [:customer/id :customer/name]}
-               {:allo/product [:db/ident]}
-               :allo/time] eid))
-
-;; rev-allo export service API
-
-(defn rev-allo-eids [db]
-  (d/q '[:find [?e ...]
-         :in $
-         :where [?e :rev-allo/sales _]] db))
-
-(defn rev-allo-eid->allocation
-  "Transfrom rev-allo eid -> {HashMap with allocation fields}"
-  [db eid]
-  (d/pull db '[{:rev-allo/sales [:user/email]}
-               :rev-allo/customer-id
-               {:rev-allo/customer [:customer/id :customer/name]}
-               :rev-allo/time
-               :rev-allo/source] eid))
+   input: eid
+   output: [:db/retractEntity eid]"
+  [eid]
+  (vector :db/retractEntity eid))

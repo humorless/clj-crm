@@ -393,3 +393,19 @@
                {:allo/customer [:customer/id :customer/name]}
                {:allo/product [:db/ident]}
                :allo/time] eid))
+
+;; rev-allo export service API
+
+(defn rev-allo-eids [db]
+  (d/q '[:find [?e ...]
+         :in $
+         :where [?e :rev-allo/sales _]] db))
+
+(defn rev-allo-eid->allocation
+  "Transfrom rev-allo eid -> {HashMap with allocation fields}"
+  [db eid]
+  (d/pull db '[{:rev-allo/sales [:user/email]}
+               :rev-allo/customer-id
+               {:rev-allo/customer [:customer/id :customer/name]}
+               :rev-allo/time
+               :rev-allo/source] eid))

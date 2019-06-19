@@ -144,6 +144,14 @@
         allocations (map #(dcore/allo-eid->allocation db %) eids)]
     allocations))
 
+(defmethod dispatch-q :rev-allo
+  [user-q]
+  (log/info "at rev-allo, user-q as" user-q)
+  (let [db (d/db conn)
+        eids (dcore/rev-allo-eids db)
+        allocations (map #(dcore/rev-allo-eid->allocation db %) eids)]
+    allocations))
+
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword
                           (s/optional-key :tx) s/Int})
 

@@ -1,31 +1,29 @@
 (ns clj-crm.etl.user
-  (:require [clojure.set :as cs]
-            [clojure.tools.logging :as log]
-            [clj-crm.db.core :as dcore :refer [conn]]
-            [datomic.api :as d]
-            [dk.ative.docjure.spreadsheet :as spreadsheet]
-            [clojure.java.io :as io]
-            [buddy.hashers :as hs])
-  (:import [java.io StringWriter]))
+  (:require
+   [clojure.tools.logging :as log]
+   [clj-crm.db.core :as dcore :refer [conn]]
+   [datomic.api :as d]
+   [dk.ative.docjure.spreadsheet :as spreadsheet]
+   [clojure.java.io :as io]
+   [buddy.hashers :as hs]
+   [clojure.spec.alpha :as spec]))
 
-(defn- team-m->team-tx-m
-  "m is of the {HashMap} form that just reading the data from excel.
-   However, we need to do certain transformation to get tx-map."
-  [db m]
-  (let [t-str (:user/team m)
-        t-ident (keyword t-str)
-        r-str (:user/roles m)
-        r-ident (keyword r-str)
-        pwd-str (:user/pwd m)
-        pwd-hash (hs/derive pwd-str)
-        c-str (:user/channel m)
-        c-ident (keyword c-str)]
-    (if c-ident
-      (assoc m :user/team t-ident :user/roles r-ident
-             :user/pwd pwd-hash :user/channel c-ident)
-      (assoc (dissoc m :user/channel)
-             :user/team t-ident :user/roles r-ident
-             :user/pwd pwd-hash))))
+(spec/def ::email string?)
+(spec/def ::name string?)
+(spec/def ::roles string?)
+(spec/def ::team string?)
+(spec/def ::pwd string?)
+(spec/def ::channel (spec/nilable string?))
+
+(spec/def ::user
+  (spec/keys :req-un
+             [::email ::name ::roles ::team ::pwd ::channel]))
+
+(defn- check-users [state]
+  (if (every? #(spec/valid? ::user %) state)
+    state
+    (throw (ex-info "schema error of user" {:causes state
+                                            :desc "user schema error"}))))
 
 (defn- get-users-from-excel
   "Read the excel file, retrieve the user data,
@@ -38,48 +36,45 @@
   (with-open [stream (io/input-stream (str addr filename))]
     (->> (spreadsheet/load-workbook stream)
          (spreadsheet/select-sheet "Sheet0")
-         (spreadsheet/select-columns {:A :user/email
-                                      :B :user/name
-                                      :C :user/roles
-                                      :D :user/team
-                                      :E :user/pwd
-                                      :F :user/channel}) ;; Column F is nullable
-         rest
-         (map #(team-m->team-tx-m (d/db conn) %))
-         set)))
+         (spreadsheet/select-columns {:A :email
+                                      :B :name
+                                      :C :roles
+                                      :D :team
+                                      :E :pwd
+                                      :F :channel}) ;; Column F is nullable
+         rest)))
 
-(defn- u-eid->fields
-  "Transfrom user eid -> {HashMap with user fields}"
-  [db eid]
-  (d/pull db '[:user/email :user/name  {:user/roles [*]}
-               {:user/team [*]} {:user/channel [*]} :user/pwd] eid))
+(defn- raw-m->user-m
+  "m is of the {HashMap} form that just reading the data from excel.
+   However, we need to do certain transformation to get tx-map."
+  [db m]
+  (let [{t-str :team r-str :roles
+         pwd-str :pwd c-str :channel
+         e :email n :name} m
+        t-ident (keyword t-str)
+        r-ident (keyword r-str)
+        pwd-hash (hs/derive pwd-str)
+        c-ident (keyword c-str)]
+    (if c-ident
+      {:user/email e  :user/name n :user/team t-ident
+       :user/roles r-ident :user/pwd pwd-hash :user/channel c-ident}
+      {:user/email e :user/name n :user/team t-ident
+       :user/roles r-ident :user/pwd pwd-hash})))
 
-(defn- tx-user
-  "transform the {HashMap} data into db-transaction-form"
-  [m]
-  (let [r-ident (get-in m [:user/roles :db/ident])
-        t-ident (get-in m [:user/team :db/ident])
-        c-ident (get-in m [:user/channel :db/ident])]
-    (if c-ident ;; when c-ident is nil, skip this attribute
-      (assoc m :user/roles r-ident
-             :user/team t-ident
-             :user/channel c-ident)
-      (assoc m :user/roles r-ident
-             :user/team t-ident))))
-
-(defn- get-users-from-db [db]
-  (let [eids (dcore/user-eids db)
-        query-result (map #(u-eid->fields db %) eids)
-        data (map tx-user  query-result)]
-    (set data)))
+(defn- raw->tx [db raw-data]
+  (->> raw-data
+       (map #(raw-m->user-m db %))
+       vec))
 
 (defn sync-data
   "From Excel file, get the current users
    Write into database"
   [url filename]
   (log/info "sync-data triggered!")
-  (let [e-user-rel (get-users-from-excel url filename)
-        tx-data (vec e-user-rel)]
+  (let [db (d/db conn)
+        e-user-raw (get-users-from-excel url filename)
+        users (check-users e-user-raw)
+        tx-data (raw->tx db users)]
     (do (log/info "tx-data write into db, length: " (count tx-data))
         (log/info "first item of tx-data" (first tx-data))
         (when (seq tx-data)

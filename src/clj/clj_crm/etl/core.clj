@@ -15,21 +15,6 @@
   :start (:etl-url env)
   :stop "")
 
-(defn init-etl
-  "Trigger timer to run ETL periodically.
-   Run once a day at 13:00 "
-  []
-  (let [events-seq (rest (periodic-seq (.. (t/now)
-                                           (withZone (DateTimeZone/forID "Asia/Taipei"))
-                                           (withTime 13 0 0 0))
-                                       (t/days 1)))]
-    (chime/chime-at events-seq
-                    (fn [ts]
-                      (prn "at " ts "sync data")
-                      (customer/sync-data))
-                    {:on-finished (fn []
-                                    (println "Schedule finished."))})))
-
 (defn sync-data
   "Switch on cmd to decide which `sync-data` function to use"
   [cmd filename]

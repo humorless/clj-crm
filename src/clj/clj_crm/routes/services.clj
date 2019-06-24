@@ -102,7 +102,7 @@
      (try (if-let [r (etl/sync-data cmd filename)]
             (ok {:result :insert-done})
             (ok {:result :already-sync}))
-          (catch Exception e
+          (catch clojure.lang.ExceptionInfo e
             (bad-request {:reason (ex-data e)}))))
 
    (POST "/api/transaction" req
@@ -111,7 +111,7 @@
      :description "date-str denotes the date string showing on the UI. Example: 2019-05-23-v1"
      (try (if-let [r (dc/transact-tag-tx date-str)]
             (ok {:result :tag-tx-written}))
-          (catch Exception e
+          (catch clojure.lang.ExceptionInfo e
             (bad-request {:reason (ex-data e)}))))
 
    (context "/api" []

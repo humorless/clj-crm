@@ -1,4 +1,4 @@
-(ns clj-crm.etl.lap
+(ns clj-crm.etl.agp
   (:require
    [clojure.tools.logging :as log]
    [clj-crm.db.core :as dcore :refer [conn]]
@@ -8,36 +8,40 @@
    [clojure.spec.alpha :as spec]))
 
 (spec/def ::year-month double?)
-(spec/def ::adaccount-corporate-name string?)
-(spec/def ::adaccount-id string?)
-(spec/def ::billing-tax-id string?)
+(spec/def ::neon-product-id double?)
+(spec/def ::invoice-details string?)
+(spec/def ::basic-id string?)
+(spec/def ::customer-name string?)
+(spec/def ::deptor-code string?)
 (spec/def ::revenue double?)
 
 (spec/def ::rev-stream
   (spec/keys :req-un
-             [::year-month ::adaccount-corporate-name ::adaccount-id
-              ::billing-tax-id ::revenue]))
+             [::year-month ::neon-product-id ::invoice-details ::basic-id
+              ::customer-name ::deptor-code ::revenue]))
 
 (defn- check-streams [data]
   (if (every? #(spec/valid? ::rev-stream %) data)
     data
     (throw (ex-info "schema error of rev-stream" {:causes data
-                                                  :desc "lap schema validation error"}))))
+                                                  :desc "agp schema validation error"}))))
 
 (defn- get-rev-streams-from-excel
   "Read the excel file, retrieve the orders data,
  and then transform the data into db-transaction-form
 
- (get-rev-streams-from-excel \"http://127.0.0.1:5001/\" \"lap.xlsx\")"
+ (get-rev-streams-from-excel \"http://127.0.0.1:5001/\" \"agp.xlsx\")"
   [addr filename]
   (with-open [stream (io/input-stream (str addr filename))]
     (let [title+orders (->> (spreadsheet/load-workbook stream)
                             (spreadsheet/select-sheet "Sheet0")
-                            (spreadsheet/select-columns {:A :year-month
-                                                         :B :adaccount-corporate-name
-                                                         :C :adaccount-id
-                                                         :E :billing-tax-id
-                                                         :F :revenue}))]
+                            (spreadsheet/select-columns {:B :year-month
+                                                         :D :neon-product-id
+                                                         :G :invoice-details
+                                                         :K :basic-id
+                                                         :L :customer-name
+                                                         :O :deptor-code
+                                                         :AA :revenue}))]
       (rest title+orders))))
 
 (defn- raw-streams->stream-txes

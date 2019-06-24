@@ -21,7 +21,7 @@
               ::customer-name ::deptor-code ::revenue]))
 
 (defn- check-streams [data]
-  (if (every? #(spec/valid? ::rev-stream %) data)
+  (if (spec/valid? (spec/* ::rev-stream) data)
     data
     (throw (ex-info "schema error of rev-stream" {:causes data
                                                   :desc "agp schema validation error"}))))

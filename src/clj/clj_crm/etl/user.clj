@@ -20,7 +20,7 @@
              [::email ::name ::roles ::team ::pwd ::channel]))
 
 (defn- check-users [state]
-  (if (every? #(spec/valid? ::user %) state)
+  (if (spec/valid? (spec/* ::user) state)
     state
     (throw (ex-info "schema error of user" {:causes state
                                             :desc "user schema error"}))))

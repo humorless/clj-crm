@@ -12,7 +12,7 @@
 (spec/def ::customer-id string?)
 (spec/def ::lamp-customer-id string?)
 (spec/def ::sales-name string?)
-(spec/def ::source string?)
+(spec/def ::source #{"agp" "lap"})
 
 (spec/def ::mapping
   (spec/keys :req-un
@@ -66,10 +66,6 @@
       (log/error :sales-name sn  "has no mapping in database")
       (throw (ex-info "raw data error" {:causes raw-m
                                         :desc "lookup :rev-allo/sales failed"})))
-    (when (and (not= s-keyword :etl.source/lap) (not= s-keyword :etl.source/agp))
-      (log/error :source s "source str error")
-      (throw (ex-info "raw data error" {:causes raw-m
-                                        :desc "convert source string to valid keyword failed"})))
     {:rev-allo/sales s-eid
      :rev-allo/customer c-eid
      :rev-allo/customer-id ci

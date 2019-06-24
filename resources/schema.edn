@@ -369,6 +369,13 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
 
+   {:db/doc "The campaign name of the revenue stream."
+    :db/ident :rev-stream/campaign-name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
    {:db/doc "String value id that may correspond to an eid of customer table"
     :db/ident :rev-stream/customer-id
     :db/valueType :db.type/string

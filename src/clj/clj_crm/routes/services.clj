@@ -103,7 +103,9 @@
             (ok {:result :insert-done})
             (ok {:result :already-sync}))
           (catch clojure.lang.ExceptionInfo e
-            (bad-request {:reason (ex-data e)}))))
+            (bad-request {:reason (ex-data e)}))
+          (catch java.util.concurrent.ExecutionException e
+            (bad-request {:reason (.getCause e)}))))
 
    (POST "/api/transaction" req
      :body-params [date-str :- s/Str]
@@ -112,7 +114,9 @@
      (try (if-let [r (dc/transact-tag-tx date-str)]
             (ok {:result :tag-tx-written}))
           (catch clojure.lang.ExceptionInfo e
-            (bad-request {:reason (ex-data e)}))))
+            (bad-request {:reason (ex-data e)}))
+          (catch java.util.concurrent.ExecutionException e
+            (bad-request {:reason (.getCause e)}))))
 
    (context "/api" []
      :auth-rules authenticated?

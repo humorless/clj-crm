@@ -24,9 +24,33 @@
    :E :billing-tax-id
    :F :revenue})
 
+(defn- basic-mapping
+  "handle the mapping that does not need to lookup any tables in database"
+  [{y-m :year-month a-c-n :adaccount-corporate-name
+    a-i :adaccount-id r :revenue}]
+  (let [y-m-str (str (int y-m))]
+    {:rev-stream/stream-unique-id a-i
+     :rev-stream/campaign-name a-c-n
+     :rev-stream/customer-id a-i
+     :rev-stream/service-category-enum :product.type/timeline
+     :rev-stream/writing-time (utility/y-m->dt y-m-str)
+     :rev-stream/revenue (long r)
+     :rev-stream/source :etl.source/lap}))
+
+(defn- chan-mapping
+  [table {deptor-key :billing-tax-id}]
+  (let [chan-eid  (get table deptor-key)]
+    (if chan-eid   ;; possibly nil
+      {:rev-stream/channel chan-eid}
+      {})))
+
 (defn- data->data-txes
   [data]
-  data)
+  (let [db (d/db conn)
+        table (utility/tax-id->c-eid db)]
+    (let [basic-v (map basic-mapping data)
+          chan-v  (map #(chan-mapping table %) data)]
+      (mapv merge basic-v chan-v))))
 
 (def ^:private check-raw
   (utility/check-raw-fn ::rev-stream))

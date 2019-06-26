@@ -172,61 +172,65 @@
     :customer/id "CM0001"
     :customer/name "AAA股份有限公司"
     :customer/name-en "AAA Corporation"
-    :customer/tax-id "12345678"
+    :customer/tax-id "TAX-0001"
+    :customer/neon-code "NEON_CODE_0001"
     :customer/business-type :customer.bus/food}
 
    {:db/id "cm-2"
     :customer/id "CM0002"
     :customer/name "BBB股份有限公司"
     :customer/name-en "BBB Corporation"
-    :customer/tax-id "23456789"
+    :customer/tax-id "TAX-0002"
+    :customer/neon-code "NEON_CODE_0002"
     :customer/business-type :customer.bus/games}
 
    {:db/id "cm-3"
     :customer/id "CM0003"
     :customer/name "CCC股份有限公司"
     :customer/name-en "CCC Corporation"
-    :customer/tax-id "34567891"
+    :customer/tax-id "TAX-0003"
+    :customer/neon-code "NEON_CODE_0003"
     :customer/business-type :customer.bus/e-commerce}
 
    {:db/id "cm-4"
     :customer/id "CM0004"
     :customer/name "DDD股份有限公司"
     :customer/name-en "DDD Corporation"
-    :customer/tax-id "45678912"
+    :customer/tax-id "TAX-0004"
+    :customer/neon-code "NEON_CODE_0004"
     :customer/business-type :customer.bus/arts}
 
    {:db/id "cm-5"
     :customer/id "CM0005"
     :customer/name "EEE股份有限公司"
     :customer/name-en "EEE Corporation"
-    :customer/tax-id "56789123"
+    :customer/tax-id "TAX-0005"
     :customer/business-type :customer.bus/automotive}
 
    {:customer/id "CM0006"
     :customer/name "FFF股份有限公司"
     :customer/name-en "FFF Corporation"
-    :customer/tax-id "67891234"
+    :customer/tax-id "TAX-0006"
     :customer/business-type :customer.bus/education}
 
    {:customer/id "CM0007"
     :customer/name "GGG股份有限公司"
     :customer/name-en "GGG Corporation"
-    :customer/tax-id "78912345"
+    :customer/tax-id "TAX-0007"
     :customer/business-type :customer.bus/fashion}
 
    {:db/id "cm-8"
     :customer/id "CM0008"
     :customer/name "HHH股份有限公司"
     :customer/name-en "HHH Corporation"
-    :customer/tax-id "89123456"
+    :customer/tax-id "TAX-0008"
     :customer/business-type :customer.bus/finance}
 
    {:db/id "cm-9"
     :customer/id "CM0009"
     :customer/name "III股份有限公司"
     :customer/name-en "III Corporation"
-    :customer/tax-id "91234567"
+    :customer/tax-id "TAX-0009"
     :customer/business-type :customer.bus/retail}
 
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref for existing entity

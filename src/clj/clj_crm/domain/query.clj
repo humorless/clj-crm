@@ -121,6 +121,14 @@
         data (concat [team-datum] sales-data)]
     data))
 
+(defmethod dispatch-q :all-streams
+  [user-q]
+  (log/info "at all-streams, user-q as" user-q)
+  (let [db (d/db conn)
+        s-eids (drevenue/rev-stream-eids db)
+        data (map #(drevenue/s-eid->rev-stream db %) s-eids)]
+    data))
+
 (defmethod dispatch-q :all-orders
   [user-q]
   (log/info "at all-orders, user-q as" user-q)

@@ -361,6 +361,13 @@
      :revenue revenue}))
 
 ;; Orders export API
+(defn rev-stream-eids
+  [db]
+  (d/q '[:find [?e ...]
+         :in $
+         :where
+         [?e :rev-stream/stream-unique-id]]
+       db))
 
 (defn order-eids
   [db]
@@ -370,13 +377,24 @@
          [?o-eid :order/product-unique-id]]
        db))
 
+(defn s-eid->rev-stream
+  [db eid]
+  (d/pull db '[:rev-stream/stream-unique-id
+               :rev-stream/campaign-name
+               :rev-stream/customer-id
+               {:rev-stream/channel [:customer/name :customer/id]}
+               {:rev-stream/service-category-enum [:db/ident]}
+               :rev-stream/writing-time
+               :rev-stream/revenue
+               :rev-stream/source] eid))
+
 (defn o-eid->order
   "Transfrom order eid -> {HashMap with order fields}"
   [db eid]
   (d/pull db '[:order/product-unique-id
                {:order/customer [:customer/name :customer/id]}
                {:order/channel [:customer/name :customer/id]}
-               :order/service-category-enum
+               {:order/service-category-enum [:db/ident]}
                :order/io-writing-time
                :order/accounting-data
                :order/product-net-price

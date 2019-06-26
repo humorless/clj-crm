@@ -12,4 +12,25 @@
                          (concat
                            (for [rv to-remove] [:db/retract eid attr rv])
                            (for [nv new-vals] [:db/add eid attr nv])))}}
+ {:db/id #db/id [:db.part/user]
+  :db/ident :fn/upsert-rev-stream
+  :db/doc "The primary key of rev-stream is compound key"
+  :db/fn #db/fn
+  {:lang :clojure
+   :params [db m]
+   :code (if-let [id (ffirst
+                      (d/q '[:find ?e
+                             :in $ ?u ?t ?s
+                             :where
+                             [?e :rev-stream/stream-unique-id ?u]
+                             [?e :rev-stream/writing-time ?t]
+                             [?e :rev-stream/source ?s]]
+                           db (:rev-stream/stream-unique-id m)
+                           (:rev-stream/writing-time m)
+                           (:rev-stream/source m)))]
+           [(-> (dissoc m :rev-stream/stream-unique-id
+                        :rev-stream/writing-time
+                        :rev-stream/source)
+                (assoc :db/id id))]
+           [m])}}
 ]

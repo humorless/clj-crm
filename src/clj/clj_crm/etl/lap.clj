@@ -50,7 +50,8 @@
         table (utility/tax-id->c-eid db)]
     (let [basic-v (map basic-mapping data)
           chan-v  (map #(chan-mapping table %) data)]
-      (mapv merge basic-v chan-v))))
+      (->> (map merge basic-v chan-v)
+           (mapv #(vector :fn/upsert-rev-stream %))))))
 
 (def ^:private check-raw
   (utility/check-raw-fn ::rev-stream))

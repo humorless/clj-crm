@@ -42,8 +42,8 @@
     [data]
     (if (spec/valid? (spec/* schema) data)
       data
-      (throw (ex-info "schema error of excel" {:causes data
-                                               :desc (spec/explain-str (spec/* schema) data)})))))
+      (let [desc (spec/explain-str (spec/* schema) data)]
+        (throw (ex-info desc {:causes data :desc desc}))))))
 
 (defn get-raw-from-excel-fn
   "assemble columns-map and get-raw-from-excel fn"

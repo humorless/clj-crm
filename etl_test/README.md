@@ -1,3 +1,6 @@
+# How to test
+
+With suitable etl namespace:
 ```
-  serve -l 5001
+  (get-raw-from-excel "$your-proj-dir/clj-crm/etl_test/" "dev_user.xlsx")
 ```

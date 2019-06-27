@@ -167,23 +167,50 @@
 (def sync-data
   (utility/sync-data-fn get-raw-from-excel check-raw data->data-txes))
 
-(comment (def raw (get-raw-from-excel "http://10.20.30.40:5001/" "raw.xlsx")))
-
+(comment
+  (def raw (get-raw-from-excel "http://10.20.30.40:5001/" "raw.xlsx")))
 
 (comment
-  (def temp-datum #:order{:product-unique-id "5722-1"
-                          :io-writing-time #inst "2018-08-20T10:46:00.000-00:00"
-                          :service-category-enum :product.type/OA
-                          :terms-start-date "2019-05-14"
-                          :terms-end-date "2020-06-15"
-                          :product-net-price 19500
-                          :accounting-data (list {:accounting/month "2019-04" :accounting/revenue -3}
-                                                 {:accounting/month "2019-05" :accounting/revenue -2})}))
+  (def test-txes-1
+    [[:fn/upsert-order
+      #:order{:io-writing-time #inst "2019-04-01T02:39:00.000-00:00",
+              :service-category-enum :product.type/today,
+              :accounting-data
+              [#:accounting{:month "2019-04", :revenue 99995}
+               #:accounting{:month "2019-05", :revenue 200005}],
+              :terms-start-date "2019-04-24",
+              :terms-end-date "2019-05-14",
+              :product-net-price 300000,
+              :product-unique-id "10006-1"}]]))
+
 (comment
   (d/q '[:find ?m ?r
          :in $ ?e
          :where
          [?e :order/accounting-data ?a]
+         [?e :order/product-net-price ?p]
          [?a :accounting/month ?m]
          [?a :accounting/revenue ?r]]
-         (d/db conn) [:order/product-unique-id "5722-1"]))
+       (d/db conn) [:order/product-unique-id "10006-1"]))
+
+(comment
+  (d/q '[:find ?p .
+         :in $ ?e
+         :where
+         [?e :order/product-net-price ?p]]
+       (d/db conn) [:order/product-unique-id "10006-1"]))
+
+(comment
+  (def test-txes-2
+    [[:fn/upsert-order
+      #:order{:io-writing-time #inst "2019-04-01T02:39:00.000-00:00",
+              :service-category-enum :product.type/today,
+              :accounting-data
+              [#:accounting{:month "2019-04", :revenue -2}
+               #:accounting{:month "2019-05", :revenue -3}
+               #:accounting{:month "2019-02", :revenue 4}
+               #:accounting{:month "2019-01", :revenue 5}],
+              :terms-start-date "2019-04-24",
+              :terms-end-date "2019-05-14",
+              :product-net-price 400,
+              :product-unique-id "10006-1"}]]))

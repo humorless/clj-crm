@@ -120,7 +120,8 @@
      :order/product-net-price np-long
      :order/campaign-no  c-no-long
      :order/campaign-name c-name
-     :order/campaign-status c-status}))
+     :order/campaign-status c-status
+     :order/source :etl.source/lamp}))
 
 (defn- chan-mapping
   [table {d-t-id :debtor-tax-id t-id :tax-id}]

@@ -12,13 +12,13 @@
 (spec/def ::invoice-details string?)
 (spec/def ::basic-id string?)
 (spec/def ::customer-name string?)
-(spec/def ::deptor-code string?)
+(spec/def ::debtor-code string?)
 (spec/def ::revenue double?)
 
 (spec/def ::rev-stream
   (spec/keys :req-un
              [::year-month ::neon-product-id ::invoice-details ::basic-id
-              ::customer-name ::deptor-code ::revenue]))
+              ::customer-name ::debtor-code ::revenue]))
 
 (def ^:private columns-map
   {:B :year-month
@@ -26,7 +26,7 @@
    :G :invoice-details
    :K :basic-id
    :L :customer-name
-   :O :deptor-code
+   :O :debtor-code
    :AA :revenue})
 
 (defn- basic-mapping
@@ -43,10 +43,10 @@
      :rev-stream/source :etl.source/agp}))
 
 (defn- chan-mapping
-  [table {d-c :deptor-code}]
+  [table {d-c :debtor-code}]
   (let [str-tuple (string/split d-c #"-")
-        deptor-key (first str-tuple)
-        chan-eid  (get table deptor-key)]
+        debtor-key (first str-tuple)
+        chan-eid  (get table debtor-key)]
     (if chan-eid   ;; possibly nil
       {:rev-stream/channel chan-eid}
       {})))

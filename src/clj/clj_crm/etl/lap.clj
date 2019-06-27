@@ -38,8 +38,8 @@
      :rev-stream/source :etl.source/lap}))
 
 (defn- chan-mapping
-  [table {deptor-key :billing-tax-id}]
-  (let [chan-eid  (get table deptor-key)]
+  [table {debtor-key :billing-tax-id}]
+  (let [chan-eid  (get table debtor-key)]
     (if chan-eid   ;; possibly nil
       {:rev-stream/channel chan-eid}
       {})))

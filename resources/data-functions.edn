@@ -33,4 +33,26 @@
                         :rev-stream/source)
                 (assoc :db/id id))]
            [m])}}
+ {:db/id #db/id [:db.part/user]
+  :db/ident :fn/upsert-order
+  :db/doc "The :order/accounting-data is cardinality many.
+  When insert semantic, transact `[m]`
+  When update semantic, do retraction of :order/accounting-data first and then transact `m`  "
+  :db/fn #db/fn
+  {:lang :clojure
+   :params [db m]
+   :code (if-let [eid (ffirst
+                      (d/q '[:find ?e
+                             :in $ ?u
+                             :where
+                             [?e :order/product-unique-id ?u]]
+                           db (:order/product-unique-id m)))]
+           (let [ad-refs (d/q '[:find [?a ...]
+                                :in $ ?e
+                                :where [?e :order/accounting-data ?a]]
+                              db eid)
+                 retracts (mapcat (fn [r]  [[:db/retractEntity r]
+                                            [:db/retract eid :order/accounting-data r]]) ad-refs)]
+             (conj (vec retracts) m))
+           [m])}}
 ]

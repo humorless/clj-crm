@@ -169,14 +169,21 @@
 
 (comment (def raw (get-raw-from-excel "http://10.20.30.40:5001/" "raw.xlsx")))
 
+
 (comment
   (def temp-datum #:order{:product-unique-id "5722-1"
                           :io-writing-time #inst "2018-08-20T10:46:00.000-00:00"
-                          :customer 17592186046462
-                          :channel  17592186046462
                           :service-category-enum :product.type/OA
                           :terms-start-date "2019-05-14"
                           :terms-end-date "2020-06-15"
                           :product-net-price 19500
                           :accounting-data (list {:accounting/month "2019-04" :accounting/revenue -3}
                                                  {:accounting/month "2019-05" :accounting/revenue -2})}))
+(comment
+  (d/q '[:find ?m ?r
+         :in $ ?e
+         :where
+         [?e :order/accounting-data ?a]
+         [?a :accounting/month ?m]
+         [?a :accounting/revenue ?r]]
+         (d/db conn) [:order/product-unique-id "5722-1"]))

@@ -19,6 +19,16 @@
         boundary (time.core/plus l-d (time.core/days 1))]
     (time.coerce/to-date boundary)))
 
+(defn service-category->enum
+  "create a mapping table that can lookup enum from service category name."
+  [db]
+  (into {}  (d/q '[:find ?name ?enum
+                   :where
+                   [?e :product/type-id ?name]
+                   [?e :product/type ?t]
+                   [?t :db/ident ?enum]]
+                 db)))
+
 (defn tax-id->c-eid
   "create a mapping table that can lookup customer-eid from customer tax-id."
   [db]
@@ -45,8 +55,15 @@
       (let [desc (spec/explain-str (spec/* schema) data)]
         (throw (ex-info desc {:causes data :desc desc}))))))
 
-(defn get-raw-from-excel-fn
-  "assemble columns-map and get-raw-from-excel fn"
+(defn check-raw-fn*
+  "assemble schema and validate fn
+   The * means `check` only the `rest` part of data"
+  [schema]
+  (comp (check-raw-fn schema) rest))
+
+(defn get-raw-from-excel-fn*
+  "assemble columns-map and get-raw-from-excel fn
+   The * means `get` title and data"
   [columns-map]
   (fn get-raw-from-excel
     [addr filename]
@@ -54,7 +71,12 @@
       (let [title+orders (->> (spreadsheet/load-workbook stream)
                               (spreadsheet/select-sheet "Sheet0")
                               (spreadsheet/select-columns columns-map))]
-        (rest title+orders)))))
+        title+orders))))
+
+(defn get-raw-from-excel-fn
+  "assemble columns-map and get-raw-from-excel fn"
+  [columns-map]
+  (comp rest (get-raw-from-excel-fn* columns-map)))
 
 (defn sync-data-fn
   "assemble get, validate, transform, push to db"
@@ -63,8 +85,8 @@
     [url filename]
     (log/info "sync-data triggered!")
     (let [raw (get-raw-from-excel url filename)
-          data (check-raw raw) ;; schema validation
-          tx-data (data->tx-data data)]
+          _ (check-raw raw) ;; schema validation, but it may `rest` on raw
+          tx-data (data->tx-data raw)]
       (do (log/info "tx-data write into db, length: " (count tx-data))
           (log/info "first item of tx-data" (first tx-data))
           (when (seq tx-data)

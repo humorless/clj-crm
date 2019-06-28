@@ -453,4 +453,40 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}]
   ]}
+:clj-crm/norm7 {:txes [
+  [{:db/doc "The product name of order."
+    :db/ident :order/product-name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The campaign name of order."
+    :db/ident :order/campaign-name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The campaign status of order."
+    :db/ident :order/campaign-status
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The campaign number of order."
+    :db/ident :order/campaign-no
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The source of the ETL."
+    :db/ident :order/source
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}]
+  ]}
 }

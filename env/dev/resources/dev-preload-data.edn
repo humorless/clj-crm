@@ -204,33 +204,33 @@
     :customer/id "CM0005"
     :customer/name "EEE股份有限公司"
     :customer/name-en "EEE Corporation"
-    :customer/tax-id "TAX-0005"
+    :customer/tax-id "5"
     :customer/business-type :customer.bus/automotive}
 
    {:customer/id "CM0006"
     :customer/name "FFF股份有限公司"
     :customer/name-en "FFF Corporation"
-    :customer/tax-id "TAX-0006"
+    :customer/tax-id "6"
     :customer/business-type :customer.bus/education}
 
    {:customer/id "CM0007"
     :customer/name "GGG股份有限公司"
     :customer/name-en "GGG Corporation"
-    :customer/tax-id "TAX-0007"
+    :customer/tax-id "10007"
     :customer/business-type :customer.bus/fashion}
 
    {:db/id "cm-8"
     :customer/id "CM0008"
     :customer/name "HHH股份有限公司"
     :customer/name-en "HHH Corporation"
-    :customer/tax-id "TAX-0008"
+    :customer/tax-id "10008"
     :customer/business-type :customer.bus/finance}
 
    {:db/id "cm-9"
     :customer/id "CM0009"
     :customer/name "III股份有限公司"
     :customer/name-en "III Corporation"
-    :customer/tax-id "TAX-0009"
+    :customer/tax-id "10009"
     :customer/business-type :customer.bus/retail}
 
    {:req/sales [:user/email "userA1@example.com"] ;; lookup ref for existing entity

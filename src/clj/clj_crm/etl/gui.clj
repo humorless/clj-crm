@@ -63,7 +63,7 @@
 
 (defn- chan-mapping
   [table {d-t-id :debtor-tax-id t-id :advertisor-tax-id}]
-  (let [t-id-str (str t-id)
+  (let [t-id-str (str (int t-id))
         c-eid (get table t-id)
         trim-d-t-id (string/trim d-t-id)
         chan-eid (get table trim-d-t-id)]

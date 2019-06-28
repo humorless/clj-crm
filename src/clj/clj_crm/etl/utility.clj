@@ -55,12 +55,6 @@
       (let [desc (spec/explain-str (spec/* schema) data)]
         (throw (ex-info desc {:causes data :desc desc}))))))
 
-(defn check-raw-fn*
-  "assemble schema and validate fn
-   The * means `check` only the `rest` part of data"
-  [schema]
-  (comp (check-raw-fn schema) rest))
-
 (defn get-raw-from-excel-fn*
   "assemble columns-map and get-raw-from-excel fn
    The * means `get` title and data"

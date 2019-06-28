@@ -155,9 +155,9 @@
            (mapv #(vector :fn/upsert-order %))))))
 
 (def ^{:private true
-       :doc "Using -fn*, this check-raw ignores title"}
+       :doc "this check-raw ignores title"}
   check-raw
-  (utility/check-raw-fn* ::order))
+  (comp (utility/check-raw-fn ::order) rest))
 
 (def ^{:private true
        :doc "Using -fn*, this get-raw-from-excel return the title+data"}

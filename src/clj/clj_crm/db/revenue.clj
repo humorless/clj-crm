@@ -159,8 +159,6 @@
   [db [o-eid p-type & more]]
   (case p-type
     :product.type/SS (o-eid->delta-revenues db o-eid)
-    :product.type/line_point_code_tw (o-eid->delta-revenues db o-eid)
-    :product.type/today (o-eid->day-revenues db o-eid)
     (o-eid->normal-revenues db o-eid)))
 
 (def quarter-table

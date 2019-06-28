@@ -6,6 +6,7 @@
             [clj-crm.etl.user :as user]
             [clj-crm.etl.allocation :as allocation]
             [clj-crm.etl.lamp :as lamp]
+            [clj-crm.etl.gui :as gui]
             [clj-crm.etl.lap :as lap]
             [clj-crm.etl.agp :as agp]
             [clj-crm.etl.rev-allo :as rev-allo]
@@ -24,6 +25,7 @@
     "customer" (customer/sync-data url filename)
     "user" (user/sync-data url filename)
     "lamp" (lamp/sync-data url filename)
+    "gui" (gui/sync-data url filename)
     "lap" (lap/sync-data url filename)
     "agp" (agp/sync-data url filename)
     "rev-allo" (rev-allo/sync-data url filename)

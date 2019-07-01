@@ -50,9 +50,9 @@
   [schema]
   (fn check-raw
     [data]
-    (if (spec/valid? (spec/* schema) data)
+    (if (spec/valid? schema data)
       data
-      (let [desc (spec/explain-str (spec/* schema) data)]
+      (let [desc (spec/explain-str schema data)]
         (throw (ex-info desc {:causes data :desc desc}))))))
 
 (defn get-raw-from-excel-fn*

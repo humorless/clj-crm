@@ -13,10 +13,11 @@
 (spec/def ::channel (spec/nilable string?))
 
 (spec/def ::user
-  (spec/keys :req-un
-             [::email ::name ::roles ::team ::pwd]
-             :opt-un
-             [::channel]))
+  (spec/*
+   (spec/keys :req-un
+              [::email ::name ::roles ::team ::pwd]
+              :opt-un
+              [::channel])))
 
 (def ^:private columns-map
   {:A :email

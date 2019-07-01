@@ -34,13 +34,14 @@
 (spec/def ::12 (spec/or :revenue double? :none string?))
 
 (spec/def ::order
-  (spec/keys :req-un
-             [::campaign-no ::campaign-name ::campaign-status
-              ::io-writing-time ::tax-id ::debtor-tax-id
-              ::product-unique-id ::product-name ::service-category
-              ::terms-start-date ::terms-end-date ::product-net-price
-              ::1 ::2 ::3 ::4 ::5 ::6
-              ::7 ::8 ::9 ::10 ::11 ::12]))
+  (spec/*
+   (spec/keys :req-un
+              [::campaign-no ::campaign-name ::campaign-status
+               ::io-writing-time ::tax-id ::debtor-tax-id
+               ::product-unique-id ::product-name ::service-category
+               ::terms-start-date ::terms-end-date ::product-net-price
+               ::1 ::2 ::3 ::4 ::5 ::6
+               ::7 ::8 ::9 ::10 ::11 ::12])))
 
 (def ^:private columns-map
   {:B :campaign-no

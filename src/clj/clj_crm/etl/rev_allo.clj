@@ -1,11 +1,9 @@
 (ns clj-crm.etl.rev-allo
   (:require
-   [clojure.string :as string]
    [clojure.tools.logging :as log]
    [clj-crm.db.core :as dcore :refer [conn]]
    [datomic.api :as d]
-   [dk.ative.docjure.spreadsheet :as spreadsheet]
-   [clojure.java.io :as io]
+   [clj-crm.etl.utility :as utility]
    [clojure.spec.alpha :as spec]))
 
 (spec/def ::apply-time inst?)
@@ -15,29 +13,16 @@
 (spec/def ::source #{"agp" "lap"})
 
 (spec/def ::mapping
-  (spec/keys :req-un
-             [::apply-time ::customer-id ::lamp-customer-id ::sales-name ::source]))
+  (spec/*
+   (spec/keys :req-un
+              [::apply-time ::customer-id ::lamp-customer-id ::sales-name ::source])))
 
-(defn- check-mappings [state]
-  (if (every? #(spec/valid? ::mapping %) (:mappings state))
-    state
-    (throw (ex-info "schema error of mapping" {:causes (:mappings state)
-                                               :desc "mapping schema error"}))))
-
-;; (get-raw-orders-from-excel "http://127.0.0.1:5001/" "allocation.xlsx")
-(defn- get-mappings-from-excel
-  "Read the excel file, retrieve the orders data,
-   and then transform the data into db-transaction-form"
-  [addr filename]
-  (with-open [stream (io/input-stream (str addr filename))]
-    (->> (spreadsheet/load-workbook stream)
-         (spreadsheet/select-sheet "Sheet0")
-         (spreadsheet/select-columns {:A :apply-time
-                                      :B :source
-                                      :C :customer-id
-                                      :D :lamp-customer-id
-                                      :F :sales-name})
-         rest)))
+(def ^:private columns-map
+  {:A :apply-time
+   :B :source
+   :C :customer-id
+   :D :lamp-customer-id
+   :F :sales-name})
 
 (defn- sales-name->eid
   [db]
@@ -72,7 +57,7 @@
      :rev-allo/time at
      :rev-allo/source s-keyword}))
 
-(defn- rev-allo-raw->rev-allo-txes
+(defn- data->data-txes
   "The transformation:
 
   Lookup `sales ref` by sales-name field
@@ -80,30 +65,18 @@
   Store the `customer-id` using db.type/string
   Store the `time` using db.type/inst
   Store the `source` using db.type/keyword"
-  [db state]
-  (let [s-table (sales-name->eid db)
+  [data]
+  (let [db (d/db conn)
+        s-table (sales-name->eid db)
         c-table (lamp-customer-id->eid db)]
-    (->> (:mappings state)
+    (->> data
          (map #(raw->tx s-table c-table %)))))
 
-;; Action with exception throwing
+(def ^:private check-raw
+  (utility/check-raw-fn ::mapping))
 
+(def ^:private get-raw-from-excel
+  (utility/get-raw-from-excel-fn columns-map))
 
-(defn- get-excel-and-validate [addr filename]
-  (-> {}
-      (assoc :mappings (get-mappings-from-excel addr filename))
-      (check-mappings)))
-
-;; Assembly
-(defn sync-data
-  "read excel, database, and sync
-   Assembly function"
-  [url filename]
-  (log/info "sync-data triggered!")
-  (let [state (get-excel-and-validate url filename)
-        db (d/db conn)
-        tx-data (rev-allo-raw->rev-allo-txes db state)]
-    (do (log/info "tx-data write into db, length: " (count tx-data))
-        (log/info "first item of tx-data" (first tx-data))
-        (when (seq tx-data)
-          @(d/transact conn tx-data)))))
+(def sync-data
+  (utility/sync-data-fn get-raw-from-excel check-raw data->data-txes))

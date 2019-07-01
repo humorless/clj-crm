@@ -16,9 +16,10 @@
 (spec/def ::revenue double?)
 
 (spec/def ::rev-stream
-  (spec/keys :req-un
-             [::year-month ::neon-product-id ::invoice-details ::basic-id
-              ::customer-name ::debtor-code ::revenue]))
+  (spec/*
+   (spec/keys :req-un
+              [::year-month ::neon-product-id ::invoice-details ::basic-id
+               ::customer-name ::debtor-code ::revenue])))
 
 (def ^:private columns-map
   {:B :year-month

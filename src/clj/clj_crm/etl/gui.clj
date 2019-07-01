@@ -19,11 +19,12 @@
 (spec/def ::advertisor-tax-id double?)
 
 (spec/def ::order
-  (spec/keys :req-un
-             [::month ::service-category ::gui-no
-              ::net-amount ::amount
-              ::campaign-no ::campaign-name
-              ::debtor-tax-id ::advertisor-tax-id]))
+  (spec/*
+   (spec/keys :req-un
+              [::month ::service-category ::gui-no
+               ::net-amount ::amount
+               ::campaign-no ::campaign-name
+               ::debtor-tax-id ::advertisor-tax-id])))
 
 (def ^:private columns-map
   {:A :month

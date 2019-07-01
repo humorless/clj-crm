@@ -80,3 +80,6 @@
 
 (def sync-data
   (utility/sync-data-fn get-raw-from-excel check-raw data->data-txes))
+
+(comment (def raw
+           (get-raw-from-excel "/home/vagrant/clo/clj-crm/etl_test/" "dev_rev_allo.xlsx")))

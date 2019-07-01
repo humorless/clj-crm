@@ -1,19 +1,17 @@
 (ns clj-crm.etl.core
-  (:require [clj-time.core :as t]
-            [clj-time.periodic :refer [periodic-seq]]
-            [chime :as chime]
-            [clj-crm.etl.customer :as customer]
-            [clj-crm.etl.user :as user]
-            [clj-crm.etl.allocation :as allocation]
-            [clj-crm.etl.rev-allo :as rev-allo]
-            [clj-crm.etl.lamp :as lamp]
-            [clj-crm.etl.gui :as gui]
-            [clj-crm.etl.lap :as lap]
-            [clj-crm.etl.agp :as agp]
-            [clj-crm.etl.target :as target]
-            [clj-crm.config :refer [env]]
-            [mount.core :as mount])
-  (:import [org.joda.time DateTimeZone]))
+  (:require
+   [clj-crm.etl.customer]
+   [clj-crm.etl.user]
+   [clj-crm.etl.allocation]
+   [clj-crm.etl.rev-allo]
+   [clj-crm.etl.lamp]
+   [clj-crm.etl.gui]
+   [clj-crm.etl.lap]
+   [clj-crm.etl.agp]
+   [clj-crm.etl.target]
+   [clojure.tools.logging :as log]
+   [clj-crm.config :refer [env]]
+   [mount.core :as mount]))
 
 (mount/defstate url
   :start (:etl-url env)
@@ -22,6 +20,8 @@
 (defn sync-data
   "Switch on cmd to decide which `sync-data` function to use"
   [cmd filename]
-  (let [fn-sym (symbol cmd "sync-data")
-        sync-data (resolve fn-sym)]
-    (sync-data url filename)))
+  (log/info "cmd as " cmd ", filename as " filename)
+  (let [fn-sym (symbol (str "clj-crm.etl." cmd) "sync-data")
+        etl (resolve fn-sym)]
+    (log/info "fn-sym as " fn-sym ", etl function as " etl)
+    (etl url filename)))

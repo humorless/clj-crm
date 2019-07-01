@@ -161,6 +161,14 @@
         allocations (map #(dallo/rev-allo-eid->allocation db %) eids)]
     allocations))
 
+(defmethod dispatch-q :target
+  [user-q]
+  (log/info "at target, user-q as" user-q)
+  (let [db (d/db conn)
+        eids (drevenue/target-eids db)
+        data (map #(drevenue/target-eid->target db %) eids)]
+    data))
+
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword
                           (s/optional-key :tx) s/Int})
 

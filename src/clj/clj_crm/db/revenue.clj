@@ -398,3 +398,17 @@
                :order/product-net-price
                :order/terms-start-date
                :order/terms-end-date] eid))
+
+(defn target-eids
+  [db]
+  (d/q '[:find [?e ...]
+         :in $
+         :where [?e :target/revenue]]
+       db))
+
+(defn target-eid->target
+  [db eid]
+  (d/pull db '[:target/start-date
+               :target/end-date
+               {:target/user [:user/name :user/email]}
+               :target/revenue] eid))

@@ -12,6 +12,11 @@
 
 (def ^:private td-fmt-y-m (time.format/formatter "yyyyMM"))
 
+(defn y-m->dt* [y-m-str]
+  {:pre [(string? y-m-str)]}
+  (let [f-d (time.format/parse td-fmt-y-m y-m-str)]
+    (time.coerce/to-date f-d)))
+
 (defn y-m->dt [y-m-str]
   {:pre [(string? y-m-str)]}
   (let [f-d (time.format/parse td-fmt-y-m y-m-str)
@@ -28,6 +33,14 @@
                    [?e :product/type ?t]
                    [?t :db/ident ?enum]]
                  db)))
+
+(defn user-name->u-eid
+  "create a mapping table that can lookup user-eid from user name."
+  [db]
+  (into {} (d/q '[:find ?name ?e
+                  :where
+                  [?e :user/name ?name]]
+                db)))
 
 (defn tax-id->c-eid
   "create a mapping table that can lookup customer-eid from customer tax-id."

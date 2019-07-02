@@ -11,6 +11,7 @@ cd datomic-free-${DATOMIC_VERSION}
 cp config/samples/free-transactor-template.properties transactor.properties
 
 sed "s/host=localhost/host=0.0.0.0/" -i transactor.properties
+sed "/host=0.0.0.0/a alt-host=${ALT_HOST:-127.0.0.1}" -i transactor.properties
 
 mkdir ./data
 sed "s/# data-dir=data/data-dir=.\/data/" -i transactor.properties

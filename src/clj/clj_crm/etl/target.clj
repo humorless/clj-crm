@@ -47,10 +47,9 @@
 (defn- data->data-txes
   [data]
   (let [db (d/db conn)
-        table (utility/user-name->u-eid db)
-        sdata (set data)]
-    (let [basic-xs (map basic-mapping sdata)
-          user-xs  (map #(user-mapping table %) sdata)]
+        table (utility/user-name->u-eid db)]
+    (let [basic-xs (map basic-mapping data)
+          user-xs  (map #(user-mapping table %) data)]
       (->> (map merge basic-xs user-xs)
            (mapv #(vector :fn/upsert-target %))))))
 
@@ -65,3 +64,6 @@
 
 (comment (def raw
            (get-raw-from-excel "/home/vagrant/clo/clj-crm/etl_test/" "dev_target.xlsx")))
+(comment (def data
+           (data->data-txes raw)))
+(comment (utility/fn-txes->pure-txes :fn/upsert-target data))

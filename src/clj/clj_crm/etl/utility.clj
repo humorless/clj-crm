@@ -98,3 +98,11 @@
           (log/info "first item of tx-data" (first tx-data))
           (when (seq tx-data)
             @(d/transact conn tx-data))))))
+
+(defn fn-txes->pure-txes
+  "Example of fn-k  :fn/upsert-target"
+  [fn-k data]
+  (let [db (d/db conn)
+        f (dcore/query-db-fn db fn-k)
+        data-only (map second data)]
+    (mapv #(f db %) data-only)))

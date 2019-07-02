@@ -55,4 +55,21 @@
                                             [:db/retract eid :order/accounting-data r]]) ad-refs)]
              (conj (vec retracts) m))
            [m])}}
+ {:db/id #db/id [:db.part/user]
+  :db/ident :fn/upsert-target
+  :db/doc "The primary key of target is compound key (year-quarterly, user)"
+  :db/fn #db/fn
+  {:lang :clojure
+   :params [db m]
+   :code (if-let [id (d/q '[:find ?e .
+                            :in $ ?q ?u
+                            :where
+                            [?e :target/year-quarterly ?q]
+                            [?e :target/user ?u]]
+                           db (:target/year-quarterly m)
+                           (:target/user m))]
+           [(-> (dissoc m :target/year-quarterly
+                        :target/user)
+                (assoc :db/id id))]
+           [m])}}
 ]

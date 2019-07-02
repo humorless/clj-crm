@@ -31,7 +31,7 @@
 (defn- basic-mapping
   [{tp :time-period r :target}]
   {:target/year-quarterly (excel-fmt->db-fmt tp)
-   :target/revenue  (long r)})
+   :target/revenue (long r)})
 
 (defn- user-mapping
   [table {u :sales}]
@@ -46,7 +46,8 @@
         sdata (set data)]
     (let [basic-xs (map basic-mapping sdata)
           user-xs  (map #(user-mapping table %) sdata)]
-      (map merge basic-xs user-xs))))
+      (->> (map merge basic-xs user-xs)
+           (mapv #(vector :fn/upsert-target %))))))
 
 (def ^:private check-raw
   (utility/check-raw-fn ::rev-target))

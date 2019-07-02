@@ -8,7 +8,12 @@
    [clj-crm.etl.utility :as utility]
    [clojure.spec.alpha :as spec]))
 
-(spec/def ::time-period string?)
+(defn- tp-fmt?
+  "Valid time period format is `2019 Q1`"
+  [s]
+  (re-matches #"[0-9]{4} Q[1-4]{1}" s))
+
+(spec/def ::time-period tp-fmt?)
 (spec/def ::sales string?)
 (spec/def ::target double?)
 

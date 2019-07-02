@@ -1,40 +1,36 @@
 (ns clj-crm.etl.target
   (:require
    [clojure.tools.logging :as log]
+   [clojure.string :as string]
    [clj-crm.db.core :as dcore :refer [conn]]
    [datomic.api :as d]
    [clojure.string :as string]
    [clj-crm.etl.utility :as utility]
    [clojure.spec.alpha :as spec]))
 
-(spec/def ::start-date double?)
-(spec/def ::end-date double?)
+(spec/def ::time-period string?)
 (spec/def ::sales string?)
 (spec/def ::target double?)
 
 (spec/def ::rev-target
   (spec/*
    (spec/keys :req-un
-              [::start-date ::end-date ::sales ::target])))
+              [::time-period ::sales ::target])))
 
 (def ^:private columns-map
-  {:A :start-date
-   :B :end-date
-   :C :sales
-   :D :target})
+  {:A :time-period
+   :B :sales
+   :C :target})
 
-(defn- str->inst*
-  [ds]
-  (utility/y-m->dt* (str (int ds))))
-
-(defn- str->inst
-  [ds]
-  (utility/y-m->dt (str (int ds))))
+(defn- excel-fmt->db-fmt
+  [s]
+  (let [l-s (clojure.string/lower-case s)
+        [y q] (string/split l-s #"\s")]
+    (str y "-" q)))
 
 (defn- basic-mapping
-  [{sd :start-date ed :end-date r :target}]
-  {:target/start-date (str->inst* sd)
-   :target/end-date (str->inst ed)
+  [{tp :time-period r :target}]
+  {:target/year-quarterly (excel-fmt->db-fmt tp)
    :target/revenue  (long r)})
 
 (defn- user-mapping
@@ -48,9 +44,9 @@
   (let [db (d/db conn)
         table (utility/user-name->u-eid db)
         sdata (set data)]
-    (let [basic (map basic-mapping sdata)
-          user  (map #(user-mapping table %) sdata)]
-      (map merge basic user))))
+    (let [basic-xs (map basic-mapping sdata)
+          user-xs  (map #(user-mapping table %) sdata)]
+      (map merge basic-xs user-xs))))
 
 (def ^:private check-raw
   (utility/check-raw-fn ::rev-target))

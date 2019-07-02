@@ -408,7 +408,6 @@
 
 (defn target-eid->target
   [db eid]
-  (d/pull db '[:target/start-date
-               :target/end-date
+  (d/pull db '[:target/year-quarterly
                {:target/user [:user/name :user/email]}
                :target/revenue] eid))

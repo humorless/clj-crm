@@ -1,6 +1,7 @@
 (ns clj-crm.db.revenue
   (:require [clj-crm.db.user :as duser]
             [datomic.api :as d]
+            [clj-crm.db.core :refer [conn]]
             [clojure.string :as string]
             [clojure.walk :as walk]
             [clj-time.core :as time.core]
@@ -411,3 +412,12 @@
   (d/pull db '[:target/year-quarterly
                {:target/user [:user/name :user/email]}
                :target/revenue] eid))
+
+(defn- u-eid->target
+  [db eid]
+  (d/q '[:find ?q ?r
+         :in $ ?u
+         :where
+         [?t :target/user ?u]
+         [?t :target/year-quarterly ?q]
+         [?t :target/revenue ?r]] db eid))

@@ -53,4 +53,15 @@
     :rev-stream/revenue 40000
     :rev-stream/source :etl.source/lap}]
 ]}
+:clj-crm/data10 {:txes [
+  [{:target/year-quarterly "2019-q1"
+    :target/user [:user/email "userA1@example.com"]
+    :target/revenue 600}
+   {:target/year-quarterly "2019-q2"
+    :target/user [:user/email "userA1@example.com"]
+    :target/revenue 1200}
+   {:target/year-quarterly "2019-q3"
+    :target/user [:user/email "userB1@example.com"]
+    :target/revenue 1800}]
+]}
 }

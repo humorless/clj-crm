@@ -332,26 +332,27 @@
       #{})))
 
 ;; Module API for revenue
-(defn u-eid->revenue-report
+(defn- u-eid->total-revenues
   [db eid]
   (let [orders (u-eid->orders db eid)
         order-revenues (mapcat #(o-tuple->revenues db %) orders) ;; vector of revenue tuple
-        stream-revenues (u-eid->stream-revenues db eid)
-        revenue (revenues->revenue-report db (concat order-revenues stream-revenues))
+        stream-revenues (u-eid->stream-revenues db eid)]
+    (concat order-revenues stream-revenues)))
+
+(defn u-eid->revenue-report
+  [db eid]
+  (let [total-revenues (u-eid->total-revenues db eid)
         [u t] (duser/u-eid->userName-teamName-tuple db eid)]
     {:salesName u
      :teamName t
-     :revenue revenue}))
+     :revenue (revenues->revenue-report db total-revenues)}))
 
 (defn t-u-entry->revenue-report
   [db [teamName eids]]
-  (let [orders (mapcat #(u-eid->orders db %) eids)
-        order-revenues (mapcat #(o-tuple->revenues db %) orders) ;; vector of revenue tuple
-        stream-revenues (mapcat #(u-eid->stream-revenues db %) eids)
-        revenue (revenues->revenue-report db (concat order-revenues stream-revenues))]
+  (let [total-team-revenues (mapcat #(u-eid->total-revenues db %) eids)]
     {:salesName "total"
      :teamName teamName
-     :revenue revenue}))
+     :revenue (revenues->revenue-report db total-team-revenues)}))
 
 ;; Orders export API
 (defn rev-stream-eids

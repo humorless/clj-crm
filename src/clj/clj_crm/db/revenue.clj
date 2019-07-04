@@ -10,7 +10,7 @@
 
 ;; Order matching functions
 (def order-match-rules
-  '[[(direct-allo-customer-order ?a ?o)
+  '[[(direct-allo-customer-order ?a ?o ?c)
      [?a :allo/customer ?c]
      [?o :order/customer ?c]]
     [(direct-allo-product-order ?a ?o ?p-keyword)
@@ -23,7 +23,7 @@
      [?a :allo/time ?a-t]
      [?o :order/io-writing-time ?o-t]
      [(compare ?a-t ?o-t) ?less]]
-    [(indirect-allo-customer-order ?a ?o)
+    [(indirect-allo-customer-order ?a ?o ?c)
      [?a :allo/customer ?c]
      [?o :order/channel ?c]]
     [(indirect-allo-product-order ?a ?o ?p-keyword)
@@ -32,38 +32,38 @@
      [?sc :db/ident ?p-keyword]]])
 
 (defn- agency-u-eid->orders [db u-eid]
-  (d/q '[:find ?o ?p-keyword ?pui
+  (d/q '[:find ?o ?p-keyword ?c ?pui
          :in $ % ?s ?less
          :where
          [?a :allo/sales ?s]
-         (indirect-allo-customer-order ?a ?o)
+         (indirect-allo-customer-order ?a ?o ?c)
          (indirect-allo-product-order ?a ?o ?p-keyword)
          (allo-time-order ?a ?o ?less)
          [?o :order/product-unique-id ?pui]
          (not-join [?o]
                    [?b :allo/sales ?s]
-                   (direct-allo-customer-order ?b ?o)
-                   (direct-allo-product-order ?b ?o _)
+                   (direct-allo-customer-order ?b ?o ?_o-c)
+                   (direct-allo-product-order ?b ?o ?_o-p)
                    (allo-time-order ?b ?o ?less))]
        db order-match-rules u-eid -1))
 
 (defn- reseller-u-eid->orders [db u-eid]
-  (d/q '[:find ?o ?p-keyword ?pui
+  (d/q '[:find ?o ?p-keyword ?c ?pui
          :in $ % ?s ?less
          :where
          [?a :allo/sales ?s]
-         (indirect-allo-customer-order ?a ?o)
+         (indirect-allo-customer-order ?a ?o ?c)
          (indirect-allo-product-order ?a ?o ?p-keyword)
          (allo-time-order ?a ?o ?less)
          [?o :order/product-unique-id ?pui]]
        db order-match-rules u-eid -1))
 
 (defn- direct-u-eid->orders [db u-eid]
-  (d/q '[:find ?o ?p-keyword ?pui
+  (d/q '[:find ?o ?p-keyword ?c ?pui
          :in $ % ?s ?less
          :where
          [?a :allo/sales ?s]
-         (direct-allo-customer-order ?a ?o)
+         (direct-allo-customer-order ?a ?o ?c)
          (direct-allo-product-order ?a ?o ?p-keyword)
          (allo-time-order ?a ?o ?less)
          [?o :order/product-unique-id ?pui]]
@@ -78,30 +78,26 @@
       #{})))
 
 (defn- o-eid->normal-revenues
-  [db o-eid]
-  (d/q '[:find ?pui ?m ?p-keyword ?r
-         :in $ ?o
+  [db o-eid c-eid]
+  (d/q '[:find ?pui ?m ?c ?r
+         :in $ ?o ?c
          :where
          [?o :order/product-unique-id ?pui]
          [?o :order/accounting-data ?ad]
-         [?o :order/service-category-enum ?sc]
-         [?sc :db/ident ?p-keyword]
          [?ad :accounting/month ?m]
-         [?ad :accounting/revenue ?r]] db o-eid))
+         [?ad :accounting/revenue ?r]] db o-eid c-eid))
 
 (defn- o-eid->delta-revenues
   "specify net-revenue at the starting month, just like a delta revenue"
-  [db o-eid]
+  [db o-eid c-eid]
   (let [date->month (fn [s]
                       (string/join "-" (butlast (string/split s #"-"))))]
-    (->>  (d/q '[:find ?pui ?sd ?p-keyword ?np
-                 :in $ ?o
+    (->>  (d/q '[:find ?pui ?sd ?c ?np
+                 :in $ ?o ?c
                  :where
                  [?o :order/product-unique-id ?pui]
-                 [?o :order/service-category-enum ?sc]
-                 [?sc :db/ident ?p-keyword]
                  [?o :order/product-net-price ?np]
-                 [?o :order/terms-start-date ?sd]] db o-eid)
+                 [?o :order/terms-start-date ?sd]] db o-eid c-eid)
           (mapv #(update % 1 date->month)))))
 
 (def td-fmt-date (time.format/formatter "yyyy-MM-dd"))
@@ -127,23 +123,21 @@
     (zipmap (keys gp)  (map #(count (second %)) gp))))
 
 (defn- month-dts->month-revenue-tuple
-  [pui p-name r-p-d [y-m-str number-of-day]]
+  [pui c-name r-p-d [y-m-str number-of-day]]
   (let [revenue (* r-p-d number-of-day)
         r (Math/round (double revenue))]
-    [pui y-m-str p-name r]))
+    [pui y-m-str c-name r]))
 
 (defn- o-eid->day-revenues
   "specify net-revenue according to how many days per month has"
-  [db o-eid]
-  (let [[pui p-name np sd ed]  (d/q '[:find  [?pui ?p-keyword ?np ?sd ?ed]
-                                      :in $ ?o
+  [db o-eid c-eid]
+  (let [[pui c-name np sd ed]  (d/q '[:find [?pui ?c ?np ?sd ?ed]
+                                      :in $ ?o ?c
                                       :where
                                       [?o :order/product-unique-id ?pui]
-                                      [?o :order/service-category-enum ?sc]
-                                      [?sc :db/ident ?p-keyword]
                                       [?o :order/product-net-price ?np]
                                       [?o :order/terms-start-date ?sd]
-                                      [?o :order/terms-end-date ?ed]] db o-eid)
+                                      [?o :order/terms-end-date ?ed]] db o-eid c-eid)
         s-dt (date-str->dt sd) ;; dt stands for class #clj-time/date-time
         e-dt (date-str->dt ed)
         span-days-int (days-of-closed-closed-dt s-dt e-dt)
@@ -151,16 +145,16 @@
     (->> (time.periodic/periodic-seq s-dt (time.core/days 1))
          (take span-days-int)
          (frequencies-by #(dt->y-m-str %))
-         (map #(month-dts->month-revenue-tuple pui p-name r-p-d %))
+         (map #(month-dts->month-revenue-tuple pui c-name r-p-d %))
          (sort-by second))))
 
 (defn- o-tuple->revenues
-  "Example output: #{[17592186045536 \"2019-02\" :product.type/line_now 100]
-                     [17592186045536 \"2019-03\" :product.type/more_tab 200] ...}"
-  [db [o-eid p-type & more]]
+  "Example output: #{[pui-a \"2019-02\" c-eid-a 100]
+                     [pui-b \"2019-03\" c-eid-b 200] ...}"
+  [db [o-eid p-type c-eid & more]]
   (case p-type
-    :product.type/SS (o-eid->delta-revenues db o-eid)
-    (o-eid->normal-revenues db o-eid)))
+    :product.type/SS (o-eid->delta-revenues db o-eid c-eid)
+    (o-eid->normal-revenues db o-eid c-eid)))
 
 (def quarter-table
   {"01" :q1
@@ -215,7 +209,7 @@
 
 (defn- statistics [tuples]
   {:sum (sum-over-tuples tuples)
-   :sum-by-product (sum-by-product-over-tuples tuples)})
+   :ori tuples})
 
 (defn- revenues->revenue-report
   [db revenues]
@@ -234,7 +228,7 @@
   '[[(etl-source ?ra ?o)
      [?ra :rev-allo/source ?s-etl]
      [?o  :rev-stream/source ?s-etl]]
-    [(direct-allo-customer-stream ?a ?ra ?o)
+    [(direct-allo-customer-stream ?a ?ra ?o ?c)
      [?a :allo/customer ?c]
      [?ra :rev-allo/customer ?c]
      [?ra :rev-allo/customer-id ?ci]
@@ -253,10 +247,10 @@
      [?a :allo/time ?a-t]
      [?o :rev-stream/writing-time ?o-t]
      [(compare ?a-t ?o-t) ?less]]
-    [(indirect-allo-customer-stream ?a ?o)
+    [(indirect-allo-customer-stream ?a ?o ?c)
      [?a :allo/customer ?c]
      [?o :rev-stream/channel ?c]]
-    [(direct-allo-customer-stream-by-channel ?a ?o ?n1 ?n2)
+    [(direct-allo-customer-stream-by-channel ?a ?o ?c ?_1 ?_2)
      [?a :allo/customer ?c]
      [?o :rev-stream/channel ?c]]
     [(indirect-allo-product-stream ?a ?o ?p-keyword)
@@ -271,16 +265,16 @@
 
 ;; (direct-u-eid->revenues (d/db conn) [:user/email "userA1@example.com"]))
 (defn- direct-u-eid->revenues [db u-eid]
-  (->>  (d/q '[:find ?sui ?o-t ?p-keyword ?r
+  (->>  (d/q '[:find ?sui ?o-t ?c ?r
                :in $ % ?s ?less
                :where
                [?ra :rev-allo/sales ?s]
                [?a :allo/sales ?s]
                (or
-                (direct-allo-customer-stream-by-channel ?a ?o ?ra ?less)
+                (direct-allo-customer-stream-by-channel ?a ?o ?c ?ra ?less)
                 (and (etl-source ?ra ?o)
                      (rev-allo-time-stream ?ra ?o ?less)
-                     (direct-allo-customer-stream ?a ?ra ?o)))
+                     (direct-allo-customer-stream ?a ?ra ?o ?c)))
                (direct-allo-product-stream ?a ?o ?p-keyword)
                (allo-time-stream ?a ?o ?less)
                [?o :rev-stream/stream-unique-id ?sui]
@@ -291,11 +285,11 @@
 
 ;; (agency-u-eid->revenues (d/db conn) [:user/email "userB2@example.com"])
 (defn- agency-u-eid->revenues [db u-eid]
-  (->> (d/q '[:find ?sui ?o-t ?p-keyword ?r
+  (->> (d/q '[:find ?sui ?o-t ?c ?r
               :in $ % ?s ?less
               :where
               [?a :allo/sales ?s]
-              (indirect-allo-customer-stream ?a ?o)
+              (indirect-allo-customer-stream ?a ?o ?c)
               (indirect-allo-product-stream ?a ?o ?p-keyword)
               (allo-time-stream ?a ?o ?less)
               [?o :rev-stream/stream-unique-id ?sui]
@@ -306,8 +300,8 @@
                         [?b :allo/sales ?s]
                         (etl-source ?rb ?o)
                         (rev-allo-time-stream ?rb ?o ?less)
-                        (direct-allo-customer-stream ?b ?rb ?o)
-                        (direct-allo-product-stream ?b ?o _)
+                        (direct-allo-customer-stream ?b ?rb ?o ?_s-c)
+                        (direct-allo-product-stream ?b ?o ?_s-p)
                         (allo-time-stream ?b ?o ?less))]
             db stream-match-rules u-eid -1)
        (mapv #(update % 1 inst->y-m-str))))
@@ -315,11 +309,11 @@
 ;; (reseller-u-eid->revenues (d/db conn) [:user/email "userB1@example.com"]))
 (defn- reseller-u-eid->revenues [db u-eid]
   (->>
-   (d/q '[:find ?sui ?o-t ?p-keyword ?r
+   (d/q '[:find ?sui ?o-t ?c ?r
           :in $ % ?s ?less
           :where
           [?a :allo/sales ?s]
-          (indirect-allo-customer-stream ?a ?o)
+          (indirect-allo-customer-stream ?a ?o ?c)
           (indirect-allo-product-stream ?a ?o ?p-keyword)
           (allo-time-stream ?a ?o ?less)
           [?o :rev-stream/stream-unique-id ?sui]

@@ -211,8 +211,8 @@
   {:sum (sum-over-tuples tuples)
    :ori tuples})
 
-(defn- revenues->revenue-report
-  [db revenues]
+(defn- report-by-qurterly-monthly
+  [revenues]
   (let [y-revenues   (group-by-year revenues)
         y-q-revenues (update-map y-revenues group-by-quarter)
         y-m-revenues (update-map y-revenues group-by-month)
@@ -331,7 +331,6 @@
       :user.channel/agency (agency-u-eid->revenues db u-eid)
       #{})))
 
-;; Module API for revenue
 (defn- u-eid->total-revenues
   [db eid]
   (let [orders (u-eid->orders db eid)
@@ -339,20 +338,62 @@
         stream-revenues (u-eid->stream-revenues db eid)]
     (concat order-revenues stream-revenues)))
 
+(defn- c-eid->customerName
+  [db]
+  (->> (d/q '[:find ?c ?n
+              :where
+              [?c :customer/name ?n]] db)
+       (into {})))
+
+(defn- ->tucr-entity
+  "create team, user, customer, revenue entity"
+  [table t u [c-eid revenues]]
+  (let [c-name (get table c-eid)]
+    {:teamName t
+     :salesName u
+     :customerName c-name
+     :revenue (report-by-qurterly-monthly revenues)}))
+
+(def place-holder (apply str (repeat 50 "z")))
+
+;; Module API for revenue
+(defn remove-place-holder
+  [ent]
+  (let [{s :salesName c :customerName t :teamName} ent
+        s-c-total {:salesName "total" :customerName "total"}
+        s-total {:salesName "total"}
+        c-total {:customerName "total"}]
+    (cond
+      (and (= s place-holder) (= c place-holder)) (merge ent s-c-total)
+      (= s place-holder) (merge ent s-total)
+      (= c place-holder) (merge ent c-total)
+      :else ent)))
+
+(defn u-eid->customer-revenue-report-v
+  [db eid]
+  (let [total-revenues (u-eid->total-revenues db eid)
+        c-eid-revenues-m (group-by #(nth % 2) total-revenues)
+        [u t] (duser/u-eid->userName-teamName-tuple db eid)]
+    (let [table (c-eid->customerName db)
+          data-v (mapv #(->tucr-entity table t u %) c-eid-revenues-m)]
+      data-v)))
+
 (defn u-eid->revenue-report
   [db eid]
   (let [total-revenues (u-eid->total-revenues db eid)
         [u t] (duser/u-eid->userName-teamName-tuple db eid)]
-    {:salesName u
-     :teamName t
-     :revenue (revenues->revenue-report db total-revenues)}))
+    {:teamName t
+     :salesName u
+     :customerName place-holder
+     :revenue (report-by-qurterly-monthly total-revenues)}))
 
 (defn t-u-entry->revenue-report
   [db [teamName eids]]
   (let [total-team-revenues (mapcat #(u-eid->total-revenues db %) eids)]
-    {:salesName "total"
-     :teamName teamName
-     :revenue (revenues->revenue-report db total-team-revenues)}))
+    {:teamName teamName
+     :salesName place-holder
+     :customerName place-holder
+     :revenue (report-by-qurterly-monthly total-team-revenues)}))
 
 ;; Orders export API
 (defn rev-stream-eids

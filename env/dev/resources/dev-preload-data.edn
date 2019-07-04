@@ -106,7 +106,7 @@
     :user/status :user.status/active
     :user/channel :user.channel/reseller
     :user/roles  :user.roles/sales
-    :user/team   :user.team/team2}
+    :user/team   :user.team/reseller}
 
    {:db/id     "B2"
     :user/name "sales name B2"
@@ -115,7 +115,7 @@
     :user/status :user.status/active
     :user/channel :user.channel/agency
     :user/roles  :user.roles/sales
-    :user/team   :user.team/team2}
+    :user/team   :user.team/agency}
 
    {:db/id     "B3"
     :user/name "sales name B3"
@@ -147,7 +147,7 @@
     :user/email "userC2@example.com"
     :user/status :user.status/active
     :user/roles  :user.roles/operator
-    :user/team   :user.team/team3}
+    :user/team   :user.team/null}
 
    {:db/id     "C3"
     :user/name "sales name C3"

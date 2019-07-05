@@ -102,9 +102,10 @@
         team-user-m (group-by #(duser/u-eid->teamName db %) eids)
         team-data (map #(drevenue/t-u-entry->revenue-report db %) team-user-m)
         sales-data (map #(drevenue/u-eid->revenue-report db %) eids)
-        data (concat team-data sales-data)
+        other-report (drevenue/u-eids->other-revenue-report db eids)
+        data (concat team-data sales-data [other-report])
         sorted-data (sort-by (juxt :teamName :salesName) data)]
-    (map drevenue/remove-place-holder sorted-data)))
+    (map drevenue/place-holder->total sorted-data)))
 
 (defmethod dispatch-q :my-revenues
   [user-q]
@@ -122,7 +123,7 @@
         team-datum (drevenue/t-u-entry->revenue-report db [teamName eids])
         data (concat [team-datum] sales-data customer-data)
         sorted-data (sort-by (juxt :teamName :salesName :customerName) data)]
-    (map drevenue/remove-place-holder sorted-data)))
+    (map drevenue/place-holder->total sorted-data)))
 
 (defmethod dispatch-q :all-streams
   [user-q]

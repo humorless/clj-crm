@@ -69,6 +69,16 @@
          [?o :order/product-unique-id ?pui]]
        db order-match-rules u-eid -1))
 
+(defn- all-orders-but [db1 db2]
+  (d/q '[:find ?o ?p-keyword ?c ?pui
+         :in $a $b ?c
+         :where
+         [$a ?o :order/service-category-enum ?sc]
+         [$a ?sc :db/ident ?p-keyword]
+         [$a ?o :order/product-unique-id ?pui]
+         ($b not [?o])]
+       db1 db2 -1))
+
 (defn- u-eid->orders [db u-eid]
   (let [chan (duser/u-eid->chan-type db u-eid)]
     (case chan
@@ -263,6 +273,26 @@
   [inst]
   (.format (java.text.SimpleDateFormat. "yyyy-MM") inst))
 
+(defn- all-revenues-db [db]
+  (->>
+   (d/q '[:find ?sui ?o-t ?c ?r
+          :in $ ?c
+          :where
+          [?o :rev-stream/stream-unique-id ?sui]
+          [?o :rev-stream/writing-time ?o-t]
+          [?o :rev-stream/revenue ?r]]
+        db -1)
+   (mapv #(update % 1 inst->y-m-str))))
+
+(defn- all-revenues-but [db1 db2]
+  (let [r-db (all-revenues-db db1)]
+    (d/q '[:find ?sui ?m ?c ?r
+           :in $a $b ?c
+           :where
+           [$a ?sui ?m ?c ?r]
+           ($b not [?sui ?m])]
+         r-db db2)))
+
 ;; (direct-u-eid->revenues (d/db conn) [:user/email "userA1@example.com"]))
 (defn- direct-u-eid->revenues [db u-eid]
   (->>  (d/q '[:find ?sui ?o-t ?c ?r
@@ -354,20 +384,43 @@
      :customerName c-name
      :revenue (report-by-qurterly-monthly revenues)}))
 
+(defn- u-eids->other-order-revenues
+  [db eids]
+  (let [order-db (mapcat #(u-eid->orders db %) eids)
+        other-orders (all-orders-but db order-db)]
+    (mapcat #(o-tuple->revenues db %) other-orders)))
+
+(defn- u-eids->other-stream-revenues
+  [db eids]
+  (let [stream-revenue-db (mapcat #(u-eid->stream-revenues db %) eids)]
+    (all-revenues-but db stream-revenue-db)))
+
 (def place-holder (apply str (repeat 50 "z")))
+(def place-holder-other (str (apply str (repeat 49 "z")) "a"))
 
 ;; Module API for revenue
-(defn remove-place-holder
+(defn place-holder->total
   [ent]
-  (let [{s :salesName c :customerName t :teamName} ent
-        s-c-total {:salesName "total" :customerName "total"}
-        s-total {:salesName "total"}
-        c-total {:customerName "total"}]
+  (let [{t :teamName s :salesName c :customerName} ent
+        t-s-c-total {:teamName "total" :salesName "total" :customerName "total"}
+        s-c-total   {:salesName "total" :customerName "total"}
+        c-total     {:customerName "total"}]
     (cond
+      (and (= t place-holder) (= s place-holder) (= c place-holder)) (merge ent t-s-c-total)
+      (and (= t place-holder-other) (= s place-holder) (= c place-holder)) (merge ent t-s-c-total)
       (and (= s place-holder) (= c place-holder)) (merge ent s-c-total)
-      (= s place-holder) (merge ent s-total)
       (= c place-holder) (merge ent c-total)
       :else ent)))
+
+(defn u-eids->other-revenue-report
+  [db eids]
+  (let [order-revenues (u-eids->other-order-revenues db eids)
+        stream-revenues (u-eids->other-stream-revenues db eids)
+        total-revenues (concat order-revenues stream-revenues)]
+    {:teamName  place-holder-other
+     :salesName place-holder
+     :customerName place-holder
+     :revenue (report-by-qurterly-monthly total-revenues)}))
 
 (defn u-eid->customer-revenue-report-v
   [db eid]

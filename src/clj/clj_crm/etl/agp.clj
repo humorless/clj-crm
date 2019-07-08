@@ -8,7 +8,7 @@
    [clojure.spec.alpha :as spec]))
 
 (spec/def ::year-month double?)
-(spec/def ::neon-product-id double?)
+(spec/def ::invoice-details-id string?)
 (spec/def ::invoice-details string?)
 (spec/def ::basic-id string?)
 (spec/def ::customer-name string?)
@@ -18,12 +18,12 @@
 (spec/def ::rev-stream
   (spec/*
    (spec/keys :req-un
-              [::year-month ::neon-product-id ::invoice-details ::basic-id
+              [::year-month ::invoice-details-id ::invoice-details ::basic-id
                ::customer-name ::debtor-code ::revenue])))
 
 (def ^:private columns-map
   {:B :year-month
-   :D :neon-product-id
+   :F :invoice-details-id
    :G :invoice-details
    :K :basic-id
    :L :customer-name
@@ -32,10 +32,10 @@
 
 (defn- basic-mapping
   "handle the mapping that does not need to lookup any tables in database"
-  [{y-m :year-month n-p-i :neon-product-id ivo :invoice-details
+  [{y-m :year-month ivo-i :invoice-details-id ivo :invoice-details
     b-i :basic-id c-n :customer-name  r :revenue}]
   (let [y-m-str (str (int y-m))]
-    {:rev-stream/stream-unique-id (str b-i "_" (int n-p-i))
+    {:rev-stream/stream-unique-id (str b-i "_" ivo-i)
      :rev-stream/campaign-name (str c-n "_" ivo)
      :rev-stream/customer-id b-i
      :rev-stream/service-category-enum :product.type/OA

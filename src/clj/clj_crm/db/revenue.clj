@@ -423,10 +423,10 @@
   (let [order-revenues (all-order-revenues db)
         stream-revenues (all-stream-revenues db)
         total-revenues (concat order-revenues stream-revenues)]
-  {:teamName place-holder
-   :salesName place-holder
-   :customerName place-holder
-   :revenue (report-by-quarterly-monthly total-revenues)}))
+    {:teamName place-holder
+     :salesName place-holder
+     :customerName place-holder
+     :revenue (report-by-quarterly-monthly total-revenues)}))
 
 (defn u-eids->other-revenue-report
   [db eids]

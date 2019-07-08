@@ -287,7 +287,7 @@
 (defn- all-revenues-but [db1 db2]
   (let [r-db (all-revenues-db db1)]
     (d/q '[:find ?sui ?m ?c ?r
-           :in $a $b ?c
+           :in $a $b
            :where
            [$a ?sui ?m ?c ?r]
            ($b not [?sui ?m])]
@@ -403,11 +403,12 @@
   [ent]
   (let [{t :teamName s :salesName c :customerName} ent
         t-s-c-total {:teamName "total" :salesName "total" :customerName "total"}
+        ot-s-c-total {:teamName "other" :salesName "total" :customerName "total"}
         s-c-total   {:salesName "total" :customerName "total"}
         c-total     {:customerName "total"}]
     (cond
       (and (= t place-holder) (= s place-holder) (= c place-holder)) (merge ent t-s-c-total)
-      (and (= t place-holder-other) (= s place-holder) (= c place-holder)) (merge ent t-s-c-total)
+      (and (= t place-holder-other) (= s place-holder) (= c place-holder)) (merge ent ot-s-c-total)
       (and (= s place-holder) (= c place-holder)) (merge ent s-c-total)
       (= c place-holder) (merge ent c-total)
       :else ent)))

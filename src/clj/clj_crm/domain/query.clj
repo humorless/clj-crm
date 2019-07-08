@@ -95,7 +95,7 @@
   [user-q]
   (log/info "at all-revenues, user-q as" user-q)
   (let [tx (:tx user-q)
-        db (if (some? tx)
+        db (if (and (not= 0 tx) (some? tx))
              (d/as-of (d/db conn) tx)
              (d/db conn))
         eids (duser/sales-eids db)

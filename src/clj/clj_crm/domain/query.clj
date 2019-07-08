@@ -103,7 +103,8 @@
         team-data (map #(drevenue/t-u-entry->revenue-report db %) team-user-m)
         sales-data (map #(drevenue/u-eid->revenue-report db %) eids)
         other-report (drevenue/u-eids->other-revenue-report db eids)
-        data (concat team-data sales-data [other-report])
+        total-report (drevenue/total-revenue-report db)
+        data (concat team-data sales-data [other-report total-report])
         sorted-data (sort-by (juxt :teamName :salesName) data)]
     (map drevenue/place-holder->total sorted-data)))
 

@@ -221,7 +221,7 @@
   {:sum (sum-over-tuples tuples)
    :ori tuples})
 
-(defn- report-by-qurterly-monthly
+(defn- report-by-quarterly-monthly
   [revenues]
   (let [y-revenues   (group-by-year revenues)
         y-q-revenues (update-map y-revenues group-by-quarter)
@@ -273,7 +273,7 @@
   [inst]
   (.format (java.text.SimpleDateFormat. "yyyy-MM") inst))
 
-(defn- all-revenues-db [db]
+(defn- all-stream-revenues [db]
   (->>
    (d/q '[:find ?sui ?o-t ?c ?r
           :in $ ?c
@@ -284,14 +284,14 @@
         db -1)
    (mapv #(update % 1 inst->y-m-str))))
 
-(defn- all-revenues-but [db1 db2]
-  (let [r-db (all-revenues-db db1)]
+(defn- all-stream-revenues-but [db1 db2]
+  (let [s-db (all-stream-revenues db1)]
     (d/q '[:find ?sui ?m ?c ?r
            :in $a $b
            :where
            [$a ?sui ?m ?c ?r]
            ($b not [?sui ?m])]
-         r-db db2)))
+         s-db db2)))
 
 ;; (direct-u-eid->revenues (d/db conn) [:user/email "userA1@example.com"]))
 (defn- direct-u-eid->revenues [db u-eid]
@@ -382,7 +382,7 @@
     {:teamName t
      :salesName u
      :customerName c-name
-     :revenue (report-by-qurterly-monthly revenues)}))
+     :revenue (report-by-quarterly-monthly revenues)}))
 
 (defn- u-eids->other-order-revenues
   [db eids]
@@ -393,7 +393,12 @@
 (defn- u-eids->other-stream-revenues
   [db eids]
   (let [stream-revenue-db (mapcat #(u-eid->stream-revenues db %) eids)]
-    (all-revenues-but db stream-revenue-db)))
+    (all-stream-revenues-but db stream-revenue-db)))
+
+(defn- all-order-revenues
+  [db]
+  (let [orders (all-orders-but db [])]
+    (mapcat #(o-tuple->revenues db %) orders)))
 
 (def place-holder (apply str (repeat 50 "z")))
 (def place-holder-other (str (apply str (repeat 49 "z")) "a"))
@@ -413,6 +418,16 @@
       (= c place-holder) (merge ent c-total)
       :else ent)))
 
+(defn total-revenue-report
+  [db]
+  (let [order-revenues (all-order-revenues db)
+        stream-revenues (all-stream-revenues db)
+        total-revenues (concat order-revenues stream-revenues)]
+  {:teamName place-holder
+   :salesName place-holder
+   :customerName place-holder
+   :revenue (report-by-quarterly-monthly total-revenues)}))
+
 (defn u-eids->other-revenue-report
   [db eids]
   (let [order-revenues (u-eids->other-order-revenues db eids)
@@ -421,7 +436,7 @@
     {:teamName  place-holder-other
      :salesName place-holder
      :customerName place-holder
-     :revenue (report-by-qurterly-monthly total-revenues)}))
+     :revenue (report-by-quarterly-monthly total-revenues)}))
 
 (defn u-eid->customer-revenue-report-v
   [db eid]
@@ -439,7 +454,7 @@
     {:teamName t
      :salesName u
      :customerName place-holder
-     :revenue (report-by-qurterly-monthly total-revenues)}))
+     :revenue (report-by-quarterly-monthly total-revenues)}))
 
 (defn t-u-entry->revenue-report
   [db [teamName eids]]
@@ -447,7 +462,7 @@
     {:teamName teamName
      :salesName place-holder
      :customerName place-holder
-     :revenue (report-by-qurterly-monthly total-team-revenues)}))
+     :revenue (report-by-quarterly-monthly total-team-revenues)}))
 
 ;; Orders export API
 (defn rev-stream-eids

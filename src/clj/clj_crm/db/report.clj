@@ -7,57 +7,49 @@
 
 ;; stream-revenues-db (mapcat #(u-eid->stream-revenues db %) u-eids)
 
-(defn- order-full-join
-  [db-all db-order]
-  (d/q '[:find ?u-name ?t-keyword
-         ?src ?pui ?o-cam-no ?o-cam-name ?o-cam-status
-         ?io-t ?s-enum ?sd ?ed ?np
-         ?c-id ?c-name-en ?c-name ?c-tax-id ?b-type
-         ?d-id ?d-name-en ?d-name ?d-tax-id
-         :in $A $O
-         :where [$O ?o ?u]
-         [$A ?u :user/name ?u-name]
-         [$A ?u :user/team ?t]
-         [$A ?t :db/ident ?t-keyword]
-         [$A ?o :order/source ?src]
-         [$A ?o :order/product-unique-id ?pui]
-         [$A ?o :order/campaign-no ?o-cam-no]
-         [$A ?o :order/campaign-name ?o-cam-name]
-         [$A ?o :order/campaign-status ?o-cam-status]
-         [$A ?o :order/io-writing-time ?io-t]
-         [$A ?o :order/service-category-enum ?s-enum]
-         [$A ?o :order/terms-start-date ?sd]
-         [$A ?o :order/terms-end-date ?ed]
-         [$A ?o :order/product-net-price ?np]
-         [$A ?o :order/customer ?c]
-         [$A ?c :customer/id ?c-id]
-         [$A ?c :customer/name-en ?c-name-en]
-         [$A ?c :customer/name ?c-name]
-         [$A ?c :customer/tax-id ?c-tax-id]
-         [$A ?c :customer/business-type ?b-type]
-         [$A ?o :order/channel ?d]
-         [$A ?d :customer/id ?d-id]
-         [$A ?d :customer/name-en ?d-name-en]
-         [$A ?d :customer/name ?d-name]
-         [$A ?d :customer/tax-id ?d-tax-id]]
-       db-all db-order))
+(defn- user-view
+  [db ocdut]
+  (let [[o c d u-name t-keyword] ocdut]
+    {:user/name u-name
+     :team/name (name t-keyword)}))
+
+(defn- order-view
+  [db ocdut]
+  (let [[o c d u-name t-keyword] ocdut]
+    (d/pull db '[:order/product-unique-id
+                 :order/io-writing-time] o)))
 
 (defn- u-eid->ou-tuples
   [db u-eid]
   (->> (drevenue/u-eid->orders db u-eid)
        (map #(vector (first %) u-eid))))
 
+(defn- ou-tuples->ocdut-tuples
+  [db ou-ts]
+  (d/q '[:find ?o ?c ?d ?u-name ?t-keyword
+         :in $ [[?o ?u]]
+         :where
+         [?u :user/name ?u-name]
+         [?u :user/team ?t]
+         [?t :db/ident ?t-keyword]
+         [?o :order/customer ?c]
+         [?o :order/channel ?d]]
+       db ou-ts))
+
 (defn- u-eids->order-full-join-reports
   " orders-db is the form [[o p-keyword c pui]]"
   [db u-eids]
-  (let [orders-db (mapcat #(u-eid->ou-tuples db %) u-eids)
-        order-fj (order-full-join db orders-db)]
-    order-fj))
+  (let [ou-tuples (mapcat #(u-eid->ou-tuples db %) u-eids)
+        ocdut-tuples (ou-tuples->ocdut-tuples db ou-tuples)]
+    (let [user-xs (map #(user-view db %) ocdut-tuples)
+          order-xs (map #(order-view db %) ocdut-tuples)]
+      (map merge user-xs order-xs))))
+
 
 ;; Public API
-(comment
-  (defn u-eids->full-join-reports
-    [db u-eids]
-    (let [o-r (u-eids->order-full-join-reports db u-eids)
-          s-r (u-eids->stream-full-join-reports db u-eids)]
-      (concat o-r s-r))))
+
+
+(defn u-eids->full-join-reports
+  [db u-eids]
+  (let [o-r (u-eids->order-full-join-reports db u-eids)]
+    (concat o-r [])))

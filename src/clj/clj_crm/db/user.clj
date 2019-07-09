@@ -1,6 +1,16 @@
 (ns clj-crm.db.user
   (:require [datomic.api :as d]))
 
+(defn u-eid->same-team-u-eids
+  [db eid]
+  (d/q '[:find [?e ...]
+         :in $ ?u-eid
+         :where
+         [?u-eid :user/team ?t-eid]
+         [?e :user/team ?t-eid]
+         [?e :user/roles :user.roles/sales]]
+       db eid))
+
 (defn u-eid->teamName
   [db eid]
   (-> (d/q '[:find ?t-keyword .

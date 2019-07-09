@@ -1,6 +1,7 @@
 (ns clj-crm.domain.query
   (:require [clj-crm.db.core :as dcore :refer [conn]]
             [clj-crm.db.revenue :as drevenue]
+            [clj-crm.db.report :as dreport]
             [clj-crm.db.allocation :as dallo]
             [clj-crm.db.user :as duser]
             [schema.core :as s]
@@ -107,6 +108,19 @@
         data (concat team-data sales-data [other-report total-report])
         sorted-data (sort-by (juxt :teamName :salesName) data)]
     (map drevenue/place-holder->total sorted-data)))
+
+(defmethod dispatch-q :my-full-join-reports
+  [user-q]
+  (log/info "at my-full-join-reports, user-q as" user-q)
+  (let [tx (:tx user-q)
+        db (if (some? tx)
+             (d/as-of (d/db conn) tx)
+             (d/db conn))
+        email (:user user-q)
+        user-lookup-ref [:user/email email]
+        u-eids (duser/u-eid->same-team-u-eids db user-lookup-ref)
+        report (dreport/u-eids->full-join-reports db u-eids)]
+    report))
 
 (defmethod dispatch-q :my-revenues
   [user-q]

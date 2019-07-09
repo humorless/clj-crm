@@ -79,7 +79,8 @@
          ($b not [?o])]
        db1 db2 -1))
 
-(defn- u-eid->orders [db u-eid]
+;; public API
+(defn u-eid->orders [db u-eid]
   (let [chan (duser/u-eid->chan-type db u-eid)]
     (case chan
       :user.channel/direct (direct-u-eid->orders db u-eid)
@@ -158,7 +159,8 @@
          (map #(month-dts->month-revenue-tuple pui c-name r-p-d %))
          (sort-by second))))
 
-(defn- o-tuple->revenues
+;; public API
+(defn o-tuple->revenues
   "Example output: #{[pui-a \"2019-02\" c-eid-a 100]
                      [pui-b \"2019-03\" c-eid-b 200] ...}"
   [db [o-eid p-type c-eid & more]]
@@ -350,7 +352,8 @@
          [?o :rev-stream/revenue ?r]]
        db stream-match-rules u-eid -1))
 
-(defn- u-eid->stream-revenues
+;; public API
+(defn u-eid->stream-revenues
   [db u-eid]
   (let [chan (duser/u-eid->chan-type db u-eid)]
     (case chan

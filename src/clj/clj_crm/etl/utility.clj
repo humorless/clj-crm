@@ -12,6 +12,14 @@
 
 (def ^:private td-fmt-y-m (time.format/formatter "yyyyMM"))
 
+(defn yearmonth->year-month
+  "change `201905` to `2019-05`"
+  [in-str]
+  {:pre [(string? in-str)]}
+  (let [front (apply str (take 4 in-str))
+        back (apply str (take-last 2 in-str))]
+    (str front "-" back)))
+
 (defn y-m->dt* [y-m-str]
   {:pre [(string? y-m-str)]}
   (let [f-d (time.format/parse td-fmt-y-m y-m-str)]

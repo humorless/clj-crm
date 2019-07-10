@@ -23,13 +23,13 @@
                              :in $ ?u ?t ?s
                              :where
                              [?e :rev-stream/stream-unique-id ?u]
-                             [?e :rev-stream/writing-time ?t]
+                             [?e :rev-stream/accounting-time ?t]
                              [?e :rev-stream/source ?s]]
                            db (:rev-stream/stream-unique-id m)
-                           (:rev-stream/writing-time m)
+                           (:rev-stream/accounting-time m)
                            (:rev-stream/source m)))]
            [(-> (dissoc m :rev-stream/stream-unique-id
-                        :rev-stream/writing-time
+                        :rev-stream/accounting-time
                         :rev-stream/source)
                 (assoc :db/id id))]
            [m])}}

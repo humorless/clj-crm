@@ -274,15 +274,13 @@
   (.format (java.text.SimpleDateFormat. "yyyy-MM") inst))
 
 (defn- all-stream-revenues [db]
-  (->>
-   (d/q '[:find ?sui ?o-t ?c ?r
-          :in $ ?c
-          :where
-          [?o :rev-stream/stream-unique-id ?sui]
-          [?o :rev-stream/writing-time ?o-t]
-          [?o :rev-stream/revenue ?r]]
-        db -1)
-   (mapv #(update % 1 inst->y-m-str))))
+  (d/q '[:find ?sui ?a-t ?c ?r
+         :in $ ?c
+         :where
+         [?o :rev-stream/stream-unique-id ?sui]
+         [?o :rev-stream/accounting-time ?a-t]
+         [?o :rev-stream/revenue ?r]]
+       db -1))
 
 (defn- all-stream-revenues-but [db1 db2]
   (let [s-db (all-stream-revenues db1)]
@@ -295,62 +293,62 @@
 
 ;; (direct-u-eid->revenues (d/db conn) [:user/email "userA1@example.com"]))
 (defn- direct-u-eid->revenues [db u-eid]
-  (->>  (d/q '[:find ?sui ?o-t ?c ?r
-               :in $ % ?s ?less
-               :where
-               [?ra :rev-allo/sales ?s]
-               [?a :allo/sales ?s]
-               (or
-                (direct-allo-customer-stream-by-channel ?a ?o ?c ?ra ?less)
-                (and (etl-source ?ra ?o)
-                     (rev-allo-time-stream ?ra ?o ?less)
-                     (direct-allo-customer-stream ?a ?ra ?o ?c)))
-               (direct-allo-product-stream ?a ?o ?p-keyword)
-               (allo-time-stream ?a ?o ?less)
-               [?o :rev-stream/stream-unique-id ?sui]
-               [?o :rev-stream/writing-time ?o-t]
-               [?o :rev-stream/revenue ?r]]
-             db stream-match-rules u-eid -1)
-        (mapv #(update % 1 inst->y-m-str))))
+  (d/q '[:find ?sui ?a-t ?c ?r
+         :in $ % ?s ?less
+         :where
+         [?ra :rev-allo/sales ?s]
+         [?a :allo/sales ?s]
+         (or
+          (direct-allo-customer-stream-by-channel ?a ?o ?c ?ra ?less)
+          (and (etl-source ?ra ?o)
+               (rev-allo-time-stream ?ra ?o ?less)
+               (direct-allo-customer-stream ?a ?ra ?o ?c)))
+         (direct-allo-product-stream ?a ?o ?p-keyword)
+         (allo-time-stream ?a ?o ?less)
+         [?o :rev-stream/stream-unique-id ?sui]
+         [?o :rev-stream/accounting-time ?a-t]
+         [?o :rev-stream/revenue ?r]]
+       db stream-match-rules u-eid -1))
 
 ;; (agency-u-eid->revenues (d/db conn) [:user/email "userB2@example.com"])
+
+
 (defn- agency-u-eid->revenues [db u-eid]
-  (->> (d/q '[:find ?sui ?o-t ?c ?r
-              :in $ % ?s ?less
-              :where
-              [?a :allo/sales ?s]
-              (indirect-allo-customer-stream ?a ?o ?c)
-              (indirect-allo-product-stream ?a ?o ?p-keyword)
-              (allo-time-stream ?a ?o ?less)
-              [?o :rev-stream/stream-unique-id ?sui]
-              [?o :rev-stream/writing-time ?o-t]
-              [?o :rev-stream/revenue ?r]
-              (not-join [?o]
-                        [?rb :rev-allo/sales ?s]
-                        [?b :allo/sales ?s]
-                        (etl-source ?rb ?o)
-                        (rev-allo-time-stream ?rb ?o ?less)
-                        (direct-allo-customer-stream ?b ?rb ?o ?_s-c)
-                        (direct-allo-product-stream ?b ?o ?_s-p)
-                        (allo-time-stream ?b ?o ?less))]
-            db stream-match-rules u-eid -1)
-       (mapv #(update % 1 inst->y-m-str))))
+  (d/q '[:find ?sui ?a-t ?c ?r
+         :in $ % ?s ?less
+         :where
+         [?a :allo/sales ?s]
+         (indirect-allo-customer-stream ?a ?o ?c)
+         (indirect-allo-product-stream ?a ?o ?p-keyword)
+         (allo-time-stream ?a ?o ?less)
+         [?o :rev-stream/stream-unique-id ?sui]
+         [?o :rev-stream/accounting-time ?a-t]
+         [?o :rev-stream/revenue ?r]
+         (not-join [?o]
+                   [?rb :rev-allo/sales ?s]
+                   [?b :allo/sales ?s]
+                   (etl-source ?rb ?o)
+                   (rev-allo-time-stream ?rb ?o ?less)
+                   (direct-allo-customer-stream ?b ?rb ?o ?_s-c)
+                   (direct-allo-product-stream ?b ?o ?_s-p)
+                   (allo-time-stream ?b ?o ?less))]
+       db stream-match-rules u-eid -1))
 
 ;; (reseller-u-eid->revenues (d/db conn) [:user/email "userB1@example.com"]))
+
+
 (defn- reseller-u-eid->revenues [db u-eid]
-  (->>
-   (d/q '[:find ?sui ?o-t ?c ?r
-          :in $ % ?s ?less
-          :where
-          [?a :allo/sales ?s]
-          (indirect-allo-customer-stream ?a ?o ?c)
-          (indirect-allo-product-stream ?a ?o ?p-keyword)
-          (allo-time-stream ?a ?o ?less)
-          [?o :rev-stream/stream-unique-id ?sui]
-          [?o :rev-stream/writing-time ?o-t]
-          [?o :rev-stream/revenue ?r]]
-        db stream-match-rules u-eid -1)
-   (mapv #(update % 1 inst->y-m-str))))
+  (d/q '[:find ?sui ?a-t ?c ?r
+         :in $ % ?s ?less
+         :where
+         [?a :allo/sales ?s]
+         (indirect-allo-customer-stream ?a ?o ?c)
+         (indirect-allo-product-stream ?a ?o ?p-keyword)
+         (allo-time-stream ?a ?o ?less)
+         [?o :rev-stream/stream-unique-id ?sui]
+         [?o :rev-stream/accounting-time ?a-t]
+         [?o :rev-stream/revenue ?r]]
+       db stream-match-rules u-eid -1))
 
 (defn- u-eid->stream-revenues
   [db u-eid]
@@ -489,6 +487,7 @@
                {:rev-stream/channel [:customer/name :customer/id]}
                {:rev-stream/service-category-enum [:db/ident]}
                :rev-stream/writing-time
+               :rev-stream/accounting-time
                :rev-stream/revenue
                :rev-stream/source] eid))
 

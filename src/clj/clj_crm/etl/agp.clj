@@ -40,6 +40,7 @@
      :rev-stream/customer-id b-i
      :rev-stream/service-category-enum :product.type/OA
      :rev-stream/writing-time (utility/y-m->dt y-m-str)
+     :rev-stream/accounting-time (utility/yearmonth->year-month y-m-str)
      :rev-stream/revenue (long r)
      :rev-stream/source :etl.source/agp}))
 

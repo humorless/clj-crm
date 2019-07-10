@@ -90,7 +90,7 @@
 (defn- accounting-mapping
   [{ym-d :month r :amount}]
   (if (number? r)
-    (let [y-m-str (yearmonth->year-month (str (int ym-d)))
+    (let [y-m-str (utility/yearmonth->year-month (str (int ym-d)))
           ar {:accounting/month y-m-str
               :accounting/revenue (long r)}]
       {:order/accounting-data [ar]})

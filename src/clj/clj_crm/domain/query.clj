@@ -1,7 +1,7 @@
 (ns clj-crm.domain.query
   (:require [clj-crm.db.core :as dcore :refer [conn]]
             [clj-crm.db.revenue :as drevenue]
-            [clj-crm.db.report :as dreport]
+            [clj-crm.fjr.core :as fjr]
             [clj-crm.db.allocation :as dallo]
             [clj-crm.db.user :as duser]
             [schema.core :as s]
@@ -119,8 +119,9 @@
         email (:user user-q)
         user-lookup-ref [:user/email email]
         u-eids (duser/u-eid->same-team-u-eids db user-lookup-ref)
-        report (dreport/u-eids->full-join-reports db u-eids)]
-    report))
+        order-ru-tuples (mapcat #(drevenue/u-eid->order-ru-tuples db %) u-eids)
+        order-reports (fjr/order-ru-tuples->order-full-join-reports db order-ru-tuples)]
+    order-reports))
 
 (defmethod dispatch-q :my-revenues
   [user-q]

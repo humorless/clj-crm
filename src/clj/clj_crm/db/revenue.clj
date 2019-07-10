@@ -79,8 +79,7 @@
          ($b not [?o])]
        db1 db2 -1))
 
-;; public API
-(defn u-eid->orders [db u-eid]
+(defn- u-eid->orders [db u-eid]
   (let [chan (duser/u-eid->chan-type db u-eid)]
     (case chan
       :user.channel/direct (direct-u-eid->orders db u-eid)
@@ -159,8 +158,7 @@
          (map #(month-dts->month-revenue-tuple pui c-name r-p-d %))
          (sort-by second))))
 
-;; public API
-(defn o-tuple->revenues
+(defn- o-tuple->revenues
   "Example output: #{[pui-a \"2019-02\" c-eid-a 100]
                      [pui-b \"2019-03\" c-eid-b 200] ...}"
   [db [o-eid p-type c-eid & more]]
@@ -352,8 +350,7 @@
          [?o :rev-stream/revenue ?r]]
        db stream-match-rules u-eid -1))
 
-;; public API
-(defn u-eid->stream-revenues
+(defn- u-eid->stream-revenues
   [db u-eid]
   (let [chan (duser/u-eid->chan-type db u-eid)]
     (case chan
@@ -404,7 +401,19 @@
 (def place-holder (apply str (repeat 50 "z")))
 (def place-holder-other (str (apply str (repeat 49 "z")) "a"))
 
+(defn- ->order-ru-tuple
+  "The output is: `[o-eid year-month-string u-eid revenue]`"
+  [u-eid [pui y-m c r]]
+  (let [o [:order/product-unique-id pui]]
+    [o y-m u-eid r]))
+
 ;; Module API for revenue
+(defn u-eid->order-ru-tuples
+  [db u-eid]
+  (->> (u-eid->orders db u-eid)
+       (mapcat #(o-tuple->revenues db %))
+       (map #(->order-ru-tuple u-eid %))))
+
 (defn place-holder->total
   [ent]
   (let [{t :teamName s :salesName c :customerName} ent

@@ -407,12 +407,37 @@
   (let [o [:order/product-unique-id pui]]
     [o y-m u-eid r]))
 
+(defn- ->stream-ru-tuple
+  "The output is: `[o-eid year-month-string u-eid revenue]`"
+  [db u-eid [sui y-m c r]]
+  (let [o (d/q '[:find ?o .
+                 :in $ ?sui ?y-m
+                 :where
+                 [?o :rev-stream/stream-unique-id ?sui]
+                 [?o :rev-stream/accounting-time ?y-m]]
+               db sui y-m)]
+    [o y-m u-eid r]))
+
 ;; Module API for revenue
+(defn u-eid->stream-ru-tuples
+  [db u-eid]
+  (->> (u-eid->stream-revenues db u-eid)
+       (map #(->stream-ru-tuple db u-eid %))))
+
 (defn u-eid->order-ru-tuples
   [db u-eid]
   (->> (u-eid->orders db u-eid)
        (mapcat #(o-tuple->revenues db %))
        (map #(->order-ru-tuple u-eid %))))
+
+(defn u-eids->other-ru-tuples
+  [db eids]
+  (let [order-revenues (u-eids->other-order-revenues db eids)
+        stream-revenues (u-eids->other-stream-revenues db eids)
+        order-ru-tuples  (map #(->order-ru-tuple nil %) order-revenues)
+        stream-ru-tuples  (map #(->stream-ru-tuple db nil %) stream-revenues)]
+    {:order order-ru-tuples
+     :stream stream-ru-tuples}))
 
 (defn place-holder->total
   [ent]

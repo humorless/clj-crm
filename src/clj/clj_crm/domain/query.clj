@@ -109,6 +109,22 @@
         sorted-data (sort-by (juxt :teamName :salesName) data)]
     (map drevenue/place-holder->total sorted-data)))
 
+(defmethod dispatch-q :all-full-join-reports
+  [user-q]
+  (log/info "at all-full-join-reports, user-q as" user-q)
+  (let [tx (:tx user-q)
+        db (if (some? tx)
+             (d/as-of (d/db conn) tx)
+             (d/db conn))
+        eids (duser/sales-eids db)
+        {other-stream-ru-tuples :stream other-order-ru-tuples :order} (drevenue/u-eids->other-ru-tuples db eids)
+        stream-ru-tuples (mapcat #(drevenue/u-eid->stream-ru-tuples db %) eids)
+        order-ru-tuples (mapcat #(drevenue/u-eid->order-ru-tuples db %) eids)
+        stream-reports (fjr/stream-ru-tuples->full-join-reports db (concat stream-ru-tuples other-stream-ru-tuples))
+        order-reports (fjr/order-ru-tuples->full-join-reports db (concat order-ru-tuples other-order-ru-tuples))]
+    {:stream stream-reports
+     :order order-reports}))
+
 (defmethod dispatch-q :my-full-join-reports
   [user-q]
   (log/info "at my-full-join-reports, user-q as" user-q)
@@ -119,9 +135,12 @@
         email (:user user-q)
         user-lookup-ref [:user/email email]
         u-eids (duser/u-eid->same-team-u-eids db user-lookup-ref)
+        stream-ru-tuples (mapcat #(drevenue/u-eid->stream-ru-tuples db %) u-eids)
         order-ru-tuples (mapcat #(drevenue/u-eid->order-ru-tuples db %) u-eids)
-        order-reports (fjr/order-ru-tuples->order-full-join-reports db order-ru-tuples)]
-    order-reports))
+        stream-reports (fjr/stream-ru-tuples->full-join-reports db stream-ru-tuples)
+        order-reports (fjr/order-ru-tuples->full-join-reports db order-ru-tuples)]
+    {:stream stream-reports
+     :order order-reports}))
 
 (defmethod dispatch-q :my-revenues
   [user-q]

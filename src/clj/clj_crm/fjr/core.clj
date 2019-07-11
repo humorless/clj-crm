@@ -5,7 +5,6 @@
             [clojure.string :as string]))
 
 ;; fjr stands for full join report
-
 (defn- customer-view
   [db fjr]
   (let [{c :c-eid d :d-eid} fjr
@@ -34,6 +33,17 @@
     {:revenue/value r
      :revenue/time  t}))
 
+(defn- rev-stream-view
+  [db fjr]
+  (let [{o :o-eid} fjr]
+    (d/pull db '[:rev-stream/stream-unique-id
+                 :rev-stream/writing-time
+                 :rev-stream/accounting-time
+                 :rev-stream/source
+                 :rev-stream/campaign-name
+                 :rev-stream/customer-id
+                 {:rev-stream/service-category-enum [:db/ident]}] o)))
+
 (defn- order-view
   [db fjr]
   (let [{o :o-eid} fjr]
@@ -49,7 +59,44 @@
                  :order/terms-end-date
                  {:order/service-category-enum [:db/ident]}] o)))
 
-(defn- ru-tuples->fjr-entity-xs
+(defn- ru->d-entity
+  [db ru]
+  (let [d (d/q '[:find ?d .
+                 :in $ ?o
+                 :where
+                 [?o :rev-stream/channel ?d]]
+               db (first ru))]
+    {:d-eid d}))
+
+(defn- ru->c-entity
+  "The output may be {:c-eid nil}"
+  [db ru]
+  (let [c (d/q '[:find ?c .
+                 :in $ ?o
+                 :where
+                 [?o :rev-stream/customer-id ?ci]
+                 [?ra :rev-allo/customer-id ?ci]
+                 [?ra :rev-allo/customer ?c]]
+               db (first ru))]
+    {:c-eid c}))
+
+(defn- ru->otur-entity
+  [ru]
+  (let [[o y-m u r] ru]
+    {:o-eid o
+     :y-m y-m
+     :u-eid u
+     :r r}))
+
+(defn- stream-ru-tuples->fjr-entity-xs
+  "fjr stands for full join revenue"
+  [db ru-ts]
+  (let [otur-xs (map ru->otur-entity ru-ts)
+        d-xs (map #(ru->d-entity db %) ru-ts)
+        c-xs (map #(ru->c-entity db %) ru-ts)]
+    (map merge otur-xs d-xs c-xs)))
+
+(defn- order-ru-tuples->fjr-entity-xs
   "fjr stands for full join revenue"
   [db ru-ts]
   (->>
@@ -61,17 +108,23 @@
         db ru-ts)
    (map #(zipmap [:o-eid :y-m :c-eid :d-eid :u-eid :r] %))))
 
-
-
-
-
 ;; Module API
 
 
-(defn order-ru-tuples->order-full-join-reports
+(defn stream-ru-tuples->full-join-reports
   "ru-tuple is the form [o-eid year-month-string u-eid revenue]"
   [db ru-tuples]
-  (let [fjr-ety-xs (ru-tuples->fjr-entity-xs db ru-tuples)]
+  (let [fjr-ety-xs (stream-ru-tuples->fjr-entity-xs db ru-tuples)]
+    (let [user-xs (map #(user-view db %) fjr-ety-xs)
+          rev-stream-xs (map #(rev-stream-view db %) fjr-ety-xs)
+          customer-xs (map #(customer-view db %) fjr-ety-xs)
+          revenue-xs (map #(revenue-view db %) fjr-ety-xs)]
+      (map merge user-xs rev-stream-xs customer-xs revenue-xs))))
+
+(defn order-ru-tuples->full-join-reports
+  "ru-tuple is the form [o-eid year-month-string u-eid revenue]"
+  [db ru-tuples]
+  (let [fjr-ety-xs (order-ru-tuples->fjr-entity-xs db ru-tuples)]
     (let [user-xs (map #(user-view db %) fjr-ety-xs)
           order-xs (map #(order-view db %) fjr-ety-xs)
           customer-xs (map #(customer-view db %) fjr-ety-xs)

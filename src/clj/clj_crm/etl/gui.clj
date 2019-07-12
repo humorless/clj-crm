@@ -11,31 +11,33 @@
 (spec/def ::month double?)
 (spec/def ::service-category string?)
 (spec/def ::gui-no string?)
+(spec/def ::item-seq double?)
 (spec/def ::net-amount double?)
-(spec/def ::amount (spec/or :revenue double? :none string?))
 (spec/def ::campaign-no double?)
 (spec/def ::campaign-name string?)
+(spec/def ::ad-item string?)
 (spec/def ::debtor-tax-id string?)
-(spec/def ::advertisor-tax-id double?)
+(spec/def ::advertisor-tax-id string?)
 
 (spec/def ::order
   (spec/*
    (spec/keys :req-un
               [::month ::service-category ::gui-no
-               ::net-amount ::amount
-               ::campaign-no ::campaign-name
+               ::item-seq ::net-amount
+               ::campaign-no ::campaign-name ::ad-item
                ::debtor-tax-id ::advertisor-tax-id])))
 
 (def ^:private columns-map
   {:A :month
    :B :service-category
-   :C :gui-no
-   :G :debtor-tax-id
-   :K :net-amount
-   :M :amount
-   :X :campaign-no
-   :Y :campaign-name
-   :Z :advertisor-tax-id})
+   :D :gui-no
+   :E :item-seq
+   :H :debtor-tax-id
+   :L :net-amount
+   :Y :campaign-no
+   :AA :ad-item
+   :AC :campaign-name
+   :C :advertisor-tax-id})
 
 (defn- compact
   "remove the nil value key from a hashmap
@@ -47,25 +49,26 @@
 
 (defn- basic-mapping
   "`campaign-no`, `io-writing-time`, and `product-net-price` needs type transformation"
-  [{y-m :month g-no :gui-no
-    net-r :net-amount
+  [{y-m :month g-no :gui-no i-s :item-seq
+    net-r :net-amount a-i :ad-item
     c-no :campaign-no c-name :campaign-name}]
   (let [y-m-str (str (int y-m))
+        i-s-str (str (int i-s))
         t-inst (utility/y-m->dt y-m-str)
         np-long (long net-r)
         c-no-long (long c-no)]
-    {:order/product-unique-id g-no
+    {:order/product-unique-id (str g-no "_"  i-s-str)
      :order/io-writing-time t-inst
      :order/product-net-price np-long
+     :order/product-name a-i
      :order/campaign-no  c-no-long
      :order/campaign-name c-name
      :order/campaign-status "Invoice Issued"
      :order/source :etl.source/gui}))
 
 (defn- chan-mapping
-  [table {d-t-id :debtor-tax-id t-id :advertisor-tax-id}]
-  (let [t-id-str (str (int t-id))
-        c-eid (get table t-id)
+  [table {d-t-id :debtor-tax-id t-id-str :advertisor-tax-id}]
+  (let [c-eid (get table t-id-str)
         trim-d-t-id (string/trim d-t-id)
         chan-eid (get table trim-d-t-id)]
     (when (nil? c-eid) (log/info :tax-id t-id-str "has no mapping in c-table"))
@@ -88,7 +91,7 @@
     (str front "-" back)))
 
 (defn- accounting-mapping
-  [{ym-d :month r :amount}]
+  [{ym-d :month r :net-amount}]
   (if (number? r)
     (let [y-m-str (utility/yearmonth->year-month (str (int ym-d)))
           ar {:accounting/month y-m-str

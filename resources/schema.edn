@@ -518,4 +518,14 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}]
   ]}
+:clj-crm/norm9 {:txes [
+  [{:db/id :user/name
+    :db/unique :db.unique/identity}]
+  [{:db/id :product/type-id
+    :db/unique :db.unique/identity}]
+  [{:db/id :customer/neon-code
+    :db/unique :db.unique/identity}]
+  [{:db/id :customer/tax-id
+    :db/unique :db.unique/identity}]
+  ]}
 }

@@ -293,18 +293,21 @@
   [{:order/product-unique-id "pui-001-direct-A3"
     :order/customer [:customer/id "CM0004"]
     :order/service-category-enum :product.type/BC
+    :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
     :order/accounting-data #{{:accounting/month "2019-02" :accounting/revenue 100}
                              {:accounting/month "2019-03" :accounting/revenue 200}}}]
   [{:order/product-unique-id "pui-002-direct-A2"
     :order/customer [:customer/id "CM0005"]
     :order/service-category-enum :product.type/BC
+    :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
     :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue 300}
                              {:accounting/month "2019-06" :accounting/revenue 400}}}]
   [{:order/product-unique-id "pui-003-direct-A3"
     :order/customer [:customer/id "CM0004"]
     :order/service-category-enum :product.type/today
+    :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
     :order/product-net-price 700
     :order/terms-start-date "2019-07-26"
@@ -315,12 +318,14 @@
   [{:order/product-unique-id "pui-004"
     :order/customer [:customer/id "CM0004"]
     :order/service-category-enum :product.type/BC
+    :order/source :etl.source/lamp
     :order/io-writing-time #inst "2014-01-28"
     :order/accounting-data #{{:accounting/month "2019-09" :accounting/revenue 300}
                                {:accounting/month "2019-08" :accounting/revenue 400}}}]
   [{:order/product-unique-id "pui-005-direct-A3"
     :order/customer [:customer/id "CM0004"]
     :order/service-category-enum :product.type/SS
+    :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
     :order/product-net-price 1950
     :order/terms-start-date "2019-02-26"
@@ -333,6 +338,7 @@
   [{:order/product-unique-id "pui-006-direct-A3"
     :order/customer [:customer/id "CM0004"]
     :order/service-category-enum :product.type/OA
+    :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
     :order/accounting-data #{{:accounting/month "2020-02" :accounting/revenue -30}
                              {:accounting/month "2020-05" :accounting/revenue 1000}}}]
@@ -340,6 +346,7 @@
     :order/customer [:customer/id "CM0005"]
     :order/channel [:customer/id "CM0008"]
     :order/service-category-enum :product.type/today
+    :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
     :order/product-net-price 97000
     :order/terms-start-date "2019-03-26"
@@ -375,12 +382,14 @@
   [{:order/product-unique-id "pui-008-reseller-B1"
     :order/channel [:customer/id "CM0006"]
     :order/service-category-enum :product.type/OA
+    :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
     :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue -300}
                              {:accounting/month "2019-06" :accounting/revenue 400}}}]
   [{:order/product-unique-id "pui-009-agency-B2"
     :order/channel [:customer/id "CM0007"]
     :order/service-category-enum :product.type/SS
+    :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
     :order/product-net-price 700
     :order/terms-start-date "2019-02-26"

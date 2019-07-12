@@ -36,28 +36,32 @@
 (defn- rev-stream-view
   [db fjr]
   (let [{o :o-eid} fjr]
-    (d/pull db '[:rev-stream/stream-unique-id
-                 :rev-stream/writing-time
-                 :rev-stream/accounting-time
-                 :rev-stream/source
-                 :rev-stream/campaign-name
-                 :rev-stream/customer-id
-                 {:rev-stream/service-category-enum [:db/ident]}] o)))
+    (-> (d/pull db '[:rev-stream/stream-unique-id
+                     :rev-stream/writing-time
+                     :rev-stream/accounting-time
+                     :rev-stream/source
+                     :rev-stream/campaign-name
+                     :rev-stream/customer-id
+                     {:rev-stream/service-category-enum [:db/ident]}] o)
+        (update :rev-stream/source name)
+        (update :rev-stream/service-category-enum (comp name :db/ident)))))
 
 (defn- order-view
   [db fjr]
   (let [{o :o-eid} fjr]
-    (d/pull db '[:order/product-unique-id
-                 :order/product-name
-                 :order/io-writing-time
-                 :order/source
-                 :order/campaign-no
-                 :order/campaign-status
-                 :order/campaign-name
-                 :order/product-net-price
-                 :order/terms-start-date
-                 :order/terms-end-date
-                 {:order/service-category-enum [:db/ident]}] o)))
+    (-> (d/pull db '[:order/product-unique-id
+                     :order/product-name
+                     :order/io-writing-time
+                     :order/source
+                     :order/campaign-no
+                     :order/campaign-status
+                     :order/campaign-name
+                     :order/product-net-price
+                     :order/terms-start-date
+                     :order/terms-end-date
+                     {:order/service-category-enum [:db/ident]}] o)
+        (update :order/source name)
+        (update :order/service-category-enum (comp name :db/ident)))))
 
 (defn- ru->d-entity
   [db ru]

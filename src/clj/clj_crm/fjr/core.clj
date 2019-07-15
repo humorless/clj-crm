@@ -23,9 +23,11 @@
   [db fjr]
   (let [{u :u-eid} fjr
         u-graph (d/pull db '[:user/name
-                             {:user/team [:db/ident]}] u)]
+                             {:user/team [:db/ident]}] u)
+        t-n (get-in u-graph [:user/team :db/ident])
+        teamName (if (some? t-n) (name t-n) nil)]
     {:user/name (:user/name u-graph)
-     :team/name (name (get-in u-graph [:user/team :db/ident]))}))
+     :team/name teamName}))
 
 (defn- revenue-view
   [db fjr]

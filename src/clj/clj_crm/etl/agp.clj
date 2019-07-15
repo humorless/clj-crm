@@ -46,9 +46,12 @@
 
 (defn- chan-mapping
   [table {d-c :debtor-code}]
-  (let [str-tuple (string/split d-c #"-")
+  (let [trim-d-c (string/trim d-c)
+        str-tuple (string/split trim-d-c #"-")
         debtor-key (first str-tuple)
         chan-eid  (get table debtor-key)]
+    (when (nil? chan-eid)
+      (log/info "chan-eid is nil, debtor-code is: " debtor-key))
     (if chan-eid   ;; possibly nil
       {:rev-stream/channel chan-eid}
       {})))

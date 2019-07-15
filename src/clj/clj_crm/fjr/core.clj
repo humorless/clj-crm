@@ -77,18 +77,22 @@
 (defn- ru->c-entity
   "The output may be {:c-eid nil}"
   [db ru]
-  (let [c (d/q '[:find ?c .
-                 :in $ ?o
-                 :where
-                 [?o :rev-stream/customer-id ?ci]
-                 [?ra :rev-allo/customer-id ?ci]
-                 [?ra :rev-allo/customer ?c]]
-               db (first ru))]
-    {:c-eid c}))
+  (let [[o y-m u c r] ru
+        chan-type (if (nil? u)
+                    nil
+                    (d/q '[:find ?ti .
+                           :in $ ?u
+                           :where
+                           [?u :user/channel ?t]
+                           [?t :db/ident ?ti]]
+                         db u))]
+    (if (not= chan-type :user.channel/direct)
+      {:c-eid nil}
+      {:c-eid c})))
 
 (defn- ru->otur-entity
   [ru]
-  (let [[o y-m u r] ru]
+  (let [[o y-m u c r] ru]
     {:o-eid o
      :y-m y-m
      :u-eid u
@@ -118,7 +122,7 @@
 
 
 (defn stream-ru-tuples->full-join-reports
-  "ru-tuple is the form [o-eid year-month-string u-eid revenue]"
+  "ru-tuple is the form [o-eid year-month-string u-eid c-eid revenue]"
   [db ru-tuples]
   (let [fjr-ety-xs (stream-ru-tuples->fjr-entity-xs db ru-tuples)]
     (let [user-xs (map #(user-view db %) fjr-ety-xs)

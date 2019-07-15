@@ -408,7 +408,7 @@
     [o y-m u-eid r]))
 
 (defn- ->stream-ru-tuple
-  "The output is: `[o-eid year-month-string u-eid revenue]`"
+  "The output is: `[o-eid year-month-string u-eid c-eid revenue]`"
   [db u-eid [sui y-m c r]]
   (let [o (d/q '[:find ?o .
                  :in $ ?sui ?y-m
@@ -416,7 +416,7 @@
                  [?o :rev-stream/stream-unique-id ?sui]
                  [?o :rev-stream/accounting-time ?y-m]]
                db sui y-m)]
-    [o y-m u-eid r]))
+    [o y-m u-eid c r]))
 
 ;; Module API for revenue
 (defn u-eid->stream-ru-tuples

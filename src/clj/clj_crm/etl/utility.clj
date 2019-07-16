@@ -10,6 +10,14 @@
    [clj-time.coerce :as time.coerce]
    [clj-time.core :as time.core]))
 
+(defn compact
+  "remove the nil value key from a hashmap
+
+  (compact {:a nil :b 1})
+  ;; => {:b 1}"
+  [m]
+  (into {} (remove #(nil? (val %)) m)))
+
 (def ^:private td-fmt-y-m (time.format/formatter "yyyyMM"))
 
 (defn yearmonth->year-month

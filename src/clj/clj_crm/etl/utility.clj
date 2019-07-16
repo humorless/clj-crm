@@ -90,11 +90,15 @@
   [columns-map]
   (fn get-raw-from-excel
     [addr filename]
-    (with-open [stream (io/input-stream (str addr filename))]
-      (let [title+orders (->> (spreadsheet/load-workbook stream)
-                              (spreadsheet/select-sheet "Sheet0")
-                              (spreadsheet/select-columns columns-map))]
-        title+orders))))
+    (try
+      (with-open [stream (io/input-stream (str addr filename))]
+        (let [title+orders (->> (spreadsheet/load-workbook stream)
+                                (spreadsheet/select-sheet "Sheet0")
+                                (spreadsheet/select-columns columns-map))]
+          title+orders))
+      (catch Exception e
+        (let [desc "get-raw-from-excel error"]
+          (throw (ex-info desc (Throwable->map e))))))))
 
 (defn get-raw-from-excel-fn
   "assemble columns-map and get-raw-from-excel fn"

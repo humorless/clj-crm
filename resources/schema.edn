@@ -527,5 +527,27 @@
     :db/unique :db.unique/identity}]
   [{:db/id :customer/tax-id
     :db/unique :db.unique/identity}]
+  [{:db/id :order/customer
+    :db/index true}
+   {:db/id :order/channel
+    :db/index true}
+   {:db/id :order/service-category-enum
+    :db/index true}
+   {:db/id :order/io-writing-time
+    :db/index true}]
+  [{:db/id :rev-stream/customer-id
+    :db/index true}
+   {:db/id :rev-stream/channel
+    :db/index true}
+   {:db/id :rev-stream/service-category-enum
+    :db/index true}
+   {:db/id :rev-stream/writing-time
+    :db/index true}
+   {:db/id :rev-stream/source
+    :db/index true}]
+  [{:db/id :allo/sales
+    :db/index true}
+   {:db/id :rev-allo/sales
+    :db/index true}]
   ]}
 }

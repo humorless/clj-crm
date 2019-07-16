@@ -1,31 +1,33 @@
 (ns clj-crm.etl.allocation
-  (:require [clojure.set :as cs]
-            [clojure.string :as s]
-            [clojure.tools.logging :as log]
-            [clj-crm.db.core :as dcore :refer [conn]]
-            [datomic.api :as d]
-            [dk.ative.docjure.spreadsheet :as spreadsheet]
-            [clojure.java.io :as io])
-  (:import [java.io StringWriter]))
+  (:require
+   [clojure.tools.logging :as log]
+   [clj-crm.db.core :as dcore :refer [conn]]
+   [datomic.api :as d]
+   [clojure.string :as string]
+   [clj-crm.etl.utility :as utility]
+   [clojure.spec.alpha :as spec]))
+
+(spec/def ::customer-id string?)
+(spec/def ::product string?)
+(spec/def ::sales string?)
+(spec/def ::time inst?)
+
+(spec/def ::allocation
+  (spec/*
+   (spec/keys :req-un
+              [::customer-id ::product ::sales ::time])))
+
+(def ^:private columns-map
+  {:A :customer-id
+   :B :product
+   :C :sales
+   :D :time})
 
 (defn- service-category->enum
   "create a mapping table that can lookup enum from service category name."
   [db]
-  (into {"all" :product.cat/all}
-        (d/q '[:find ?name ?enum
-               :where
-               [?e :product/type-id ?name]
-               [?e :product/type ?t]
-               [?t :db/ident ?enum]]
-             db)))
-
-(defn- username->eid
-  "create a mapping table that can lookup eid from user name."
-  [db]
-  (into {}  (d/q '[:find ?n ?e
-                   :where
-                   [?e :user/name ?n]]
-                 db)))
+  (merge {"all" :product.cat/all}
+         (utility/service-category->enum db)))
 
 (defn- customer-id->eid
   "create a mapping table that can lookup eid from customer-id."
@@ -35,66 +37,47 @@
                    [?e :customer/id ?id]]
                  db)))
 
-(defn- allo-m->allo-tx-m
+(defn- chan-mapping
   "m is of the form:
    { :customer-id \"Customer ID\"
      :sales       \"Sales Name\"
      :product     \"LINE NOW\"
      :time        #inst         }"
-  [db c-table u-table p-table m]
-  (let [cid (:customer-id m)
-        s-name  (:sales m)
-        p-name  (:product m)
-        c-eid (get c-table cid)
-        u-eid (get u-table s-name)
-        p-enum (get p-table p-name)
-        tx-m (assoc {} :allo/customer c-eid
-                    :allo/product p-enum
-                    :allo/sales u-eid
-                    :allo/time (:time m))]
-    (if (nil? c-eid) (do
-                       (log/info "c-eid is nil " m)
-                       (throw (ex-info "c-eid is nil" {:causes m :desc "customer-id not matched"}))))
-    (if (nil? u-eid) (do (log/info "u-eid is nil " m)
-                         (throw (ex-info "u-eid is nil" {:causes m :desc "sales not matched"}))))
-    (if (nil? p-enum) (do (log/info "p-enum is nil " m)
-                          (throw (ex-info "p-enum is nil" {:causes m :desc "product not matched"}))))
-    tx-m))
+  [c-table u-table p-table
+   {c :customer-id u :sales p :product}]
+  (let [c-eid (get c-table c)
+        u-eid (get u-table u)
+        p-enum (get p-table p)]
+    (if (nil? c-eid) (throw (ex-info "c-eid is nil" {:causes c :desc "customer-id not matched"})))
+    (if (nil? u-eid) (throw (ex-info "u-eid is nil" {:causes u :desc "sales not matched"})))
+    (if (nil? p-enum) (throw (ex-info "p-enum is nil" {:causes p :desc "product not matched"})))
+    {:allo/customer c-eid
+     :allo/sales u-eid
+     :allo/product p-enum}))
 
-;; (get-allos-from-excel (d/db conn) "http://127.0.0.1:5001/" "allocation.xlsx")
-(defn- get-allos-from-excel
-  "Read the excel file, retrieve the allo data,
-   and then transform the data into db-transaction-form
+(defn- basic-mapping
+  "handle the mapping that does not need to lookup any tables in database"
+  [{t :time}]
+  {:allo/time t})
 
-  Implementation details:
-  rest - remove the title row
-  set  - remove duplicated rows"
-  [db addr filename]
-  (let [c-table (customer-id->eid db)
-        u-table (username->eid db)
-        p-table (service-category->enum db)]
-    (with-open [stream (io/input-stream (str addr filename))]
-      (->> (spreadsheet/load-workbook stream)
-           (spreadsheet/select-sheet "Sheet0")
-           (spreadsheet/select-columns {:A :customer-id
-                                        :B :product
-                                        :C :sales
-                                        :D :time})
-           rest
-           ;; (map prn) ;; enable when debugging
-           (map #(allo-m->allo-tx-m db c-table u-table p-table %))
-           set))))
-
-(defn sync-data
-  "A <= allocations table
-   From Excel file, get the current $A
-   Write into database"
-  [url filename]
-  (log/info "sync-data triggered!")
+(defn- data->data-txes
+  [data]
   (let [db (d/db conn)
-        e-rel (get-allos-from-excel db url filename)
-        tx-data (vec e-rel)]
-    (do (log/info "tx-data write into db, length: " (count tx-data))
-        (log/info "first item of tx-data" (first tx-data))
-        (when (seq tx-data)
-          @(d/transact conn tx-data)))))
+        c-table (customer-id->eid db)
+        u-table (utility/user-name->u-eid db)
+        p-table  (service-category->enum db)]
+    (let [basic-xs (map basic-mapping data)
+          chan-xs  (map #(chan-mapping c-table u-table p-table %) data)]
+      (mapv merge basic-xs chan-xs))))
+
+(def ^:private check-raw
+  (utility/check-raw-fn ::allocation))
+
+(def ^:private get-raw-from-excel
+  (utility/get-raw-from-excel-fn columns-map))
+
+(def sync-data
+  (utility/sync-data-fn get-raw-from-excel check-raw data->data-txes))
+
+(comment
+  (def raw (get-raw-from-excel "http://10.20.30.40:5001/" "allocation.xlsx")))

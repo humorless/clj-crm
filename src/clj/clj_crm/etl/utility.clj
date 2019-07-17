@@ -37,8 +37,9 @@
   {:pre [(string? y-m-str)]}
   (let [f-d (time.format/parse td-fmt-y-m y-m-str)
         l-d (time.core/last-day-of-the-month f-d)
-        boundary (time.core/plus l-d (time.core/days 1))]
-    (time.coerce/to-date boundary)))
+        boundary (time.core/plus l-d (time.core/days 1))
+        tz-boundary (time.core/from-time-zone boundary (time.core/time-zone-for-offset 8))]
+    (time.coerce/to-date tz-boundary)))
 
 (defn service-category->enum
   "create a mapping table that can lookup enum from service category name."

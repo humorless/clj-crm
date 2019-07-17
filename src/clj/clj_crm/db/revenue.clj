@@ -263,6 +263,11 @@
     [(direct-allo-customer-stream-by-channel ?a ?o ?c ?_1 ?_2)
      [?a :allo/customer ?c]
      [?o :rev-stream/channel ?c]]
+    [(direct-allo-customer-stream-by-customer-id ?a ?o ?c ?s ?less)
+     [?ra :rev-allo/sales ?s]
+     (etl-source ?ra ?o)
+     (rev-allo-time-stream ?ra ?o ?less)
+     (direct-allo-customer-stream ?a ?ra ?o ?c)]
     [(indirect-allo-product-stream ?a ?o ?p-keyword)
      [?a :allo/product ?sc]
      [?o :rev-stream/service-category-enum ?sc]
@@ -296,13 +301,10 @@
   (d/q '[:find ?sui ?a-t ?c ?r
          :in $ % ?s ?less
          :where
-         [?ra :rev-allo/sales ?s]
          [?a :allo/sales ?s]
          (or
-          (direct-allo-customer-stream-by-channel ?a ?o ?c ?ra ?less)
-          (and (etl-source ?ra ?o)
-               (rev-allo-time-stream ?ra ?o ?less)
-               (direct-allo-customer-stream ?a ?ra ?o ?c)))
+          (direct-allo-customer-stream-by-channel ?a ?o ?c ?s ?less)
+          (direct-allo-customer-stream-by-customer-id ?a ?o ?c ?s ?less))
          (direct-allo-product-stream ?a ?o ?p-keyword)
          (allo-time-stream ?a ?o ?less)
          [?o :rev-stream/stream-unique-id ?sui]
@@ -325,11 +327,8 @@
          [?o :rev-stream/accounting-time ?a-t]
          [?o :rev-stream/revenue ?r]
          (not-join [?o]
-                   [?rb :rev-allo/sales ?s]
                    [?b :allo/sales ?s]
-                   (etl-source ?rb ?o)
-                   (rev-allo-time-stream ?rb ?o ?less)
-                   (direct-allo-customer-stream ?b ?rb ?o ?_s-c)
+                   (direct-allo-customer-stream-by-customer-id ?b ?o ?_s-c ?s ?less)
                    (direct-allo-product-stream ?b ?o ?_s-p)
                    (allo-time-stream ?b ?o ?less))]
        db stream-match-rules u-eid -1))

@@ -35,17 +35,22 @@
     {:revenue/value r
      :revenue/time  t}))
 
+(defn- sc-enum->p-id
+  [db]
+  (->> (d/q '[:find ?t ?p
+              :in $
+              :where
+              [?e :product/type ?t]
+              [?e :product/type-id ?p]]
+            db)
+       (into {})))
+
 (defn- sc-entity->product-id
-  [db {sc :db/id}]
-  (d/q '[:find ?p .
-         :in $ ?t
-         :where
-         [?e :product/type ?t]
-         [?e :product/type-id ?p]]
-       db sc))
+  [table {sc :db/id}]
+  (get table sc))
 
 (defn- rev-stream-view
-  [db fjr]
+  [db p-table fjr]
   (let [{o :o-eid} fjr]
     (-> (d/pull db '[:rev-stream/stream-unique-id
                      :rev-stream/writing-time
@@ -55,10 +60,10 @@
                      :rev-stream/customer-id
                      :rev-stream/service-category-enum] o)
         (update :rev-stream/source name)
-        (update :rev-stream/service-category-enum #(sc-entity->product-id db %)))))
+        (update :rev-stream/service-category-enum #(sc-entity->product-id p-table %)))))
 
 (defn- order-view
-  [db fjr]
+  [db p-table fjr]
   (let [{o :o-eid} fjr]
     (-> (d/pull db '[:order/product-unique-id
                      :order/product-name
@@ -72,7 +77,7 @@
                      :order/terms-end-date
                      :order/service-category-enum] o)
         (update :order/source name)
-        (update :order/service-category-enum #(sc-entity->product-id db %)))))
+        (update :order/service-category-enum #(sc-entity->product-id p-table %)))))
 
 (defn- ru->d-entity
   [db ru]
@@ -133,9 +138,10 @@
 (defn stream-ru-tuples->full-join-reports
   "ru-tuple is the form [o-eid year-month-string u-eid c-eid revenue]"
   [db ru-tuples]
-  (let [fjr-ety-xs (stream-ru-tuples->fjr-entity-xs db ru-tuples)]
+  (let [fjr-ety-xs (stream-ru-tuples->fjr-entity-xs db ru-tuples)
+        p-table (sc-enum->p-id db)]
     (let [user-xs (map #(user-view db %) fjr-ety-xs)
-          rev-stream-xs (map #(rev-stream-view db %) fjr-ety-xs)
+          rev-stream-xs (map #(rev-stream-view db p-table %) fjr-ety-xs)
           customer-xs (map #(customer-view db %) fjr-ety-xs)
           revenue-xs (map #(revenue-view db %) fjr-ety-xs)]
       (map merge user-xs rev-stream-xs customer-xs revenue-xs))))
@@ -143,9 +149,10 @@
 (defn order-ru-tuples->full-join-reports
   "ru-tuple is the form [o-eid year-month-string u-eid revenue]"
   [db ru-tuples]
-  (let [fjr-ety-xs (order-ru-tuples->fjr-entity-xs db ru-tuples)]
+  (let [fjr-ety-xs (order-ru-tuples->fjr-entity-xs db ru-tuples)
+        p-table (sc-enum->p-id db)]
     (let [user-xs (map #(user-view db %) fjr-ety-xs)
-          order-xs (map #(order-view db %) fjr-ety-xs)
+          order-xs (map #(order-view db p-table %) fjr-ety-xs)
           customer-xs (map #(customer-view db %) fjr-ety-xs)
           revenue-xs (map #(revenue-view db %) fjr-ety-xs)]
       (map merge user-xs order-xs customer-xs revenue-xs))))

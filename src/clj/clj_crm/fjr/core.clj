@@ -35,6 +35,15 @@
     {:revenue/value r
      :revenue/time  t}))
 
+(defn- sc-entity->product-id
+  [db {sc :db/id}]
+  (d/q '[:find ?p .
+         :in $ ?t
+         :where
+         [?e :product/type ?t]
+         [?e :product/type-id ?p]]
+       db sc))
+
 (defn- rev-stream-view
   [db fjr]
   (let [{o :o-eid} fjr]
@@ -44,9 +53,9 @@
                      :rev-stream/source
                      :rev-stream/campaign-name
                      :rev-stream/customer-id
-                     {:rev-stream/service-category-enum [:db/ident]}] o)
+                     :rev-stream/service-category-enum] o)
         (update :rev-stream/source name)
-        (update :rev-stream/service-category-enum (comp name :db/ident)))))
+        (update :rev-stream/service-category-enum #(sc-entity->product-id db %)))))
 
 (defn- order-view
   [db fjr]
@@ -61,9 +70,9 @@
                      :order/product-net-price
                      :order/terms-start-date
                      :order/terms-end-date
-                     {:order/service-category-enum [:db/ident]}] o)
+                     :order/service-category-enum] o)
         (update :order/source name)
-        (update :order/service-category-enum (comp name :db/ident)))))
+        (update :order/service-category-enum #(sc-entity->product-id db %)))))
 
 (defn- ru->d-entity
   [db ru]

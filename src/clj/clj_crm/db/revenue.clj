@@ -66,6 +66,11 @@
          (direct-allo-customer-order ?a ?o ?c)
          (direct-allo-product-order ?a ?o ?p-keyword)
          (allo-time-order ?a ?o ?less)
+         (not-join [?o]
+                   [?b :allo/sales ?s]
+                   (indirect-allo-customer-order ?b ?o ?_o-c)
+                   (indirect-allo-product-order ?b ?o ?_o-p)
+                   (allo-time-order ?b ?o ?less))
          [?o :order/product-unique-id ?pui]]
        db order-match-rules u-eid -1))
 

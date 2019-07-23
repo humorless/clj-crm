@@ -49,7 +49,7 @@ Note: Backup URIs are per database. You can backup the same database at differen
 
 ```
   cd db
-  ./provision.sh
+  ./provision.sh  # Only the first time setup db needs to run provision.sh 
   tmux new-session -s datomic
   ./start.sh
 ```

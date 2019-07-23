@@ -1,6 +1,6 @@
 {
-:clj-crm/norm9-1 {:txes [[
-   {:db/doc "Record the rebate value for the debtor and product."
+:clj-crm/norm9-1 {:txes [
+  [{:db/doc "Record the rebate value for the debtor and product."
     :db/ident :allo/rebate
     :db/valueType :db.type/float
     :db/cardinality :db.cardinality/one
@@ -12,6 +12,76 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}]
+
+  [{:db/doc "string as the form `2019-q1`, `2019-q2`, etc."
+    :db/ident :pipeline/year-quarterly
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
-  ]]}
+
+   {:db/doc "ref to eid of user table"
+    :db/ident :pipeline/sales
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "ref to eid of product.type"
+    :db/ident :pipeline/product
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The sales channel (string value)"
+    :db/ident :pipeline/sales-channel-name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The clients name (string value)"
+    :db/ident :pipeline/customer-name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The campaign name (string value)"
+    :db/ident :pipeline/campaign-name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The revenue"
+    :db/ident :pipeline/revenue
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The sale closing probability"
+    :db/ident :pipeline/prob
+    :db/valueType :db.type/float
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The status of this pipeline entry. (string value)"
+    :db/ident :pipeline/status
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The note of this pipeline entry. (string value)"
+    :db/ident :pipeline/note
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}]
+]}
 }

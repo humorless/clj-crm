@@ -9,6 +9,7 @@
    [clj-crm.etl.lap]
    [clj-crm.etl.agp]
    [clj-crm.etl.target]
+   [clj-crm.etl.pipeline]
    [clojure.tools.logging :as log]
    [clj-crm.config :refer [env]]
    [mount.core :as mount]))

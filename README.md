@@ -67,7 +67,8 @@ Note: Backup URIs are per database. You can backup the same database at differen
 3. To start a web server for the application, run:
 
 ```
-  tmux new-session -s prod
+  cd clj-crm
+  tmux new-session -s backend
   lein uberjar
   java -Dconf=env/prod/resources/config.edn -Dcors-regex-str="http://10.20.30.41:5000"  -jar target/uberjar/clj-crm.jar
 ```

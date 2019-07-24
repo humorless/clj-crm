@@ -40,10 +40,11 @@
          (indirect-allo-product-order ?a ?o ?p-keyword)
          (allo-time-order ?a ?o ?less)
          [?o :order/product-unique-id ?pui]
-         (not-join [?o]
-                   [?b :allo/sales ?s]
-                   (direct-allo-customer-order ?b ?o ?_o-c)
-                   (direct-allo-product-order ?b ?o ?_o-p)
+         (not-join [?o ?less]
+                   [?b :allo/sales ?_b-s]
+                   [?_b-s :user/channel :user.channel/direct]
+                   (direct-allo-customer-order ?b ?o ?_b-c)
+                   (direct-allo-product-order ?b ?o ?_b-p)
                    (allo-time-order ?b ?o ?less))]
        db order-match-rules u-eid -1))
 
@@ -66,10 +67,11 @@
          (direct-allo-customer-order ?a ?o ?c)
          (direct-allo-product-order ?a ?o ?p-keyword)
          (allo-time-order ?a ?o ?less)
-         (not-join [?o]
-                   [?b :allo/sales ?s]
-                   (indirect-allo-customer-order ?b ?o ?_o-c)
-                   (indirect-allo-product-order ?b ?o ?_o-p)
+         (not-join [?o ?less]
+                   [?b :allo/sales ?_b-s]
+                   [?_b-s :user/channel :user.channel/reseller]
+                   (indirect-allo-customer-order ?b ?o ?_b-c)
+                   (indirect-allo-product-order ?b ?o ?_b-p)
                    (allo-time-order ?b ?o ?less))
          [?o :order/product-unique-id ?pui]]
        db order-match-rules u-eid -1))
@@ -331,10 +333,11 @@
          [?o :rev-stream/stream-unique-id ?sui]
          [?o :rev-stream/accounting-time ?a-t]
          [?o :rev-stream/revenue ?r]
-         (not-join [?o]
-                   [?b :allo/sales ?s]
-                   (direct-allo-customer-stream-by-customer-id ?b ?o ?_s-c ?s ?less)
-                   (direct-allo-product-stream ?b ?o ?_s-p)
+         (not-join [?o ?less]
+                   [?b :allo/sales ?_b-s]
+                   [?_b-s :user/channel :user.channel/direct]
+                   (direct-allo-customer-stream-by-customer-id ?b ?o ?_b-c ?_b-s ?less)
+                   (direct-allo-product-stream ?b ?o ?_b-p)
                    (allo-time-stream ?b ?o ?less))]
        db stream-match-rules u-eid -1))
 

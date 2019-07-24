@@ -70,7 +70,7 @@ Note: Backup URIs are per database. You can backup the same database at differen
   cd clj-crm
   tmux new-session -s backend
   lein uberjar
-  java -Dconf=env/prod/resources/config.edn -Dcors-regex-str="http://10.20.30.41:5000"  -jar target/uberjar/clj-crm.jar
+  java -Dconf=env/prod/resources/config.edn -Dcors-regex-str="http://10.20.30.41:5000"  -jar target/uberjar/clj-crm.jar -Xmx4g
 ```
 
 ## License

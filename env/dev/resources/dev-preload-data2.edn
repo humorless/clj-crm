@@ -69,5 +69,6 @@
    {:target/year-quarterly "2019-q3"
     :target/user [:user/email "userB1@example.com"]
     :target/revenue 1800}]
+  [[:db/add #db/id [:db.part/user] :db/ident :user.team/online]]
 ]}
 }

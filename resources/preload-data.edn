@@ -61,5 +61,8 @@
   [{:product/type :product.type/in_store_sales_promotion    :product/category :product.cat/all}
    {:product/type :product.type/in_store_sales_promotion    :product/type-id "In Store Sales Promotion"}]
 ]}
+:clj-crm/data3 {:txes [
+  [[:db/add #db/id [:db.part/user] :db/ident :user.team/online]]
+]}
 
 }

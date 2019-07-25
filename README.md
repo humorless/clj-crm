@@ -54,14 +54,14 @@ Note: Backup URIs are per database. You can backup the same database at differen
   ./start.sh
 ```
 
-2. Prepare the LAMP url (First time deploy only)
+2. Prepare the LAMP url (First time deploy only). The LAMP url is for backend to access the excel files.
 
 ```
-  cd $LAMP_DIR
+  cd $ETL_DIR
   tmux new-session -s upload
   simple-http-upload-server -p 3001
   C-B d
-  tmux new-session -s lamp
+  tmux new-session -s etl
   serve -l 5001
 ```
 3. To start a web server for the application, run:

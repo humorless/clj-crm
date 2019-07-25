@@ -184,29 +184,47 @@
         data (conj tag-txes ["now" (d/t->tx (d/basis-t db))])]
     data))
 
+(defn- tx-decorate-fn
+  [f]
+  (fn [user-q]
+    (let [tx (:tx user-q)
+          db (if (some? tx)
+               (d/as-of (d/db conn) tx)
+               (d/db conn))]
+      (f db))))
+
+(defn- allocation
+  [db]
+  (let [eids (dallo/allo-eids db)
+        allocations (map #(dallo/allo-eid->allocation db %) eids)]
+    allocations))
+
+(defn- rev-allo
+  [db]
+  (let [eids (dallo/rev-allo-eids db)
+        allocations (map #(dallo/rev-allo-eid->allocation db %) eids)]
+    allocations))
+
+(defn- target
+  [db]
+  (let [eids (drevenue/target-eids db)
+        data (map #(drevenue/target-eid->target db %) eids)]
+    data))
+
 (defmethod dispatch-q :allocation
   [user-q]
   (log/info "at allocation, user-q as" user-q)
-  (let [db (d/db conn)
-        eids (dallo/allo-eids db)
-        allocations (map #(dallo/allo-eid->allocation db %) eids)]
-    allocations))
+  ((tx-decorate-fn allocation) user-q))
 
 (defmethod dispatch-q :rev-allo
   [user-q]
   (log/info "at rev-allo, user-q as" user-q)
-  (let [db (d/db conn)
-        eids (dallo/rev-allo-eids db)
-        allocations (map #(dallo/rev-allo-eid->allocation db %) eids)]
-    allocations))
+  ((tx-decorate-fn rev-allo) user-q))
 
 (defmethod dispatch-q :target
   [user-q]
   (log/info "at target, user-q as" user-q)
-  (let [db (d/db conn)
-        eids (drevenue/target-eids db)
-        data (map #(drevenue/target-eid->target db %) eids)]
-    data))
+  ((tx-decorate-fn target) user-q))
 
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword
                           (s/optional-key :tx) s/Int})

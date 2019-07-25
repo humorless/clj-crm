@@ -2,6 +2,7 @@
   (:require [clj-crm.db.core :as dcore :refer [conn]]
             [clj-crm.db.revenue :as drevenue]
             [clj-crm.fjr.core :as fjr]
+            [clj-crm.fjr.time :as fjr.time]
             [clj-crm.db.allocation :as dallo]
             [clj-crm.db.user :as duser]
             [schema.core :as s]
@@ -109,6 +110,13 @@
         sorted-data (sort-by (juxt :teamName :salesName) data)]
     (map drevenue/place-holder->total sorted-data)))
 
+(defn- ->time-span
+  [user-q]
+  (let [ts (:time-span user-q)]
+    (if (set? ts)
+      ts
+      (fjr.time/quarter-month-str-set))))
+
 (defmethod dispatch-q :all-full-join-reports
   [user-q]
   (log/info "at all-full-join-reports, user-q as" user-q)
@@ -116,12 +124,13 @@
         db (if (some? tx)
              (d/as-of (d/db conn) tx)
              (d/db conn))
+        time-span (->time-span user-q)
         eids (duser/sales-eids db)
         {other-stream-ru-tuples :stream other-order-ru-tuples :order} (drevenue/u-eids->other-ru-tuples db eids)
         stream-ru-tuples (mapcat #(drevenue/u-eid->stream-ru-tuples db %) eids)
         order-ru-tuples (mapcat #(drevenue/u-eid->order-ru-tuples db %) eids)
-        stream-reports (fjr/stream-ru-tuples->full-join-reports db (concat stream-ru-tuples other-stream-ru-tuples))
-        order-reports (fjr/order-ru-tuples->full-join-reports db (concat order-ru-tuples other-order-ru-tuples))]
+        stream-reports (fjr/stream-ru-tuples->full-join-reports db time-span (concat stream-ru-tuples other-stream-ru-tuples))
+        order-reports (fjr/order-ru-tuples->full-join-reports db time-span (concat order-ru-tuples other-order-ru-tuples))]
     {:stream stream-reports
      :order order-reports}))
 
@@ -132,13 +141,14 @@
         db (if (some? tx)
              (d/as-of (d/db conn) tx)
              (d/db conn))
+        time-span (->time-span user-q)
         email (:user user-q)
         user-lookup-ref [:user/email email]
         u-eids (duser/u-eid->same-team-u-eids db user-lookup-ref)
         stream-ru-tuples (mapcat #(drevenue/u-eid->stream-ru-tuples db %) u-eids)
         order-ru-tuples (mapcat #(drevenue/u-eid->order-ru-tuples db %) u-eids)
-        stream-reports (fjr/stream-ru-tuples->full-join-reports db stream-ru-tuples)
-        order-reports (fjr/order-ru-tuples->full-join-reports db order-ru-tuples)]
+        stream-reports (fjr/stream-ru-tuples->full-join-reports db time-span stream-ru-tuples)
+        order-reports (fjr/order-ru-tuples->full-join-reports db time-span order-ru-tuples)]
     {:stream stream-reports
      :order order-reports}))
 
@@ -227,7 +237,8 @@
   ((tx-decorate-fn target) user-q))
 
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword
-                          (s/optional-key :tx) s/Int})
+                          (s/optional-key :tx) s/Int
+                          (s/optional-key :time-span) #{s/Str}})
 
 (defn query
   " Input:

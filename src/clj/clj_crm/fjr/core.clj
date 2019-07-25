@@ -132,13 +132,18 @@
         db ru-ts)
    (map #(zipmap [:o-eid :y-m :c-eid :d-eid :u-eid :r] %))))
 
+(defn- valid-time-span?
+  "ts is of the form: #{\"2019-05\" \"2019-06\"}"
+  [ts fjr]
+  {:pre [(set? ts)]}
+  (ts (:y-m fjr)))
 ;; Module API
 
 
 (defn stream-ru-tuples->full-join-reports
   "ru-tuple is the form [o-eid year-month-string u-eid c-eid revenue]"
-  [db ru-tuples]
-  (let [fjr-ety-xs (stream-ru-tuples->fjr-entity-xs db ru-tuples)
+  [db time-span ru-tuples]
+  (let [fjr-ety-xs (filter #(valid-time-span? time-span %) (stream-ru-tuples->fjr-entity-xs db ru-tuples))
         p-table (sc-enum->p-id db)]
     (let [user-xs (map #(user-view db %) fjr-ety-xs)
           rev-stream-xs (map #(rev-stream-view db p-table %) fjr-ety-xs)
@@ -148,8 +153,8 @@
 
 (defn order-ru-tuples->full-join-reports
   "ru-tuple is the form [o-eid year-month-string u-eid revenue]"
-  [db ru-tuples]
-  (let [fjr-ety-xs (order-ru-tuples->fjr-entity-xs db ru-tuples)
+  [db time-span ru-tuples]
+  (let [fjr-ety-xs (filter #(valid-time-span? time-span %) (order-ru-tuples->fjr-entity-xs db ru-tuples))
         p-table (sc-enum->p-id db)]
     (let [user-xs (map #(user-view db %) fjr-ety-xs)
           order-xs (map #(order-view db p-table %) fjr-ety-xs)

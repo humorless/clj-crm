@@ -1,5 +1,6 @@
 (ns clj-crm.db.allocation
   (:require
+   [clj-crm.db.core :refer [conn]]
    [datomic.api :as d]))
 
 
@@ -10,6 +11,12 @@
   (d/q '[:find [?e ...]
          :in $
          :where [?e :allo/sales _]] db))
+
+(defn allo-direct-eids [db]
+  (d/q '[:find [?e ...]
+         :in $
+         :where [?e :allo/sales _]
+         [?e :allo/product :product.cat/all]] db))
 
 (defn allo-non-direct-eids [db]
   (d/q '[:find [?e ...]

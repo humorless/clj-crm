@@ -108,6 +108,16 @@
     (do @(d/transact conn tx-data)
         :cmd-success)))
 
+(defmethod dispatch-c :delete-direct-allocation
+  [user-c]
+  (log/info "at delete-direct-allocation, user-c as" user-c)
+  (let [db (d/db conn)
+        eids (dallo/allo-direct-eids db)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete-direct-allocation, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
 (defn command
   " Input:
     c is in the form: [Command]

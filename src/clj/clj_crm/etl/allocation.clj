@@ -58,7 +58,7 @@
 (defn- basic-mapping
   "handle the mapping that does not need to lookup any tables in database"
   [{t :time}]
-  {:allo/time t})
+  {:allo/time (utility/dt->dt-tz t)})
 
 (defn- data->data-txes
   [data]

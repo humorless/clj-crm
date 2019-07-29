@@ -54,7 +54,7 @@
     {:rev-allo/sales s-eid
      :rev-allo/customer c-eid
      :rev-allo/customer-id ci
-     :rev-allo/time at
+     :rev-allo/time (utility/dt->dt-tz at)
      :rev-allo/source s-keyword}))
 
 (defn- data->data-txes

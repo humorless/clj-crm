@@ -41,6 +41,14 @@
         tz-boundary (time.core/from-time-zone boundary (time.core/time-zone-for-offset 8))]
     (time.coerce/to-date tz-boundary)))
 
+(defn dt->dt-tz
+  "dt is `Java Date instance`
+   dt-tz is `Java Date instance` with time zone compensated"
+  [dt]
+  (let [clj-dt (time.coerce/from-date dt)
+        clj-dt-tz (time.core/from-time-zone clj-dt (time.core/time-zone-for-offset 8))]
+    (time.coerce/to-date clj-dt-tz)))
+
 (defn service-category->enum
   "create a mapping table that can lookup enum from service category name."
   [db]

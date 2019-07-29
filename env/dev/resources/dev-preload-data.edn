@@ -254,15 +254,18 @@
   [{:allo/sales [:user/email "userA1@example.com"]
     :allo/customer [:customer/id "CM0003"]
     :allo/product :product.cat/all
-    :allo/time #inst "2014-01-28T09:00:00Z"}
+    :allo/time #inst "2014-01-28T09:00:00Z"
+    :allo/rebate 0.17}
    {:allo/sales [:user/email "userA3@example.com"]
     :allo/customer [:customer/id "CM0004"]
     :allo/product :product.cat/all
-    :allo/time #inst "2014-01-29"}
+    :allo/time #inst "2014-01-29"
+    :allo/rebate 0.18}
    {:allo/sales [:user/email "userA2@example.com"]
     :allo/customer [:customer/id "CM0005"]
     :allo/product :product.cat/all
-    :allo/time #inst "2014-02-28"}]
+    :allo/time #inst "2014-02-28"
+    :allo/rebate 0.19}]
 
   [{:req/sales [:user/email "userA2@example.com"] ;; lookup ref for existing entity
     :req/add-customer-items #{}
@@ -361,27 +364,33 @@
   [{:allo/sales [:user/email "userB1@example.com"]
     :allo/customer [:customer/id "CM0006"]
     :allo/product :product.type/OA
-    :allo/time #inst "2014-01-28T09:00:00Z"}
+    :allo/time #inst "2014-01-28T09:00:00Z"
+    :allo/rebate 0.16}
    {:allo/sales [:user/email "userB1@example.com"]
     :allo/customer [:customer/id "CM0006"]
     :allo/product :product.type/timeline
-    :allo/time #inst "2014-01-28T09:00:00Z"}
+    :allo/time #inst "2014-01-28T09:00:00Z"
+    :allo/rebate 0.15}
    {:allo/sales [:user/email "userB2@example.com"]
     :allo/customer [:customer/id "CM0007"]
     :allo/product :product.type/SS
-    :allo/time #inst "2014-01-29"}
+    :allo/time #inst "2014-01-29"
+    :allo/rebate 0.14}
    {:allo/sales [:user/email "userB2@example.com"]
     :allo/customer [:customer/id "CM0007"]
     :allo/product :product.type/timeline
-    :allo/time #inst "2014-01-29"}
+    :allo/time #inst "2014-01-29"
+    :allo/rebate 0.13}
    {:allo/sales [:user/email "userB2@example.com"]
     :allo/customer [:customer/id "CM0008"]
     :allo/product :product.type/today
-    :allo/time #inst "2018-01-29"}
+    :allo/time #inst "2018-01-29"
+    :allo/rebate 0.12}
    {:allo/sales [:user/email "userB2@example.com"]
     :allo/customer [:customer/id "CM0008"]
     :allo/product :product.type/timeline
-    :allo/time #inst "2018-01-29"} ]
+    :allo/time #inst "2018-01-29"
+    :allo/rebate 0.11} ]
   [{:order/product-unique-id "pui-008-reseller-B1"
     :order/channel [:customer/id "CM0006"]
     :order/service-category-enum :product.type/OA

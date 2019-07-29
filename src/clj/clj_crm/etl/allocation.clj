@@ -11,17 +11,19 @@
 (spec/def ::product string?)
 (spec/def ::sales string?)
 (spec/def ::time inst?)
+(spec/def ::rebate double?)
 
 (spec/def ::allocation
   (spec/*
    (spec/keys :req-un
-              [::customer-id ::product ::sales ::time])))
+              [::customer-id ::product ::sales ::time ::rebate])))
 
 (def ^:private columns-map
   {:A :customer-id
    :B :product
    :C :sales
-   :D :time})
+   :D :time
+   :E :rebate})
 
 (defn- service-category->enum
   "create a mapping table that can lookup enum from service category name."
@@ -57,8 +59,9 @@
 
 (defn- basic-mapping
   "handle the mapping that does not need to lookup any tables in database"
-  [{t :time}]
-  {:allo/time t})
+  [{t :time r :rebate}]
+  {:allo/time t
+   :allo/rebate r})
 
 (defn- data->data-txes
   [data]

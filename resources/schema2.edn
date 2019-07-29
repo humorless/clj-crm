@@ -1,0 +1,10 @@
+{
+:clj-crm/norm9-1 {:txes [[
+   {:db/doc "Record the rebate value for the debtor and product."
+    :db/ident :allo/rebate
+    :db/valueType :db.type/float
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+  ]]}
+}

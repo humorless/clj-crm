@@ -21,7 +21,7 @@
 ;; => (map d/touch (find-all-by (d/db conn) :conformity/conformed-norms)))
 (defn setup-app-db [fname]
   (let [norms-map (c/read-resource fname)]
-    (c/ensure-conforms conn norms-map (keys norms-map))))
+    (c/ensure-conforms conn norms-map)))
 
 ;; Given that every db-fn entity has :db/ident
 ;; The (setup-db-fn) has `upsert` semantic, which means that

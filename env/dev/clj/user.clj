@@ -14,6 +14,7 @@
   (mount/start-without #'clj-crm.core/repl-server)
   (log/info "prepare to install db schema")
   (setup-app-db "schema.edn")
+  (setup-app-db "schema2.edn")
   (setup-app-db "dev-preload-data.edn")
   (setup-app-db "dev-preload-data2.edn")
   (setup-db-fn))

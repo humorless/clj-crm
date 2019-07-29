@@ -35,6 +35,41 @@
     {:revenue/value r
      :revenue/time  t}))
 
+(defn- stream-rebate-view
+  [db r-table fjr]
+  (let [{d :d-eid o :o-eid r :r} fjr
+        p-graph (d/pull db '[:rev-stream/service-category-enum] o)
+        sc (get-in p-graph [:rev-stream/service-category-enum :db/id])
+        rebate (get r-table [d sc] 0)]
+    {:revenue/net-value (* r (- 1 rebate))}))
+
+(defn- order-rebate-view
+  [db r-table fjr]
+  (let [{d :d-eid o :o-eid r :r} fjr
+        p-graph (d/pull db '[:order/service-category-enum] o)
+        sc (get-in p-graph [:order/service-category-enum :db/id])
+        rebate (get r-table [d sc] 0)]
+    {:revenue/net-value (* r (- 1 rebate))}))
+
+(defn- rebate-tidy
+  [rbs]
+  (let [c-s (map first rbs)
+        p-s (map second rbs)
+        r-s (map last rbs)]
+    (map #(vector (vector %1 %2) %3)  c-s p-s r-s)))
+
+(defn- c-p->rebate
+  [db]
+  (->> (d/q '[:find ?c ?p ?rb
+              :in $
+              :where
+              [?e :allo/customer ?c]
+              [?e :allo/product ?p]
+              [?e :allo/rebate ?rb]]
+            db)
+       (rebate-tidy)
+       (into {})))
+
 (defn- sc-enum->p-id
   [db]
   (->> (d/q '[:find ?t ?p
@@ -144,20 +179,24 @@
   "ru-tuple is the form [o-eid year-month-string u-eid c-eid revenue]"
   [db time-span ru-tuples]
   (let [fjr-ety-xs (filter #(valid-time-span? time-span %) (stream-ru-tuples->fjr-entity-xs db ru-tuples))
-        p-table (sc-enum->p-id db)]
+        p-table (sc-enum->p-id db)
+        r-table (c-p->rebate db)]
     (let [user-xs (map #(user-view db %) fjr-ety-xs)
           rev-stream-xs (map #(rev-stream-view db p-table %) fjr-ety-xs)
           customer-xs (map #(customer-view db %) fjr-ety-xs)
+          rebate-xs (map #(stream-rebate-view db r-table %) fjr-ety-xs)
           revenue-xs (map #(revenue-view db %) fjr-ety-xs)]
-      (map merge user-xs rev-stream-xs customer-xs revenue-xs))))
+      (map merge user-xs rev-stream-xs customer-xs rebate-xs revenue-xs))))
 
 (defn order-ru-tuples->full-join-reports
   "ru-tuple is the form [o-eid year-month-string u-eid revenue]"
   [db time-span ru-tuples]
   (let [fjr-ety-xs (filter #(valid-time-span? time-span %) (order-ru-tuples->fjr-entity-xs db ru-tuples))
-        p-table (sc-enum->p-id db)]
+        p-table (sc-enum->p-id db)
+        r-table (c-p->rebate db)]
     (let [user-xs (map #(user-view db %) fjr-ety-xs)
           order-xs (map #(order-view db p-table %) fjr-ety-xs)
           customer-xs (map #(customer-view db %) fjr-ety-xs)
+          rebate-xs (map #(order-rebate-view db r-table %) fjr-ety-xs)
           revenue-xs (map #(revenue-view db %) fjr-ety-xs)]
-      (map merge user-xs order-xs customer-xs revenue-xs))))
+      (map merge user-xs order-xs customer-xs rebate-xs revenue-xs))))

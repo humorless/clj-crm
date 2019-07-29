@@ -45,6 +45,7 @@
     (log/info component "started"))
   (log/info "install db schema")
   (setup-app-db "schema.edn") ;; setup app schema, idempotent operation
+  (setup-app-db "schema2.edn") ;; setup app schema, idempotent operation
   (setup-app-db "preload-data.edn")
   (setup-db-fn)
   (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))

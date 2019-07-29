@@ -550,4 +550,5 @@
    {:db/id :rev-allo/sales
     :db/index true}]
   ]}
+;; to version 1.0.0
 }

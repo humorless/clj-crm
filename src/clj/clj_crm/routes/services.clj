@@ -2,6 +2,7 @@
   (:require [ring.util.http-response :refer :all]
             [compojure.api.sweet :refer :all]
             [schema.core :as s]
+            [clj-crm.domain.enumeration :as enum]
             [clj-crm.domain.auth :refer [user-datum user-auth register-user modify-password]]
             [clj-crm.domain.query :as dq]
             [clj-crm.domain.command :as dc]
@@ -76,6 +77,20 @@
      (if (user-auth email password)
        (ok {:user (user-datum email)})
        (unauthorized {:error "wrong auth data"})))
+
+   (POST "/api/teams" req
+     :body-params [teamName :- s/Str]
+     :summary     "input the $teamName to create correspond team enumeration as :user.team/$teamName"
+     (if (enum/add-team teamName)
+       (ok)
+       (bad-request)))
+
+   (POST "/api/products" req
+     :body-params [productName :- s/Str]
+     :summary     "input the $productName to create correspond product enumeration as :product.type/$productName. Note that the added productName must be of default revenue calculation rule. Delta revenue calculation is not supported for new added productName."
+     (if (enum/add-product productName)
+       (ok)
+       (bad-request)))
 
    (GET "/api/user" req
      :auth-rules authenticated?

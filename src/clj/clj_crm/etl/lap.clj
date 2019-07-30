@@ -37,6 +37,7 @@
      :rev-stream/writing-time (utility/y-m->dt y-m-str)
      :rev-stream/accounting-time (utility/yearmonth->year-month y-m-str)
      :rev-stream/revenue (long r)
+     :rev-stream/product-name "LAP"
      :rev-stream/source :etl.source/lap}))
 
 (defn- chan-mapping

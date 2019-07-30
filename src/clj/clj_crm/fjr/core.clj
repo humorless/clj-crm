@@ -41,7 +41,8 @@
         p-graph (d/pull db '[:rev-stream/service-category-enum] o)
         sc (get-in p-graph [:rev-stream/service-category-enum :db/id])
         rebate (get r-table [d sc] 0)]
-    {:revenue/net-value (* r (- 1 rebate))}))
+    {:revenue/net-value (* r (- 1 rebate))
+     :revenue/rebate rebate}))
 
 (defn- order-rebate-view
   [db r-table fjr]
@@ -49,7 +50,8 @@
         p-graph (d/pull db '[:order/service-category-enum] o)
         sc (get-in p-graph [:order/service-category-enum :db/id])
         rebate (get r-table [d sc] 0)]
-    {:revenue/net-value (* r (- 1 rebate))}))
+    {:revenue/net-value (* r (- 1 rebate))
+     :revenue/rebate rebate}))
 
 (defn- rebate-tidy
   [rbs]
@@ -88,6 +90,7 @@
   [db p-table fjr]
   (let [{o :o-eid} fjr]
     (-> (d/pull db '[:rev-stream/stream-unique-id
+                     :rev-stream/product-name
                      :rev-stream/writing-time
                      :rev-stream/accounting-time
                      :rev-stream/source

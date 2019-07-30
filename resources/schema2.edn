@@ -6,5 +6,12 @@
     :db/cardinality :db.cardinality/one
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}
+
+   {:db/doc "The product name of revenue stream."
+    :db/ident :rev-stream/product-name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
   ]]}
 }

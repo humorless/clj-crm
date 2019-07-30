@@ -5,8 +5,10 @@ generated using Luminus version "3.10.35"
 clj-crm is a Customer relationship management software, which the primary function is to distribute customers to sales and estimate the credit of each sales based on order data and customer-sales binding time.
 
 ## Prerequisites
-In `infra` directory, there is an Ansible playbook to do the server provisition.
+1. In `infra` directory, there is an Ansible playbook to do the server provisition.
+2. The ETL part of this system uses environment time zone information. Environment time zone need to be GMT+8.
 
+   `sudo timedatectl set-timezone Asia/Taipei`
 
 ## REPL-driven development
 To run the REPL with dev profile, run:

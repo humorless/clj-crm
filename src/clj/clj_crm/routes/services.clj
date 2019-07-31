@@ -123,10 +123,10 @@
             (bad-request {:reason (.getCause e)}))))
 
    (POST "/api/transaction" req
-     :body-params [date-str :- s/Str]
-     :summary     "record the transaction tag, which is represented by date-str"
+     :body-params [date-str :- s/Str, queryable :- s/Bool]
+     :summary     "Record the transaction tag, which is represented by date-str. If queryable set as false, then this tag will not show up at the query API - tag-tx-history"
      :description "date-str denotes the date string showing on the UI. Example: 2019-05-23-v1"
-     (try (if-let [r (dc/transact-tag-tx date-str)]
+     (try (if-let [r (dc/transact-tag-tx date-str queryable)]
             (ok {:result :tag-tx-written}))
           (catch clojure.lang.ExceptionInfo e
             (bad-request {:reason (ex-data e)}))

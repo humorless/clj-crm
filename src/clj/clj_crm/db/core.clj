@@ -373,10 +373,13 @@
 ;; Tag-tx API
 
 (defn tag-tx-list
+  "show only the tag tx pairs with history tag queryable as true"
   [db]
   (->> (d/q '[:find ?tag ?tx
               :in $
-              :where [_ :transaction/doc ?tag ?tx]] db)
+              :where [?e :history/queryable true]
+              [?e :history/tag ?tag]
+              [?e :history/tx ?tx]] db)
        seq))
 
 ;; Utility API

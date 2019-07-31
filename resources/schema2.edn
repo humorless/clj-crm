@@ -14,6 +14,28 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}]
 
+  [{:db/doc "Tag string of a history point"
+    :db/ident :history/tag
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Whether the history tag is queryable"
+    :db/ident :history/queryable
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Tx value of a history point"
+    :db/ident :history/tx
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}]
+
   [{:db/doc "string as the form `2019-q1`, `2019-q2`, etc."
     :db/ident :pipeline/year-quarterly
     :db/valueType :db.type/string

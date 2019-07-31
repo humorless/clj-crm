@@ -5,10 +5,17 @@
             [clojure.tools.logging :as log]
             [datomic.api :as d]))
 
-(defn transact-tag-tx [date-str]
+(defn transact-tag-tx
+  [date-str query-opt]
   (if (= date-str "now")
     (throw (ex-info "date-str as now is not allowed" {:causes "date-str equal now"}))
-    @(d/transact conn [{:transaction/doc date-str}])))
+    (let [{eid :db/id} (d/pull (d/db conn) '[:db/id] [:history/tag date-str])
+          tx-datum {:history/tag date-str
+                    :history/queryable query-opt
+                    :history/tx (d/t->tx (d/next-t (d/db conn)))}]
+      (if (some? eid)
+        @(d/transact conn [(dissoc tx-datum :history/tx)])
+        @(d/transact conn [tx-datum])))))
 
 (defn switch
   "Input:

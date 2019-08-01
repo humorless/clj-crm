@@ -122,6 +122,39 @@
           (catch java.util.concurrent.ExecutionException e
             (bad-request {:reason (.getCause e)}))))
 
+   (POST "/api/delete" req
+     :body-params [table-name :- s/Keyword]
+     :summary "API used to delete content of table."
+     :description "possible table names are: rev-allo, non-direct-allo, direct-allo, target, pipeline"
+     (try (if-let [r (dc/dispatch-del table-name)]
+            (ok {:result :table-delete-success}))
+          (catch clojure.lang.ExceptionInfo e
+            (bad-request {:reason (ex-data e)}))
+          (catch java.util.concurrent.ExecutionException e
+            (bad-request {:reason (.getCause e)}))))
+
+   (POST "/api/delete-order" req
+     :body-params [etl-source :- s/Str]
+     :summary "API used to delete the order table."
+     :description "possible etl-source are: `lamp`, `gui`"
+     (try (if-let [r (dc/delete-order etl-source)]
+            (ok {:result :order-delete-success}))
+          (catch clojure.lang.ExceptionInfo e
+            (bad-request {:reason (ex-data e)}))
+          (catch java.util.concurrent.ExecutionException e
+            (bad-request {:reason (.getCause e)}))))
+
+   (POST "/api/delete-rev-stream" req
+     :body-params [etl-source :- s/Str, accounting-time :- s/Str ]
+     :summary "API used to delete the rev-stream table."
+     :description "Possible etl-source are: `lap`, `agp`. Possible accounting-time format is `2019-05`"
+     (try (if-let [r (dc/delete-rev-stream etl-source accounting-time)]
+            (ok {:result :rev-stream-delete-success}))
+          (catch clojure.lang.ExceptionInfo e
+            (bad-request {:reason (ex-data e)}))
+          (catch java.util.concurrent.ExecutionException e
+            (bad-request {:reason (.getCause e)}))))
+
    (POST "/api/transaction" req
      :body-params [date-str :- s/Str, queryable :- s/Bool]
      :summary     "Record the transaction tag, which is represented by date-str. If queryable set as false, then this tag will not show up at the query API - tag-tx-history"

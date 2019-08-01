@@ -95,36 +95,6 @@
                             (s/optional-key :req) newReqSchema
                             (s/optional-key :req-op) opReqSchema})
 
-(defmethod dispatch-c :delete-rev-allo
-  [user-c]
-  (log/info "at delete-rev-allo, user-c as" user-c)
-  (let [db (d/db conn)
-        eids (dallo/rev-allo-eids db)
-        tx-data (mapv dcore/eid->retract-tx-v eids)]
-    (log/info "at delete-rev-allo, tx-data as" tx-data)
-    (do @(d/transact conn tx-data)
-        :cmd-success)))
-
-(defmethod dispatch-c :delete-non-direct-allocation
-  [user-c]
-  (log/info "at delete-non-direct-allocation, user-c as" user-c)
-  (let [db (d/db conn)
-        eids (dallo/allo-non-direct-eids db)
-        tx-data (mapv dcore/eid->retract-tx-v eids)]
-    (log/info "at delete-non-direct-allocation, tx-data as" tx-data)
-    (do @(d/transact conn tx-data)
-        :cmd-success)))
-
-(defmethod dispatch-c :delete-direct-allocation
-  [user-c]
-  (log/info "at delete-direct-allocation, user-c as" user-c)
-  (let [db (d/db conn)
-        eids (dallo/allo-direct-eids db)
-        tx-data (mapv dcore/eid->retract-tx-v eids)]
-    (log/info "at delete-direct-allocation, tx-data as" tx-data)
-    (do @(d/transact conn tx-data)
-        :cmd-success)))
-
 (defn command
   " Input:
     c is in the form: [Command]
@@ -140,3 +110,100 @@
   (let [uid (:user user)
         user-c (assoc c :user uid)]
     [:ok (dispatch-c user-c)]))
+
+(defmulti dispatch-del identity)
+
+(defmethod dispatch-del :rev-allo
+  [table-name]
+  (log/info "at delete rev-allo" table-name)
+  (let [db (d/db conn)
+        eids (dallo/rev-allo-eids db)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete rev-allo, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
+(defmethod dispatch-del :non-direct-allo
+  [table-name]
+  (log/info "at delete non-direct-allo" table-name)
+  (let [db (d/db conn)
+        eids (dallo/allo-non-direct-eids db)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete non-direct-allo, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
+(defmethod dispatch-del :direct-allo
+  [table-name]
+  (log/info "at delete direct-allo" table-name)
+  (let [db (d/db conn)
+        eids (dallo/allo-direct-eids db)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete direct-allo, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
+(defn- auxiliary-eids [db table-name]
+  (d/q '[:find [?e ...]
+         :in $ ?attr
+         :where [?e ?attr _]] db (keyword (name table-name) "revenue")))
+
+(defmethod dispatch-del :target
+  [table-name]
+  (log/info "at delete target" table-name)
+  (let [db (d/db conn)
+        eids (auxiliary-eids db table-name)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete target, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
+(defmethod dispatch-del :pipeline
+  [table-name]
+  (log/info "at delete pipeline" table-name)
+  (let [db (d/db conn)
+        eids (auxiliary-eids db table-name)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete pipeline, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
+(defn- rev-stream-eids-by
+  [db etl-src a-t]
+  (d/q '[:find [?e ...]
+         :in $ ?s ?t
+         :where
+         [?e :rev-stream/source ?s]
+         [?e :rev-stream/accounting-time ?t]]
+       db etl-src a-t))
+
+(defn- order-eids-by
+  [db etl-src]
+  (d/q '[:find [?e ...]
+         :in $ ?s
+         :where
+         [?e :order/source ?s]]
+       db etl-src))
+
+(defn delete-order
+  "etl-src is of type keyword"
+  [etl-src]
+  (log/info "at delete order" etl-src)
+  (let [db (d/db conn)
+        eids (order-eids-by db (keyword "etl.source" etl-src))
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete order, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
+(defn delete-rev-stream
+  "etl-src is of type keyword
+   a-t is of type string. a-t is for `accounting time`"
+  [etl-src a-t]
+  (log/info "at delete rev-stream" etl-src a-t)
+  (let [db (d/db conn)
+        eids (rev-stream-eids-by db (keyword "etl.source" etl-src) a-t)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete rev-stream, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))

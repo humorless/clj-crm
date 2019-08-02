@@ -60,15 +60,42 @@
     :rev-stream/source :etl.source/lap}]
 ]}
 :clj-crm/data10 {:txes [
-  [{:target/year-quarterly "2019-q1"
+  [{:target/year-quarterly "2019-q3"
     :target/user [:user/email "userA1@example.com"]
     :target/revenue 600}
-   {:target/year-quarterly "2019-q2"
-    :target/user [:user/email "userA1@example.com"]
+   {:target/year-quarterly "2019-q3"
+    :target/user [:user/email "userA2@example.com"]
+    :target/revenue 700}
+   {:target/year-quarterly "2019-q3"
+    :target/user [:user/email "userB2@example.com"]
     :target/revenue 1200}
    {:target/year-quarterly "2019-q3"
     :target/user [:user/email "userB1@example.com"]
     :target/revenue 1800}]
   [[:db/add #db/id [:db.part/user] :db/ident :user.team/online]]
+  [{:pipeline/year-quarterly "2019-q3"
+    :pipeline/sales [:user/email "userA1@example.com"]
+    :pipeline/product :product.type/line_now
+    :pipeline/status "good"
+    :pipeline/customer-name "Q"
+    :pipeline/revenue 600}
+   {:pipeline/year-quarterly "2019-q3"
+    :pipeline/sales [:user/email "userA2@example.com"]
+    :pipeline/product :product.type/OA
+    :pipeline/status "good"
+    :pipeline/customer-name "W"
+    :pipeline/revenue 700}
+   {:pipeline/year-quarterly "2019-q3"
+    :pipeline/sales [:user/email "userB2@example.com"]
+    :pipeline/product :product.type/BC
+    :pipeline/status "good"
+    :pipeline/customer-name "E"
+    :pipeline/revenue 1200}
+   {:pipeline/year-quarterly "2019-q3"
+    :pipeline/sales [:user/email "userB1@example.com"]
+    :pipeline/product :product.type/today
+    :pipeline/status "good"
+    :pipeline/customer-name "R"
+    :pipeline/revenue 1800}]
 ]}
 }

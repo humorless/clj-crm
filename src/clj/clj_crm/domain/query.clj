@@ -3,6 +3,7 @@
             [clj-crm.db.revenue :as drevenue]
             [clj-crm.fjr.core :as fjr]
             [clj-crm.fjr.time :as fjr.time]
+            [clj-crm.fjr.forecast :as fjr.forecast]
             [clj-crm.db.allocation :as dallo]
             [clj-crm.db.user :as duser]
             [schema.core :as s]
@@ -117,6 +118,13 @@
       ts
       (fjr.time/quarter-month-str-set))))
 
+(defn- ->q-span
+  [user-q]
+  (let [qs (:q-span user-q)]
+    (if (string? qs)
+      qs
+      (fjr.time/quarter-str))))
+
 (defmethod dispatch-q :all-full-join-reports
   [user-q]
   (log/info "at all-full-join-reports, user-q as" user-q)
@@ -151,6 +159,34 @@
         order-reports (fjr/order-ru-tuples->full-join-reports db time-span order-ru-tuples)]
     {:stream stream-reports
      :order order-reports}))
+
+(defmethod dispatch-q :all-pipeline-reports
+  [user-q]
+  (log/info "at all-pipeline-reports, user-q as" user-q)
+  (let [tx (:tx user-q)
+        db (if (some? tx)
+             (d/as-of (d/db conn) tx)
+             (d/db conn))
+        q-span (->q-span user-q)
+        eids (duser/sales-eids db)
+        pipeline-reports (fjr.forecast/pipeline-reports db q-span eids)
+        target-reports (fjr.forecast/target-reports db q-span eids)]
+    {:pipeline pipeline-reports
+     :target target-reports}))
+
+(defmethod dispatch-q :my-pipeline-reports
+  [user-q]
+  (log/info "at my-pipeline-reports, user-q as" user-q)
+  (let [tx (:tx user-q)
+        db (if (some? tx)
+             (d/as-of (d/db conn) tx)
+             (d/db conn))
+        q-span (->q-span user-q)
+        eids (duser/u-eid->same-team-u-eids db [:user/email (:user user-q)])
+        pipeline-reports (fjr.forecast/pipeline-reports db q-span eids)
+        target-reports (fjr.forecast/target-reports db q-span eids)]
+    {:pipeline pipeline-reports
+     :target target-reports}))
 
 (defmethod dispatch-q :my-revenues
   [user-q]
@@ -238,7 +274,8 @@
 
 (s/defschema QuerySchema {(s/required-key :q) s/Keyword
                           (s/optional-key :tx) s/Int
-                          (s/optional-key :time-span) #{s/Str}})
+                          (s/optional-key :time-span) #{s/Str}
+                          (s/optional-key :q-span) s/Str})
 
 (defn query
   " Input:

@@ -8,6 +8,11 @@
 (defn- quarter []
   (.get (LocalDate/now) IsoFields/QUARTER_OF_YEAR))
 
+(defn quarter-str []
+  (let [y (year)
+        q (quarter)]
+    (str y "-q" q)))
+
 (defn quarter-month-str-set []
   (let [y (year)
         q (dec (quarter))]

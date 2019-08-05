@@ -165,12 +165,21 @@
          (map #(month-dts->month-revenue-tuple pui c-name r-p-d %))
          (sort-by second))))
 
+(defn- o-eid-src-match?
+  [db o-eid src]
+  (d/q '[:find ?o .
+         :in $ ?o ?src
+         :where [?o :order/source ?src]]
+       db o-eid src))
+
 (defn- o-tuple->revenues
   "Example output: #{[pui-a \"2019-02\" c-eid-a 100]
                      [pui-b \"2019-03\" c-eid-b 200] ...}"
   [db [o-eid p-type c-eid & more]]
   (case p-type
-    :product.type/SS (o-eid->delta-revenues db o-eid c-eid)
+    :product.type/SS (if (o-eid-src-match? db o-eid :etl.source/lamp)
+                       (o-eid->delta-revenues db o-eid c-eid)
+                       (o-eid->normal-revenues db o-eid c-eid))
     (o-eid->normal-revenues db o-eid c-eid)))
 
 (def quarter-table

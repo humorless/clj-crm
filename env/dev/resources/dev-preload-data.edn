@@ -407,6 +407,13 @@
     :order/terms-start-date "2019-02-26"
     :order/terms-end-date "2020-05-05"
     :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue 300}
+                             {:accounting/month "2019-06" :accounting/revenue 400}}}
+   {:order/product-unique-id "pui-010"
+    :order/channel [:customer/id "CM0007"]
+    :order/service-category-enum :product.type/SS
+    :order/source :etl.source/gui
+    :order/io-writing-time #inst "2019-02-28"
+    :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue 300}
                              {:accounting/month "2019-06" :accounting/revenue 400}}}]
 ]}
 

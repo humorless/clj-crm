@@ -78,24 +78,28 @@
     :pipeline/product :product.type/line_now
     :pipeline/status "good"
     :pipeline/customer-name "Q"
+    :pipeline/prob 0.8
     :pipeline/revenue 600}
    {:pipeline/year-quarterly "2019-q3"
     :pipeline/sales [:user/email "userA2@example.com"]
     :pipeline/product :product.type/OA
-    :pipeline/status "good"
+    :pipeline/status "出單"
     :pipeline/customer-name "W"
+    :pipeline/prob 0.7
     :pipeline/revenue 700}
    {:pipeline/year-quarterly "2019-q3"
     :pipeline/sales [:user/email "userB2@example.com"]
     :pipeline/product :product.type/BC
     :pipeline/status "good"
     :pipeline/customer-name "E"
+    :pipeline/prob 0.1
     :pipeline/revenue 1200}
    {:pipeline/year-quarterly "2019-q3"
     :pipeline/sales [:user/email "userB1@example.com"]
     :pipeline/product :product.type/today
     :pipeline/status "good"
     :pipeline/customer-name "R"
+    :pipeline/prob 0.2
     :pipeline/revenue 1800}]
 ]}
 }

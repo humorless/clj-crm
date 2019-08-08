@@ -41,7 +41,7 @@
   (let [u-eid (get table u)]
     (when (nil? u-eid)
       (throw (ex-info "u-eid is nil" {:causes u :desc "user name not matched"})))
-    {:pipeline/sales u}))
+    {:pipeline/sales u-eid}))
 
 (defn- p-mapping
   [table {sc :product}]
@@ -66,8 +66,8 @@
     :pipeline/sales-channel-name chan
     :pipeline/customer-name c
     :pipeline/campaign-name c-name
-    :pipeline/revenue (long r)
-    :pipeline/prob p
+    :pipeline/revenue (if (nil? r) 0 (long r))
+    :pipeline/prob (if (nil? p) 0 p)
     :pipeline/status s
     :pipeline/note n}))
 
@@ -89,3 +89,6 @@
 
 (def sync-data
   (utility/sync-data-fn get-raw-from-excel check-raw data->data-txes))
+
+(comment
+  (def raw (get-raw-from-excel "http://10.20.30.40:5001/" "pipeline.xlsx")))

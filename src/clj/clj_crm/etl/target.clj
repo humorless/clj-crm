@@ -62,6 +62,8 @@
 (def sync-data
   (utility/sync-data-fn get-raw-from-excel check-raw data->data-txes))
 
+(comment
+  (def raw (get-raw-from-excel "http://10.20.30.40:5001/" "target.xlsx")))
 (comment (def raw
            (get-raw-from-excel "/home/vagrant/clo/clj-crm/etl_test/" "dev_target.xlsx")))
 (comment (def data

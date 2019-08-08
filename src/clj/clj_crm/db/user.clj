@@ -55,6 +55,13 @@
          :where
          [?u-eid :user/roles :user.roles/sales]] db))
 
+(defn manager-eids
+  [db]
+  (d/q '[:find [?u-eid ...]
+         :in $
+         :where
+         [?u-eid :user/roles :user.roles/manager]] db))
+
 (defn u-eid->chan-type
   [db u-eid]
   (d/q '[:find ?chan-keyword .

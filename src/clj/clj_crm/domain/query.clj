@@ -169,8 +169,9 @@
              (d/db conn))
         q-span (->q-span user-q)
         eids (duser/sales-eids db)
+        m-eids (duser/manager-eids db)
         pipeline-reports (fjr.forecast/pipeline-reports db q-span eids)
-        target-reports (fjr.forecast/target-reports db q-span eids)]
+        target-reports (fjr.forecast/target-reports db q-span (concat eids m-eids))]
     {:pipeline pipeline-reports
      :target target-reports}))
 

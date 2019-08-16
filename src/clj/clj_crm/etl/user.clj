@@ -9,15 +9,15 @@
 (spec/def ::name string?)
 (spec/def ::roles string?)
 (spec/def ::team string?)
-(spec/def ::pwd string?)
+(spec/def ::pwd (spec/nilable string?))
 (spec/def ::channel (spec/nilable string?))
 
 (spec/def ::user
   (spec/*
    (spec/keys :req-un
-              [::email ::name ::roles ::team ::pwd]
+              [::email ::name ::roles ::team]
               :opt-un
-              [::channel])))
+              [::pwd ::channel])))
 
 (def ^:private columns-map
   {:A :email
@@ -26,6 +26,11 @@
    :D :team
    :E :pwd
    :F :channel})
+
+(defn- pwd-hasher [pwd-str]
+  (if (nil? pwd-str)
+    nil
+    (hs/derive pwd-str)))
 
 (defn- raw-m->user-m
   "m is of the {HashMap} form that just reading the data from excel.
@@ -36,13 +41,10 @@
          e :email n :name} m
         t-ident (keyword t-str)
         r-ident (keyword r-str)
-        pwd-hash (hs/derive pwd-str)
-        c-ident (keyword c-str)]
-    (if c-ident
-      {:user/email e  :user/name n :user/team t-ident
-       :user/roles r-ident :user/pwd pwd-hash :user/channel c-ident}
-      {:user/email e :user/name n :user/team t-ident
-       :user/roles r-ident :user/pwd pwd-hash})))
+        nilable-pwd-hash (pwd-hasher pwd-str)
+        nilable-c-ident (keyword c-str)]
+    (utility/compact {:user/email e  :user/name n :user/team t-ident :user/roles r-ident
+                      :user/pwd nilable-pwd-hash :user/channel nilable-c-ident})))
 
 (defn- data->data-txes [data]
   (mapv raw-m->user-m data))
@@ -55,3 +57,6 @@
 
 (def sync-data
   (utility/sync-data-fn get-raw-from-excel check-raw data->data-txes))
+
+(comment
+  (def raw (get-raw-from-excel "http://10.20.30.40:5001/" "dev_user.xlsx")))

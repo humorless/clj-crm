@@ -3,4 +3,5 @@
  :nrepl-port 7000
  :etl-url "http://127.0.0.1:5001/"
  :cors-regex-str "http://10.20.30.40:5000"
+ :auxi-database-url "datomic:mem://auxi_clj_crm"
  :database-url "datomic:free://localhost:4334/clj_crm?password=qwerty"}

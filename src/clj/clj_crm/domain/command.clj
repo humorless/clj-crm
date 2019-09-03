@@ -3,6 +3,8 @@
             [clj-crm.db.allocation :as dallo]
             [schema.core :as s]
             [clojure.tools.logging :as log]
+            [clj-crm.fjr.time :as fjr.time]
+            [clj-crm.db.user :as duser]
             [datomic.api :as d]))
 
 (defn transact-tag-tx
@@ -77,6 +79,17 @@
     (do @(d/transact conn tx-data)
         :cmd-success)))
 
+(defmethod dispatch-c :calc-full-join-reports
+  [user-c]
+  (log/info "at all-full-join-reports, user-c as" user-c)
+  (let [tx (:tx user-c)
+        db (if (some? tx)
+             (d/as-of (d/db conn) tx)
+             (d/db conn))
+        time-span (fjr.time/quarter-month-str-set)
+        eids (duser/sales-eids db)]
+    "invoke calculation"))
+
 (s/defschema customerItemSchema {:customerItem/customer s/Int
                                  :customerItem/product  s/Keyword})
 
@@ -92,6 +105,7 @@
                           (s/optional-key :remove-list) #{s/Int}})
 
 (s/defschema CommandSchema {(s/required-key :c) s/Keyword
+                            (s/optional-key :tx) s/Int
                             (s/optional-key :req) newReqSchema
                             (s/optional-key :req-op) opReqSchema})
 

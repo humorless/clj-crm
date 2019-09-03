@@ -9,6 +9,10 @@
   :start (do (-> env :database-url d/create-database) (-> env :database-url d/connect))
   :stop (-> conn .release))
 
+(defstate auxi-conn
+  :start (do (-> env :auxi-database-url d/create-database) (-> env :auxi-database-url d/connect))
+  :stop (-> auxi-conn .release))
+
 ;; fresh-conn is for testing purpose db connection
 (comment
   (def fresh-conn
@@ -22,6 +26,10 @@
 (defn setup-app-db [fname]
   (let [norms-map (c/read-resource fname)]
     (c/ensure-conforms conn norms-map)))
+
+(defn setup-app-db* [conn* fname]
+  (let [norms-map (c/read-resource fname)]
+    (c/ensure-conforms conn* norms-map)))
 
 ;; Given that every db-fn entity has :db/ident
 ;; The (setup-db-fn) has `upsert` semantic, which means that

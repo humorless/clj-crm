@@ -4,4 +4,5 @@
  :etl-url "http://127.0.0.1:5001/"
  :cors-regex-str "http://10.20.30.40:4100"
  ;; :database-url "datomic:free://localhost:4334/clj_crm_dev"
+ :auxi-database-url "datomic:mem://auxi_datomic_dev"
  :database-url "datomic:mem://tmp_datomic_dev"}

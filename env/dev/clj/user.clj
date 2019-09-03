@@ -3,7 +3,7 @@
             [clojure.spec.alpha :as s]
             [expound.alpha :as expound]
             [clojure.tools.logging :as log]
-            [clj-crm.db.core :refer [setup-app-db setup-db-fn]]
+            [clj-crm.db.core :as dcore :refer [setup-app-db setup-db-fn]]
             [mount.core :as mount]
             [clj-crm.figwheel :refer [start-fw stop-fw cljs]]
             [clj-crm.core]))
@@ -17,6 +17,7 @@
   (setup-app-db "schema2.edn")
   (setup-app-db "dev-preload-data.edn")
   (setup-app-db "dev-preload-data2.edn")
+  (dcore/setup-app-db* dcore/auxi-conn "schema3.edn")
   (setup-db-fn))
 
 (defn stop []

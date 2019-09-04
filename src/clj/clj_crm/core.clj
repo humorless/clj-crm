@@ -5,7 +5,7 @@
             [clj-crm.config :refer [env]]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.tools.logging :as log]
-            [clj-crm.db.core :refer [setup-app-db setup-db-fn]]
+            [clj-crm.db.core :as dcore  :refer [setup-app-db setup-db-fn]]
             [mount.core :as mount])
   (:gen-class))
 
@@ -48,6 +48,7 @@
   (setup-app-db "schema2.edn") ;; setup app schema, idempotent operation
   (setup-app-db "preload-data.edn")
   (setup-db-fn)
+  (dcore/setup-app-db* dcore/auxi-conn "schema3.edn")
   (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))
 
 (defn -main [& args]

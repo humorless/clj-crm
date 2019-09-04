@@ -1,6 +1,7 @@
 (ns clj-crm.domain.query
   (:require [clj-crm.db.core :as dcore :refer [conn]]
             [clj-crm.db.revenue :as drevenue]
+            [clj-crm.pc.core :as pc]
             [clj-crm.fjr.core :as fjr]
             [clj-crm.fjr.time :as fjr.time]
             [clj-crm.fjr.forecast :as fjr.forecast]
@@ -132,15 +133,11 @@
         db (if (some? tx)
              (d/as-of (d/db conn) tx)
              (d/db conn))
-        time-span (->time-span user-q)
-        eids (duser/sales-eids db)
-        {other-stream-ru-tuples :stream other-order-ru-tuples :order} (drevenue/u-eids->other-ru-tuples db eids)
-        stream-ru-tuples (mapcat #(drevenue/u-eid->stream-ru-tuples db %) eids)
-        order-ru-tuples (mapcat #(drevenue/u-eid->order-ru-tuples db %) eids)
-        stream-reports (fjr/stream-ru-tuples->full-join-reports db time-span (concat stream-ru-tuples other-stream-ru-tuples))
-        order-reports (fjr/order-ru-tuples->full-join-reports db time-span (concat order-ru-tuples other-order-ru-tuples))]
-    {:stream stream-reports
-     :order order-reports}))
+        tx* (if (some? tx) tx (d/t->tx (d/basis-t db)))
+        time-span (->time-span user-q)]
+    (if-let [v (pc/load-and-decode "null" tx* time-span)]
+      v
+      (pc/all-compute-and-store tx* db time-span))))
 
 (defmethod dispatch-q :my-full-join-reports
   [user-q]
@@ -149,16 +146,14 @@
         db (if (some? tx)
              (d/as-of (d/db conn) tx)
              (d/db conn))
+        tx* (if (some? tx) tx (d/t->tx (d/basis-t db)))
         time-span (->time-span user-q)
         email (:user user-q)
         user-lookup-ref [:user/email email]
-        u-eids (duser/u-eid->same-team-u-eids db user-lookup-ref)
-        stream-ru-tuples (mapcat #(drevenue/u-eid->stream-ru-tuples db %) u-eids)
-        order-ru-tuples (mapcat #(drevenue/u-eid->order-ru-tuples db %) u-eids)
-        stream-reports (fjr/stream-ru-tuples->full-join-reports db time-span stream-ru-tuples)
-        order-reports (fjr/order-ru-tuples->full-join-reports db time-span order-ru-tuples)]
-    {:stream stream-reports
-     :order order-reports}))
+        teamName (duser/u-eid->teamName db user-lookup-ref)]
+    (if-let [v (pc/load-and-decode teamName tx* time-span)]
+      v
+      (pc/my-compute-and-store tx* db time-span user-lookup-ref teamName))))
 
 (defmethod dispatch-q :all-pipeline-reports
   [user-q]

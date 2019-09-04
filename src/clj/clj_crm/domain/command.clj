@@ -3,8 +3,6 @@
             [clj-crm.db.allocation :as dallo]
             [schema.core :as s]
             [clojure.tools.logging :as log]
-            [clj-crm.fjr.time :as fjr.time]
-            [clj-crm.pc.core :as pc]
             [clj-crm.db.user :as duser]
             [datomic.api :as d]))
 
@@ -79,18 +77,6 @@
     (log/info "at new-request, tx-data as" tx-data)
     (do @(d/transact conn tx-data)
         :cmd-success)))
-
-(defmethod dispatch-c :calc-full-join-reports
-  [user-c]
-  (log/info "at all-full-join-reports, user-c as" user-c)
-  (let [tx (:tx user-c)
-        db (if (some? tx)
-             (d/as-of (d/db conn) tx)
-             (d/db conn))
-        time-span (fjr.time/quarter-month-str-set)
-        eids (duser/sales-eids db)]
-    (do (future (pc/pre-compute-and-store tx db time-span eids)))
-    "calculate full-join-report"))
 
 (s/defschema customerItemSchema {:customerItem/customer s/Int
                                  :customerItem/product  s/Keyword})

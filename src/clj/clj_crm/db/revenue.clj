@@ -330,8 +330,45 @@
 
 ;; (agency-u-eid->revenues (d/db conn) [:user/email "userB2@example.com"])
 
+(defn- staging-direct->revenue-eids
+  "return the revenue eid collections that will be negated by agency-u-eid->revenues"
+  [db]
+  (d/q '[:find ?o
+         :in $ % ?less
+         :where
+         [?s :user/channel :user.channel/direct]
+         [?b :allo/sales ?s]
+         (allo-time-stream ?b ?o ?less)
+         (direct-allo-customer-stream-by-customer-id ?b ?o ?_c ?s ?less)
+         (direct-allo-product-stream ?b ?o ?_p)]
+       db stream-match-rules -1))
+
+(defn- staging-agency-u-eid->revenue-rels
+  "return the maximal possible relation set of agency revenue"
+  [db u-eid]
+  (d/q '[:find ?o ?c
+         :in $ % ?s ?less
+         :where
+         [?a :allo/sales ?s]
+         (indirect-allo-customer-stream ?a ?o ?c)
+         (indirect-allo-product-stream ?a ?o ?p-keyword)
+         (allo-time-stream ?a ?o ?less)]
+       db stream-match-rules u-eid -1))
 
 (defn- agency-u-eid->revenues [db u-eid]
+  (let [not-join-eids (staging-direct->revenue-eids db)
+        possible-rels (staging-agency-u-eid->revenue-rels db u-eid)]
+    (d/q '[:find ?sui ?a-t ?c ?r
+           :in $A $B $D
+           :where
+           [$A ?o ?c]
+           ($B not [?o])
+           [$D ?o :rev-stream/stream-unique-id ?sui]
+           [$D ?o :rev-stream/accounting-time ?a-t]
+           [$D ?o :rev-stream/revenue ?r]]
+         possible-rels not-join-eids db)))
+
+(defn- agency-u-eid->revenues* [db u-eid]
   (d/q '[:find ?sui ?a-t ?c ?r
          :in $ % ?s ?less
          :where

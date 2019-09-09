@@ -11,7 +11,6 @@
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
 
 (defn start []
-  (System/setProperty "datomic.objectCacheMax" "1g")
   (mount/start-without #'clj-crm.core/repl-server)
   (log/info "prepare to install db schema")
   (setup-app-db "schema.edn")

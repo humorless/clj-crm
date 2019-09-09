@@ -38,7 +38,6 @@
   (shutdown-agents))
 
 (defn start-app [args]
-  (System/setProperty "datomic.objectCacheMax" "1g")
   (doseq [component (-> args
                         (parse-opts cli-options)
                         mount/start-with-args

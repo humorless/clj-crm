@@ -106,4 +106,8 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}]
 ]}
+:clj-crm/norm9-2 {:txes [
+  [{:db/id :rev-allo/customer
+    :db/index true}]
+]}
 }

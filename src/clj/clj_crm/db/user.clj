@@ -55,6 +55,14 @@
          :where
          [?u-eid :user/roles :user.roles/sales]] db))
 
+(defn direct-sales-eids
+  [db]
+  (d/q '[:find [?u-eid ...]
+         :in $
+         :where
+         [?u-eid :user/roles :user.roles/sales]
+         [?u-eid :user/channel :user.channel/direct]] db))
+
 (defn manager-eids
   [db]
   (d/q '[:find [?u-eid ...]

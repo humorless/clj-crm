@@ -4,6 +4,7 @@
             [clj-crm.db.core :refer [conn]]
             [clojure.string :as string]
             [clojure.walk :as walk]
+            [clojure.set :as cset]
             [clj-time.core :as time.core]
             [clj-time.format :as time.format]
             [clj-time.periodic :as time.periodic]))
@@ -330,18 +331,23 @@
 
 ;; (agency-u-eid->revenues (d/db conn) [:user/email "userB2@example.com"])
 
-(defn- staging-direct->revenue-eids*
-  "return the revenue eid collections that will be negated by agency-u-eid->revenues"
-  [db t]
+(defn- staging-direct-u-eid->revenue-eids
+  [db u-eid]
   (d/q '[:find ?o
-         :in $ % ?less
+         :in $ % ?s ?less
          :where
-         [?s :user/channel :user.channel/direct]
          [?b :allo/sales ?s]
          (allo-time-stream ?b ?o ?less)
          (direct-allo-customer-stream-by-customer-id ?b ?o ?_c ?s ?less)
          (direct-allo-product-stream ?b ?o ?_p)]
-       db stream-match-rules -1))
+       db stream-match-rules u-eid -1))
+
+(defn- staging-direct->revenue-eids*
+  "return the revenue eid collections that will be negated by agency-u-eid->revenues"
+  [db t]
+  (let [direct-u-eids (duser/direct-sales-eids db)
+        r-eids-set (map #(staging-direct-u-eid->revenue-eids db %) direct-u-eids)]
+    (apply cset/union r-eids-set)))
 
 (def ^:private staging-direct->revenue-eids (memoize staging-direct->revenue-eids*))
 

@@ -330,9 +330,9 @@
 
 ;; (agency-u-eid->revenues (d/db conn) [:user/email "userB2@example.com"])
 
-(defn- staging-direct->revenue-eids
+(defn- staging-direct->revenue-eids*
   "return the revenue eid collections that will be negated by agency-u-eid->revenues"
-  [db]
+  [db t]
   (d/q '[:find ?o
          :in $ % ?less
          :where
@@ -342,6 +342,8 @@
          (direct-allo-customer-stream-by-customer-id ?b ?o ?_c ?s ?less)
          (direct-allo-product-stream ?b ?o ?_p)]
        db stream-match-rules -1))
+
+(def ^:private staging-direct->revenue-eids (memoize staging-direct->revenue-eids*))
 
 (defn- staging-agency-u-eid->revenue-rels
   "return the maximal possible relation set of agency revenue"
@@ -356,7 +358,7 @@
        db stream-match-rules u-eid -1))
 
 (defn- agency-u-eid->revenues [db u-eid]
-  (let [not-join-eids (staging-direct->revenue-eids db)
+  (let [not-join-eids (staging-direct->revenue-eids db (d/basis-t db))
         possible-rels (staging-agency-u-eid->revenue-rels db u-eid)]
     (d/q '[:find ?sui ?a-t ?c ?r
            :in $A $B $D

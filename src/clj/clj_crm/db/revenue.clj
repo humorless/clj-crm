@@ -5,6 +5,7 @@
             [clojure.string :as string]
             [clojure.walk :as walk]
             [clojure.set :as cset]
+            [clojure.core.memoize :as memo]
             [clj-time.core :as time.core]
             [clj-time.format :as time.format]
             [clj-time.periodic :as time.periodic]))
@@ -350,7 +351,8 @@
         r-eids-set (map #(staging-direct-u-eid->revenue-eids db %) direct-u-eids)]
     (apply cset/union r-eids-set)))
 
-(def ^:private staging-direct->revenue-eids (memoize staging-direct->revenue-eids*))
+(def ^:private staging-direct->revenue-eids (memo/lu staging-direct->revenue-eids*
+                                                     {} :lu/threshold 2))
 
 (defn- staging-agency-u-eid->revenue-rels
   "return the maximal possible relation set of agency revenue"

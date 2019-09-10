@@ -333,14 +333,15 @@
 
 (defn- staging-direct-u-eid->revenue-eids
   [db u-eid]
-  (d/q '[:find ?o
-         :in $ % ?s ?less
-         :where
-         [?b :allo/sales ?s]
-         (allo-time-stream ?b ?o ?less)
-         (direct-allo-customer-stream-by-customer-id ?b ?o ?_c ?s ?less)
-         (direct-allo-product-stream ?b ?o ?_p)]
-       db stream-match-rules u-eid -1))
+  (into #{}
+        (d/q '[:find ?o
+               :in $ % ?s ?less
+               :where
+               [?b :allo/sales ?s]
+               (allo-time-stream ?b ?o ?less)
+               (direct-allo-customer-stream-by-customer-id ?b ?o ?_c ?s ?less)
+               (direct-allo-product-stream ?b ?o ?_p)]
+             db stream-match-rules u-eid -1)))
 
 (defn- staging-direct->revenue-eids*
   "return the revenue eid collections that will be negated by agency-u-eid->revenues"

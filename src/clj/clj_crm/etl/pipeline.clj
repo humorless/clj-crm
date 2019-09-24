@@ -26,12 +26,12 @@
                ::revenue ::prob ::status ::note])))
 
 (def ^:private columns-map
-  {:A :time-period
-   :C :sales
-   :D :product
-   :E :channel
-   :F :client
-   :G :campaign-name
+  {:G :time-period
+   :B :sales
+   :C :product
+   :D :channel
+   :E :client
+   :F :campaign-name
    :I :revenue
    :J :prob
    :K :status

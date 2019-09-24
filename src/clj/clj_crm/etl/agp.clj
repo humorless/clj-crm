@@ -31,7 +31,7 @@
    :L :basic-id
    :M :customer-name
    :P :debtor-code
-   :AB :revenue})
+   :AE :revenue})
 
 (defn- basic-mapping
   "handle the mapping that does not need to lookup any tables in database"

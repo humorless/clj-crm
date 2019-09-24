@@ -22,8 +22,8 @@
   {:A :year-month
    :B :adaccount-corporate-name
    :C :adaccount-id
-   :E :billing-tax-id
-   :F :revenue})
+   :F :billing-tax-id
+   :J :revenue})
 
 (defn- basic-mapping
   "handle the mapping that does not need to lookup any tables in database"

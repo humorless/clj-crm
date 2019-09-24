@@ -29,15 +29,15 @@
 
 (def ^:private columns-map
   {:A :month
-   :B :service-category
-   :D :gui-no
-   :E :item-seq
-   :H :debtor-tax-id
-   :L :net-amount
-   :Y :campaign-no
-   :AA :ad-item
-   :AC :campaign-name
-   :C :advertisor-tax-id})
+   :H :service-category
+   :B :gui-no
+   :C :item-seq
+   :F :debtor-tax-id
+   :K :net-amount
+   :X :campaign-no
+   :Z :ad-item
+   :AB :campaign-name
+   :AC :advertisor-tax-id})
 
 (defn- compact
   "remove the nil value key from a hashmap

@@ -20,9 +20,10 @@
 
 (spec/def ::pipeline
   (spec/*
-   (spec/keys :req-un
-              [::time-period ::sales ::product ::channel ::client
-               ::campaign-name ::revenue ::prob ::status ::note])))
+   (spec/keys :req-un [::time-period ::sales ::product]
+              :opt-un
+              [::channel ::client ::campaign-name
+               ::revenue ::prob ::status ::note])))
 
 (def ^:private columns-map
   {:A :time-period

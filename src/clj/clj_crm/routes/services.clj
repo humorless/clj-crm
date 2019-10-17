@@ -63,14 +63,6 @@
          :ok (ok {:result result})
          :error (bad-request {:reason result}))))
 
-   (POST "/api/register" req
-     :body-params [email :- s/Str, password :- s/Str, screenname :- s/Str, role :- s/Str, team-id :- s/Str]
-     :summary     "User uses email/password to register, UI default role is sales"
-     :description "possilbe value of role could be: sales, lead, manager"
-     (if (register-user screenname email password (keyword "user.roles" role) (keyword team-id))
-       (ok {:user (user-datum email)})
-       (bad-request)))
-
    (POST "/api/login" req
      :body-params [email :- s/Str, password :- s/Str]
      :summary     "User uses email/password to login"
@@ -145,7 +137,7 @@
             (bad-request {:reason (.getCause e)}))))
 
    (POST "/api/delete-rev-stream" req
-     :body-params [etl-source :- s/Str, accounting-time :- s/Str ]
+     :body-params [etl-source :- s/Str, accounting-time :- s/Str]
      :summary "API used to delete the rev-stream table."
      :description "Possible etl-source are: `lap`, `agp`. Possible accounting-time format is `2019-05`"
      (try (if-let [r (dc/delete-rev-stream etl-source accounting-time)]

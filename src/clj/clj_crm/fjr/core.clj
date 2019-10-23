@@ -41,7 +41,7 @@
         p-graph (d/pull db '[:rev-stream/service-category-enum] o)
         sc (get-in p-graph [:rev-stream/service-category-enum :db/id])
         rebate (get r-table [d sc] 0)]
-    {:revenue/net-value (Math/round (* r (- 1 rebate)))
+    {:revenue/net-value (* r (- 1 rebate))
      :revenue/rebate rebate}))
 
 (defn- order-rebate-view

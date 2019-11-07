@@ -23,7 +23,7 @@
    :B :adaccount-corporate-name
    :C :adaccount-id
    :F :billing-tax-id
-   :J :revenue})
+   :H :revenue})
 
 (defn- basic-mapping
   "handle the mapping that does not need to lookup any tables in database"

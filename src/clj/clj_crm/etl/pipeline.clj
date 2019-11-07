@@ -32,10 +32,10 @@
    :D :channel
    :E :client
    :F :campaign-name
-   :I :revenue
-   :J :prob
-   :K :status
-   :M :note})
+   :H :revenue
+   :I :prob
+   :J :status
+   :L :note})
 
 (defn- u-mapping
   [table {u :sales}]

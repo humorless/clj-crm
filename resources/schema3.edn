@@ -28,4 +28,40 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}]
 ]}
+:clj-crm/cache01-2 {:txes [
+  [{:db/doc "The view tx (transaction id) of the revenues"
+    :db/ident :revenues/tx
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The u-eid of the revenues"
+    :db/ident :revenues/u-eid
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The type keyword of the revenues -> :order / :stream"
+    :db/ident :revenues/type
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The view time-span of the revenues"
+    :db/ident :revenues/time-span
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "The revenues value"
+    :db/ident :revenues/bytes
+    :db/valueType :db.type/bytes
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}]
+]}
 }

@@ -2,6 +2,7 @@
   (:require [clj-crm.db.user :as duser]
             [datomic.api :as d]
             [clj-crm.db.core :refer [conn]]
+            [clj-crm.pc.revenue :as pc]
             [clojure.string :as string]
             [clojure.walk :as walk]
             [clojure.set :as cset]
@@ -95,6 +96,13 @@
       :user.channel/reseller (reseller-u-eid->orders db u-eid)
       :user.channel/agency (agency-u-eid->orders db u-eid)
       #{})))
+
+(defn pc-u-eid->orders [db u-eid]
+  (if-let [v (pc/revenues-load-and-decode u-eid :order pc/*tx* pc/*time-span*)]
+    v
+    (let [data (u-eid->orders db u-eid)]
+      (future (pc/revenues-encode-and-store u-eid :order pc/*tx* pc/*time-span* data))
+      data)))
 
 (defn- o-eid->normal-revenues
   [db o-eid c-eid]
@@ -423,11 +431,18 @@
       :user.channel/agency (agency-u-eid->revenues db u-eid)
       #{})))
 
+(defn pc-u-eid->stream-revenues [db u-eid]
+  (if-let [v (pc/revenues-load-and-decode u-eid :stream pc/*tx* pc/*time-span*)]
+    v
+    (let [data (u-eid->stream-revenues db u-eid)]
+      (future (pc/revenues-encode-and-store u-eid :stream pc/*tx* pc/*time-span* data))
+      data)))
+
 (defn- u-eid->total-revenues
   [db eid]
-  (let [orders (u-eid->orders db eid)
+  (let [orders (pc-u-eid->orders db eid)
         order-revenues (mapcat #(o-tuple->revenues db %) orders) ;; vector of revenue tuple
-        stream-revenues (u-eid->stream-revenues db eid)]
+        stream-revenues (pc-u-eid->stream-revenues db eid)]
     (concat order-revenues stream-revenues)))
 
 (defn- c-eid->customerName
@@ -448,13 +463,13 @@
 
 (defn- u-eids->other-order-revenues
   [db eids]
-  (let [order-db (mapcat #(u-eid->orders db %) eids)
+  (let [order-db (mapcat #(pc-u-eid->orders db %) eids)
         other-orders (all-orders-but db order-db)]
     (mapcat #(o-tuple->revenues db %) other-orders)))
 
 (defn- u-eids->other-stream-revenues
   [db eids]
-  (let [stream-revenue-db (mapcat #(u-eid->stream-revenues db %) eids)]
+  (let [stream-revenue-db (mapcat #(pc-u-eid->stream-revenues db %) eids)]
     (all-stream-revenues-but db stream-revenue-db)))
 
 (defn- all-order-revenues
@@ -485,12 +500,12 @@
 ;; Module API for revenue
 (defn u-eid->stream-ru-tuples
   [db u-eid]
-  (->> (u-eid->stream-revenues db u-eid)
+  (->> (pc-u-eid->stream-revenues db u-eid)
        (map #(->stream-ru-tuple db u-eid %))))
 
 (defn u-eid->order-ru-tuples
   [db u-eid]
-  (->> (u-eid->orders db u-eid)
+  (->> (pc-u-eid->orders db u-eid)
        (mapcat #(o-tuple->revenues db %))
        (map #(->order-ru-tuple u-eid %))))
 

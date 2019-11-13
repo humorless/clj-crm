@@ -7,6 +7,7 @@
             [clj-crm.domain.query :as dq]
             [clj-crm.domain.command :as dc]
             [clj-crm.etl.core :as etl]
+            [clj-crm.cron.core :as cron]
             [clojure.tools.logging :as log]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
@@ -113,6 +114,20 @@
             (bad-request {:reason (ex-data e)}))
           (catch java.util.concurrent.ExecutionException e
             (bad-request {:reason (.getCause e)}))))
+
+   (GET "/api/cron" req
+     :summary     "Get the now version query cache re-calculation cronjob status"
+     (ok (cron/jobs)))
+
+   (POST "/api/cron" req
+     :body-params [quarters :- [s/Str], year :- s/Int]
+     :summary     "Install the now version query cache re-calculation cronjob into this backend process"
+     :description "The example quarters can be `[\"q1\" , \"q2\"]`, which re-calculate only Q1 and Q2. The example year can be `2019`. The year and quarters corresponds to `Time Period` of UI. "
+     (try
+       (cron/install-jobs quarters year)
+       (ok {:result :install-done})
+       (catch Exception e
+         (bad-request {:reason (.getCause e)}))))
 
    (POST "/api/delete" req
      :body-params [table-name :- s/Keyword]

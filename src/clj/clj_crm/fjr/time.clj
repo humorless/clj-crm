@@ -23,3 +23,14 @@
       (set
        (->> (map #(format "%02d" %) months)
             (map #(str y "-"  %)))))))
+
+(defn year-quarter->y-m-set
+  "output is  #{yyyy-mm, yyyy-mm, yyyy-mm}"
+  [year q]
+  (let [m1 (+ 1 (* q 3))
+        m2 (+ 2 (* q 3))
+        m3 (+ 3 (* q 3))
+        months  [m1 m2 m3]]
+    (set
+     (->> (map #(format "%02d" %) months)
+          (map #(str year "-"  %))))))

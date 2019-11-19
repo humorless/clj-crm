@@ -7,20 +7,25 @@
    [clj-crm.domain.query :as query]
    [clj-crm.fjr.time :as fjr-time]
    [clj-crm.config :refer [env]]
-   [mount.core :as mount])
+   [mount.core :refer [defstate]])
   (:import [org.joda.time DateTimeZone]))
 
-;; default cronjob start at 23:00 local time zone.
+;; cron-users should be ["userA1@example.com", "userB1@example.com"]
+(defstate cron-users
+  :start (-> env :cron-users)
+  :stop [])
+
+;; default cronjob start at 18:00 local time zone.
 (def t-seq
   (->> (periodic-seq (.. (t/now)
                          (withZone (DateTimeZone/forID "Asia/Taipei"))
-                         (withTime 23 0 0 0))
+                         (withTime 18 0 0 0))
                      (-> 1 t/days))))
 
 ;; test-seq for only testing purpose
 (def test-seq
   (->> (periodic-seq (t/now)
-                     (-> 5 t/seconds))))
+                     (-> 60 t/seconds))))
 
 (def cancel-atom
   (atom (fn []
@@ -44,12 +49,19 @@
   (let [q-n (quarter-str->int q-s)]
     (fjr-time/year-quarter->y-m-set year-n q-n)))
 
-(defn- ts->query-request
+(defn- ts->admin-query-request
   [ts]
   {:time-span ts
    :tx nil
    :user "cronjob"
    :q :all-full-join-reports})
+
+(defn- ts->user-query-request-v
+  [ts]
+  (let [partial-req {:time-span ts
+                     :tx nil
+                     :q :my-full-join-reports}]
+    (mapv #(assoc partial-req :user %) cron-users)))
 
 (defn- execute
   [req]
@@ -61,8 +73,9 @@
   (let [year (:y jobs)
         qs   (:qs jobs)
         time-span-list (map #(q-s->time-span year %) qs)
-        req-list (map ts->query-request time-span-list)]
-    req-list))
+        admin-req-list (map ts->admin-query-request time-span-list)
+        user-req-list (mapcat ts->user-query-request-v time-span-list)]
+    (concat admin-req-list user-req-list)))
 
 (defn cache-calculator [t]
   (log/info "invoke cache calculation at time " t)

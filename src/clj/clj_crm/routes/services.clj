@@ -122,7 +122,7 @@
    (POST "/api/cron" req
      :body-params [quarters :- [s/Str], year :- s/Int]
      :summary     "Install the now version query cache re-calculation cronjob into this backend process"
-     :description "The example quarters can be `[\"q1\" , \"q2\"]`, which re-calculate only Q1 and Q2. The example year can be `2019`. The year and quarters corresponds to `Time Period` of UI. "
+     :description "The example quarters can be `[\"q3\" , \"q4\"]`, which re-calculate only Q1 and Q2. The example year can be `2019`. The year and quarters corresponds to `Time Period` of UI. "
      (try
        (cron/install-jobs quarters year)
        (ok {:result :install-done})

@@ -2,6 +2,7 @@
  :port 3000
  :nrepl-port 7000
  :etl-url "http://127.0.0.1:5001/"
+ :cron-users ["userA1@example.com", "userB1@example.com", "userC1@example.com"]
  :cors-regex-str "http://10.20.30.40:5000"
  :auxi-database-url "datomic:free://localhost:4334/auxi_clj_crm?password=qwerty"
  :database-url "datomic:free://localhost:4334/clj_crm?password=qwerty"}

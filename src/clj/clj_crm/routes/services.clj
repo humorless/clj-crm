@@ -143,7 +143,7 @@
    (POST "/api/delete-target" req
      :body-params [y-q :- s/Str]
      :summary "API used to delete content of target table by year-quarter."
-     :description "possible quarter values are: `2019-q1`"
+     :description "possible quarter values are: `2019-q3`"
      (try (if-let [r (dc/delete-target y-q)]
             (ok {:result :target-delete-success}))
           (catch clojure.lang.ExceptionInfo e
@@ -156,6 +156,17 @@
      :summary "API used to delete the order table."
      :description "possible etl-source are: `lamp`, `gui`"
      (try (if-let [r (dc/delete-order etl-source)]
+            (ok {:result :order-delete-success}))
+          (catch clojure.lang.ExceptionInfo e
+            (bad-request {:reason (ex-data e)}))
+          (catch java.util.concurrent.ExecutionException e
+            (bad-request {:reason (.getCause e)}))))
+
+   (POST "/api/delete-order-gui" req
+     :body-params [accounting-time :- s/Str]
+     :summary "API used to delete the order table with etl-source gui."
+     :description "possible accouting-time format is `2019-05`"
+     (try (if-let [r (dc/delete-order-gui accounting-time)]
             (ok {:result :order-delete-success}))
           (catch clojure.lang.ExceptionInfo e
             (bad-request {:reason (ex-data e)}))

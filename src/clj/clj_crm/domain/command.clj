@@ -187,6 +187,16 @@
          [?e :order/source ?s]]
        db etl-src))
 
+(defn- order-gui-eids-by
+  [db a-t]
+  (d/q '[:find [?a ...]
+         :in $ ?t
+         :where
+         [?e :order/source :etl.source/gui]
+         [?e :order/accounting-data ?a]
+         [?a :accounting/month ?t]]
+       db a-t))
+
 (defn- auxiliary-target-table-eids [db year-quarter]
   (d/q '[:find [?e ...]
          :in $ ?y-q
@@ -210,6 +220,17 @@
   (log/info "at delete order" etl-src)
   (let [db (d/db conn)
         eids (order-eids-by db (keyword "etl.source" etl-src))
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete order, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
+(defn delete-order-gui
+  "a-t is of type string. a-t is for `accounting time`"
+  [a-t]
+  (log/info "at delete order gui, accounting-time is: " a-t)
+  (let [db (d/db conn)
+        eids (order-gui-eids-by db a-t)
         tx-data (mapv dcore/eid->retract-tx-v eids)]
     (log/info "at delete order, tx-data as" tx-data)
     (do @(d/transact conn tx-data)

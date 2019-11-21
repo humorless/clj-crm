@@ -140,6 +140,17 @@
           (catch java.util.concurrent.ExecutionException e
             (bad-request {:reason (.getCause e)}))))
 
+   (POST "/api/delete-target" req
+     :body-params [y-q :- s/Str]
+     :summary "API used to delete content of target table by year-quarter."
+     :description "possible quarter values are: `2019-q1`"
+     (try (if-let [r (dc/delete-target y-q)]
+            (ok {:result :target-delete-success}))
+          (catch clojure.lang.ExceptionInfo e
+            (bad-request {:reason (ex-data e)}))
+          (catch java.util.concurrent.ExecutionException e
+            (bad-request {:reason (.getCause e)}))))
+
    (POST "/api/delete-order" req
      :body-params [etl-source :- s/Str]
      :summary "API used to delete the order table."

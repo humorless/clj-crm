@@ -187,6 +187,23 @@
          [?e :order/source ?s]]
        db etl-src))
 
+(defn- auxiliary-target-table-eids [db year-quarter]
+  (d/q '[:find [?e ...]
+         :in $ ?y-q
+         :where [?e :target/year-quarterly ?y-q]]
+       db year-quarter))
+
+(defn delete-target
+  "year-quarter is of type string"
+  [year-quarter]
+  (log/info "at delete target by year-quarter: " year-quarter)
+  (let [db (d/db conn)
+        eids (auxiliary-target-table-eids db year-quarter)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at delete target by year-quarter, tx-data as" tx-data)
+    (do @(d/transact conn tx-data)
+        :cmd-success)))
+
 (defn delete-order
   "etl-src is of type keyword"
   [etl-src]

@@ -34,7 +34,18 @@
      [?o :order/service-category-enum ?sc]
      [?sc :db/ident ?p-keyword]]])
 
-(defn- agency-u-eid->orders [db u-eid]
+(defn- agency-u-eid->orders-of-same-channel [db u-eid]
+  (d/q '[:find ?o ?p-keyword ?c ?pui
+         :in $ % ?s ?less
+         :where
+         [?a :allo/sales ?s]
+         (indirect-allo-customer-order ?a ?o ?c)
+         (indirect-allo-product-order ?a ?o ?p-keyword)
+         (allo-time-order ?a ?o ?less)
+         [?o :order/product-unique-id ?pui]]
+       db order-match-rules u-eid -1))
+
+(defn- agency-u-eid->orders* [db u-eid]
   (d/q '[:find ?o ?p-keyword ?c ?pui
          :in $ % ?s ?less
          :where
@@ -50,6 +61,11 @@
                    (direct-allo-product-order ?b ?o ?_b-p)
                    (allo-time-order ?b ?o ?less))]
        db order-match-rules u-eid -1))
+
+(defn- agency-u-eid->orders [db u-eid]
+  (if pc/*channel-view*
+    (agency-u-eid->orders-of-same-channel db u-eid)
+    (agency-u-eid->orders* db u-eid)))
 
 (defn- reseller-u-eid->orders [db u-eid]
   (d/q '[:find ?o ?p-keyword ?c ?pui
@@ -98,10 +114,10 @@
       #{})))
 
 (defn pc-u-eid->orders [db u-eid]
-  (if-let [v (pc/revenues-load-and-decode u-eid :order pc/*tx* pc/*time-span*)]
+  (if-let [v (pc/revenues-load-and-decode u-eid :order pc/*tx* pc/*time-span* pc/*channel-view*)]
     v
     (let [data (u-eid->orders db u-eid)]
-      (future (pc/revenues-encode-and-store u-eid :order pc/*tx* pc/*time-span* data))
+      (future (pc/revenues-encode-and-store u-eid :order pc/*tx* pc/*time-span* pc/*channel-view* data))
       data)))
 
 (defn- o-eid->normal-revenues
@@ -374,7 +390,18 @@
          (allo-time-stream ?a ?o ?less)]
        db stream-match-rules u-eid -1))
 
-(defn- agency-u-eid->revenues [db u-eid]
+(defn- agency-u-eid->revenues-of-same-channel [db u-eid]
+  (let [possible-rels (staging-agency-u-eid->revenue-rels db u-eid)]
+    (d/q '[:find ?sui ?a-t ?c ?r
+           :in $A $D
+           :where
+           [$A ?o ?c]
+           [$D ?o :rev-stream/stream-unique-id ?sui]
+           [$D ?o :rev-stream/accounting-time ?a-t]
+           [$D ?o :rev-stream/revenue ?r]]
+         possible-rels db)))
+
+(defn- agency-u-eid->revenues* [db u-eid]
   (let [not-join-eids (staging-direct->revenue-eids db (d/basis-t db))
         possible-rels (staging-agency-u-eid->revenue-rels db u-eid)]
     (d/q '[:find ?sui ?a-t ?c ?r
@@ -387,7 +414,12 @@
            [$D ?o :rev-stream/revenue ?r]]
          possible-rels not-join-eids db)))
 
-(defn- agency-u-eid->revenues* [db u-eid]
+(defn- agency-u-eid->revenues [db u-eid]
+  (if pc/*channel-view*
+    (agency-u-eid->revenues-of-same-channel db u-eid)
+    (agency-u-eid->revenues* db u-eid)))
+
+(defn- agency-u-eid->revenues-semantic-version [db u-eid]
   (d/q '[:find ?sui ?a-t ?c ?r
          :in $ % ?s ?less
          :where
@@ -432,10 +464,10 @@
       #{})))
 
 (defn pc-u-eid->stream-revenues [db u-eid]
-  (if-let [v (pc/revenues-load-and-decode u-eid :stream pc/*tx* pc/*time-span*)]
+  (if-let [v (pc/revenues-load-and-decode u-eid :stream pc/*tx* pc/*time-span* pc/*channel-view*)]
     v
     (let [data (u-eid->stream-revenues db u-eid)]
-      (future (pc/revenues-encode-and-store u-eid :stream pc/*tx* pc/*time-span* data))
+      (future (pc/revenues-encode-and-store u-eid :stream pc/*tx* pc/*time-span* pc/*channel-view* data))
       data)))
 
 (defn- u-eid->total-revenues

@@ -18,27 +18,29 @@
   (apply str (-> time-span vec sort)))
 
 (defn encode-and-store
-  [team tx time-span data]
-  (log/info "encode-and-store with " team tx time-span)
+  [team tx time-span channel-view? data]
+  (log/info "encode-and-store with " team tx time-span channel-view?)
   (let [ts (->time-span-str time-span)
         v-bytes (nippy/freeze data)]
     @(d/transact dcore/auxi-conn
                  [{:booking/team team :booking/tx tx
-                   :booking/time-span ts :booking/bytes v-bytes}])))
+                   :booking/time-span ts :booking/channel-view channel-view?
+                   :booking/bytes v-bytes}])))
 
 (defn load-and-decode
-  [team tx time-span]
-  (log/info "load-and-decode with " team tx time-span)
+  [team tx time-span channel-view?]
+  (log/info "load-and-decode with " team tx time-span channel-view?)
   (let [db (d/db dcore/auxi-conn)
         ts (->time-span-str time-span)
         v (d/q '[:find ?b .
-                 :in $ ?team-n ?tx ?ts
+                 :in $ ?team-n ?tx ?ts ?c
                  :where
                  [?e :booking/team ?team-n]
                  [?e :booking/tx ?tx]
                  [?e :booking/time-span ?ts]
+                 [?e :booking/channel-view ?c]
                  [?e :booking/bytes ?b]]
-               db team tx ts)]
+               db team tx ts channel-view?)]
     (if (nil? v)
       v
       (nippy/thaw v))))
@@ -83,7 +85,7 @@
 (defn all-compute-and-store
   [tx db* time-span]
   (let [db (db-exclude-rev-stream-outside-time-span db* time-span)]
-    (binding [pc-r/*time-span* time-span pc-r/*tx* tx]
+    (binding [pc-r/*time-span* time-span pc-r/*tx* tx pc-r/*channel-view* false]
       (let [eids (duser/sales-eids db)
             {other-stream-ru-tuples :stream other-order-ru-tuples :order} (doall (drevenue/u-eids->other-ru-tuples db eids))
             stream-ru-tuples (doall (mapcat #(drevenue/u-eid->stream-ru-tuples db %) eids))
@@ -91,18 +93,31 @@
             stream-reports (fjr/stream-ru-tuples->full-join-reports db time-span (concat stream-ru-tuples other-stream-ru-tuples))
             order-reports (fjr/order-ru-tuples->full-join-reports db time-span (concat order-ru-tuples other-order-ru-tuples))
             data {:stream stream-reports :order order-reports}]
-        (future (encode-and-store "null" tx time-span data))
+        (future (encode-and-store "null" tx time-span pc-r/*channel-view* data))
         data))))
 
 (defn my-compute-and-store
   [tx db* time-span user-lookup-ref teamName]
   (let [db (db-exclude-rev-stream-outside-time-span db* time-span)]
-    (binding [pc-r/*time-span* time-span pc-r/*tx* tx]
+    (binding [pc-r/*time-span* time-span pc-r/*tx* tx pc-r/*channel-view* false]
       (let [u-eids (duser/u-eid->same-team-u-eids db user-lookup-ref)
             stream-ru-tuples (doall (mapcat #(drevenue/u-eid->stream-ru-tuples db %) u-eids))
             order-ru-tuples (doall (mapcat #(drevenue/u-eid->order-ru-tuples db %) u-eids))
             stream-reports (fjr/stream-ru-tuples->full-join-reports db time-span stream-ru-tuples)
             order-reports (fjr/order-ru-tuples->full-join-reports db time-span order-ru-tuples)
             data {:stream stream-reports :order order-reports}]
-        (future (encode-and-store teamName tx time-span data))
+        (future (encode-and-store teamName tx time-span pc-r/*channel-view* data))
+        data))))
+
+(defn my-channel-compute-and-store
+  [tx db* time-span user-lookup-ref teamName]
+  (let [db (db-exclude-rev-stream-outside-time-span db* time-span)]
+    (binding [pc-r/*time-span* time-span pc-r/*tx* tx pc-r/*channel-view* true]
+      (let [u-eids (duser/u-eid->same-team-u-eids db user-lookup-ref)
+            stream-ru-tuples (doall (mapcat #(drevenue/u-eid->stream-ru-tuples db %) u-eids))
+            order-ru-tuples (doall (mapcat #(drevenue/u-eid->order-ru-tuples db %) u-eids))
+            stream-reports (fjr/stream-ru-tuples->full-join-reports db time-span stream-ru-tuples)
+            order-reports (fjr/order-ru-tuples->full-join-reports db time-span order-ru-tuples)
+            data {:stream stream-reports :order order-reports}]
+        (future (encode-and-store teamName tx time-span pc-r/*channel-view* data))
         data))))

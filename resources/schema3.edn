@@ -64,4 +64,19 @@
     :db/id #db/id [:db.part/db]
     :db.install/_attribute :db.part/db}]
 ]}
+:clj-crm/cache01-3 {:txes [
+  [{:db/doc "Whether this booking cache is for channel view point."
+    :db/ident :booking/channel-view
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}
+
+   {:db/doc "Whether this revenues cache is for channel view point"
+    :db/ident :revenues/channel-view
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one
+    :db/id #db/id [:db.part/db]
+    :db.install/_attribute :db.part/db}]
+]}
 }

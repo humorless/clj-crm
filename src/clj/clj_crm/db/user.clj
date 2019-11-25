@@ -55,6 +55,14 @@
          :where
          [?u-eid :user/roles :user.roles/sales]] db))
 
+(defn agency-sales-eids
+  [db]
+  (d/q '[:find [?u-eid ...]
+         :in $
+         :where
+         [?u-eid :user/roles :user.roles/sales]
+         [?u-eid :user/channel :user.channel/agency]] db))
+
 (defn direct-sales-eids
   [db]
   (d/q '[:find [?u-eid ...]
@@ -78,3 +86,8 @@
          [?u :user/channel ?c]
          [?c :db/ident ?chan-keyword]]
        db u-eid))
+
+(defn agency-channel?
+  [db u-eid]
+  (= :user.channel/agency
+     (u-eid->chan-type db u-eid)))

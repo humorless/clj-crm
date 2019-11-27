@@ -152,9 +152,9 @@
         time-span (->time-span user-q)
         channel-view? true
         now? (nil? tx)]
-    (if-let [v (pc/load-and-decode "null" tx* time-span channel-view? false)]
+    (if-let [v (pc/load-and-decode "null" tx* time-span channel-view? now?)]
       v
-      (pc/all-compute-and-store tx* db time-span channel-view? false))))
+      (pc/all-compute-and-store tx* db time-span channel-view? now?))))
 
 (defmethod dispatch-q :my-full-join-reports
   [user-q]

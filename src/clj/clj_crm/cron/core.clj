@@ -50,12 +50,16 @@
   (let [q-n (quarter-str->int q-s)]
     (fjr-time/year-quarter->y-m-set year-n q-n)))
 
-(defn- ts->admin-query-request
+(defn- ts->admin-query-request-v
   [ts]
-  {:time-span ts
-   :tx nil
-   :user "cronjob"
-   :q :all-full-join-reports})
+  [{:time-span ts
+    :tx nil
+    :user "cronjob"
+    :q :all-full-join-reports}
+   {:time-span ts
+    :tx nil
+    :user "cronjob"
+    :q :all-channel-full-join-reports}])
 
 (defn- ts->user-query-request-v
   [ts]
@@ -74,7 +78,7 @@
   (let [year (:y jobs)
         qs   (:qs jobs)
         time-span-list (map #(q-s->time-span year %) qs)
-        admin-req-list (map ts->admin-query-request time-span-list)
+        admin-req-list (mapcat ts->admin-query-request-v time-span-list)
         user-req-list (mapcat ts->user-query-request-v time-span-list)]
     (concat admin-req-list user-req-list)))
 

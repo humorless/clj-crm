@@ -135,10 +135,11 @@
              (d/db conn))
         tx* (if (some? tx) tx (d/t->tx (d/basis-t db)))
         time-span (->time-span user-q)
-        channel-view? false]
-    (if-let [v (pc/load-and-decode "null" tx* time-span channel-view?)]
+        channel-view? false
+        now? (nil? tx)]
+    (if-let [v (pc/load-and-decode "null" tx* time-span channel-view? now?)]
       v
-      (pc/all-compute-and-store tx* db time-span channel-view?))))
+      (pc/all-compute-and-store tx* db time-span channel-view? now?))))
 
 (defmethod dispatch-q :all-channel-full-join-reports
   [user-q]
@@ -149,10 +150,11 @@
              (d/db conn))
         tx* (if (some? tx) tx (d/t->tx (d/basis-t db)))
         time-span (->time-span user-q)
-        channel-view? true]
-    (if-let [v (pc/load-and-decode "null" tx* time-span channel-view?)]
+        channel-view? true
+        now? (nil? tx)]
+    (if-let [v (pc/load-and-decode "null" tx* time-span channel-view? false)]
       v
-      (pc/all-compute-and-store tx* db time-span channel-view?))))
+      (pc/all-compute-and-store tx* db time-span channel-view? false))))
 
 (defmethod dispatch-q :my-full-join-reports
   [user-q]
@@ -166,10 +168,11 @@
         email (:user user-q)
         user-lookup-ref [:user/email email]
         teamName (duser/u-eid->teamName db user-lookup-ref)
-        channel-view? false]
-    (if-let [v (pc/load-and-decode teamName tx* time-span channel-view?)]
+        channel-view? false
+        now? (nil? tx)]
+    (if-let [v (pc/load-and-decode teamName tx* time-span channel-view? now?)]
       v
-      (pc/my-compute-and-store tx* db time-span user-lookup-ref teamName channel-view?))))
+      (pc/my-compute-and-store tx* db time-span user-lookup-ref teamName channel-view? now?))))
 
 (def empty-result {{:order []}
                    {:stream []}})
@@ -186,11 +189,12 @@
         email (:user user-q)
         user-lookup-ref [:user/email email]
         teamName (duser/u-eid->teamName db user-lookup-ref)
-        channel-view? true]
+        channel-view? true
+        now? (nil? tx)]
     (if (duser/agency-channel? db user-lookup-ref)
-      (if-let [v (pc/load-and-decode teamName tx* time-span channel-view?)]
+      (if-let [v (pc/load-and-decode teamName tx* time-span channel-view? false)]
         v
-        (pc/my-compute-and-store tx* db time-span user-lookup-ref teamName channel-view?))
+        (pc/my-compute-and-store tx* db time-span user-lookup-ref teamName channel-view? false))
       empty-result)))
 
 (defmethod dispatch-q :all-pipeline-reports

@@ -17,30 +17,42 @@
 (defn- ->time-span-str [time-span]
   (apply str (-> time-span vec sort)))
 
+(def frozen-now-tx (d/t->tx 0))
+
+(defn ->frozen-if-now
+  [now? tx]
+  (if now?
+    frozen-now-tx
+    tx))
+
 (defn encode-and-store
-  [team tx time-span channel-view? data]
-  (log/info "encode-and-store with " team tx time-span channel-view?)
+  [team tx time-span channel-view? now? data]
+  (log/info "encode-and-store with " team tx time-span channel-view? now?)
   (let [ts (->time-span-str time-span)
         v-bytes (nippy/freeze data)]
     @(d/transact dcore/auxi-conn
-                 [{:booking/team team :booking/tx tx
+                 [{:booking/team team :booking/tx (->frozen-if-now now? tx)
                    :booking/time-span ts :booking/channel-view channel-view?
                    :booking/bytes v-bytes}])))
 
+(defn load-booking-bytes
+  [db team tx ts channel-view?]
+  (d/q '[:find ?b .
+         :in $ ?team-n ?tx ?ts ?c
+         :where
+         [?e :booking/team ?team-n]
+         [?e :booking/tx ?tx]
+         [?e :booking/time-span ?ts]
+         [?e :booking/channel-view ?c]
+         [?e :booking/bytes ?b]]
+       db team tx ts channel-view?))
+
 (defn load-and-decode
-  [team tx time-span channel-view?]
-  (log/info "load-and-decode with " team tx time-span channel-view?)
+  [team tx time-span channel-view? now?]
+  (log/info "load-and-decode with " team tx time-span channel-view? now?)
   (let [db (d/db dcore/auxi-conn)
         ts (->time-span-str time-span)
-        v (d/q '[:find ?b .
-                 :in $ ?team-n ?tx ?ts ?c
-                 :where
-                 [?e :booking/team ?team-n]
-                 [?e :booking/tx ?tx]
-                 [?e :booking/time-span ?ts]
-                 [?e :booking/channel-view ?c]
-                 [?e :booking/bytes ?b]]
-               db team tx ts channel-view?)]
+        v  (load-booking-bytes db team (->frozen-if-now now? tx) ts channel-view?)]
     (if (nil? v)
       v
       (nippy/thaw v))))
@@ -85,7 +97,7 @@
 (def empty-other-ru-tuples {:stream [] :order []})
 
 (defn all-compute-and-store
-  [tx db* time-span channel-view?]
+  [tx db* time-span channel-view? now?]
   (let [db (db-exclude-rev-stream-outside-time-span db* time-span)]
     (binding [pc-r/*time-span* time-span pc-r/*tx* tx pc-r/*channel-view* channel-view?]
       (let [eids (if channel-view?
@@ -99,11 +111,11 @@
             stream-reports (fjr/stream-ru-tuples->full-join-reports db time-span (concat stream-ru-tuples other-stream-ru-tuples))
             order-reports (fjr/order-ru-tuples->full-join-reports db time-span (concat order-ru-tuples other-order-ru-tuples))
             data {:stream stream-reports :order order-reports}]
-        (future (encode-and-store "null" tx time-span channel-view? data))
+        (future (encode-and-store "null" tx time-span channel-view? now? data))
         data))))
 
 (defn my-compute-and-store
-  [tx db* time-span user-lookup-ref teamName channel-view?]
+  [tx db* time-span user-lookup-ref teamName channel-view? now?]
   (let [db (db-exclude-rev-stream-outside-time-span db* time-span)]
     (binding [pc-r/*time-span* time-span pc-r/*tx* tx pc-r/*channel-view* channel-view?]
       (let [u-eids (duser/u-eid->same-team-u-eids db user-lookup-ref)
@@ -112,5 +124,5 @@
             stream-reports (fjr/stream-ru-tuples->full-join-reports db time-span stream-ru-tuples)
             order-reports (fjr/order-ru-tuples->full-join-reports db time-span order-ru-tuples)
             data {:stream stream-reports :order order-reports}]
-        (future (encode-and-store teamName tx time-span channel-view? data))
+        (future (encode-and-store teamName tx time-span channel-view? now? data))
         data))))

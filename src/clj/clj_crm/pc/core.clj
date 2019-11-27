@@ -19,11 +19,29 @@
 
 (def frozen-now-tx (d/t->tx 0))
 
-(defn ->frozen-if-now
+(defn- ->frozen-if-now
   [now? tx]
   (if now?
     frozen-now-tx
     tx))
+
+(defn- tx->booking-cache-eids
+  "Return all the eids that correspond to certain tx"
+  [db tx]
+  (d/q '[:find [?e ...]
+         :in $ ?tx
+         :where
+         [?e :booking/tx ?tx]]
+       db tx))
+
+(defn delete-frozen-cache
+  "Command to delete all the frozen cache"
+  []
+  (let [db (d/db dcore/auxi-conn)
+        eids (tx->booking-cache-eids db frozen-now-tx)
+        tx-data (mapv dcore/eid->retract-tx-v eids)]
+    (log/info "at pc/delete-frozen-cache, tx-data as" tx-data)
+    @(d/transact dcore/auxi-conn tx-data)))
 
 (defn encode-and-store
   [team tx time-span channel-view? now? data]

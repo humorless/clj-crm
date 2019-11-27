@@ -6,6 +6,7 @@
    [clojure.tools.logging :as log]
    [clj-crm.domain.query :as query]
    [clj-crm.fjr.time :as fjr-time]
+   [clj-crm.pc.core :as pc]
    [clj-crm.config :refer [env]]
    [mount.core :refer [defstate]])
   (:import [org.joda.time DateTimeZone]))
@@ -79,6 +80,7 @@
 
 (defn cache-calculator [t]
   (log/info "invoke cache calculation at time " t)
+  (pc/delete-frozen-cache)
   (let [req-list (jobs->req-list @jobs-atom)]
     (run! execute req-list)))
 

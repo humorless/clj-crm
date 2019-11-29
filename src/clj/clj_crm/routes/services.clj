@@ -8,6 +8,7 @@
             [clj-crm.domain.command :as dc]
             [clj-crm.etl.core :as etl]
             [clj-crm.cron.core :as cron]
+            [clj-crm.pc.core :as pc]
             [clojure.tools.logging :as log]
             [compojure.api.meta :refer [restructure-param]]
             [buddy.auth.accessrules :refer [restrict]]
@@ -126,6 +127,15 @@
      (try
        (cron/install-jobs quarters year)
        (ok {:result :install-done})
+       (catch Exception e
+         (bad-request {:reason (.getCause e)}))))
+
+   (POST "/api/delete-frozen-cache" req
+     :summary "API used to delete the frozen cache for now."
+     :description "After invoking this API, query can re-calcuate the now cache."
+     (try
+       (pc/delete-frozen-cache)
+       (ok {:result :cache-delete})
        (catch Exception e
          (bad-request {:reason (.getCause e)}))))
 

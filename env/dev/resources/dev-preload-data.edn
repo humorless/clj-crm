@@ -99,6 +99,15 @@
     :user/roles  :user.roles/manager
     :user/team   :user.team/null}
 
+   {:db/id     "QK"
+    :user/name "Tiffany"
+    :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"
+    :user/email "partner@example.com"
+    :user/status :user.status/active
+    :user/channel :user.channel/agency
+    :user/roles  :user.roles/partner-manager
+    :user/team   :user.team/agency}
+
    {:db/id     "B1"
     :user/name "sales name B1"
     :user/pwd  "bcrypt+sha512$7b58b1516abd049081f655555b154270$12$1f97671825888b5dd330ba8e489774b2b1b076c55e991ba6"

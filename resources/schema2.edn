@@ -110,4 +110,7 @@
   [{:db/id :rev-allo/customer
     :db/index true}]
 ]}
+:clj-crm/norm9-3 {:txes [
+  [[:db/add #db/id [:db.part/user] :db/ident :user.roles/partner-manager]]
+]}
 }

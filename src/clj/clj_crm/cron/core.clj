@@ -20,7 +20,7 @@
 (def t-seq
   (->> (periodic-seq (.. (t/now)
                          (withZone (DateTimeZone/forID "Asia/Taipei"))
-                         (withTime 18 0 0 0))
+                         (withTime 17 0 0 0))
                      (-> 1 t/days))))
 
 ;; test-seq for only testing purpose

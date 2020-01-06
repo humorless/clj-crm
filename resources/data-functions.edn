@@ -69,4 +69,21 @@
                         :target/user)
                 (assoc :db/id id))]
            [m])}}
+ {:db/id #db/id [:db.part/user]
+  :db/ident :fn/upsert-order-lamp
+  :db/doc "The :order/accounting-data is cardinality many.
+  When insert semantic, transact `[m]`
+  When update semantic, find primary key attribute and then transact `[m]`  "
+  :db/fn #db/fn
+  {:lang :clojure
+   :params [db m]
+   :code (if-let [eid (d/q '[:find ?e .
+                             :in $ ?u
+                             :where
+                             [?e :order/product-unique-id ?u]]
+                           db (:order/product-unique-id m))]
+           (let [m-v [(-> (dissoc m :order/product-unique-id)
+                          (assoc :db/id eid))]]
+             m-v)
+           [m])}}
 ]

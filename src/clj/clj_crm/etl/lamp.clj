@@ -153,7 +153,7 @@
           revenue-v (process-accounting-revenue title data)] ;; transform with multiplex with title
       (->> (map merge basic-v chan-v sc-v revenue-v)
            (filter :order/service-category-enum)
-           (mapv #(vector :fn/upsert-order %))))))
+           (mapv #(vector :fn/upsert-order-lamp %))))))
 
 (def ^{:private true
        :doc "this check-raw ignores title"}
@@ -173,7 +173,7 @@
 
 (comment
   (def test-txes-1
-    [[:fn/upsert-order
+    [[:fn/upsert-order-lamp
       #:order{:io-writing-time #inst "2019-04-01T02:39:00.000-00:00",
               :service-category-enum :product.type/today,
               :accounting-data
@@ -203,7 +203,7 @@
 
 (comment
   (def test-txes-2
-    [[:fn/upsert-order
+    [[:fn/upsert-order-lamp
       #:order{:io-writing-time #inst "2019-04-01T02:39:00.000-00:00",
               :service-category-enum :product.type/today,
               :accounting-data

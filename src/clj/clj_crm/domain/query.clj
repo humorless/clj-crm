@@ -126,6 +126,12 @@
       qs
       (fjr.time/quarter-str))))
 
+(defn tx->now?
+  [db tx]
+  (let [db-now-tx (d/t->tx (d/basis-t db))]
+    (or (nil? tx)
+        (= tx db-now-tx))))
+
 (defmethod dispatch-q :all-full-join-reports
   [user-q]
   (log/info "at all-full-join-reports, user-q as" user-q)
@@ -136,7 +142,7 @@
         tx* (if (some? tx) tx (d/t->tx (d/basis-t db)))
         time-span (->time-span user-q)
         channel-view? false
-        now? (nil? tx)]
+        now? (tx->now? db tx)]
     (if-let [v (pc/load-and-decode "null" tx* time-span channel-view? now?)]
       v
       (pc/all-compute-and-store tx* db time-span channel-view? now?))))
@@ -151,7 +157,7 @@
         tx* (if (some? tx) tx (d/t->tx (d/basis-t db)))
         time-span (->time-span user-q)
         channel-view? true
-        now? (nil? tx)]
+        now? (tx->now? db tx)]
     (if-let [v (pc/load-and-decode "null" tx* time-span channel-view? now?)]
       v
       (pc/all-compute-and-store tx* db time-span channel-view? now?))))
@@ -169,7 +175,7 @@
         user-lookup-ref [:user/email email]
         teamName (duser/u-eid->teamName db user-lookup-ref)
         channel-view? false
-        now? (nil? tx)]
+        now? (tx->now? db tx)]
     (if-let [v (pc/load-and-decode teamName tx* time-span channel-view? now?)]
       v
       (pc/my-compute-and-store tx* db time-span user-lookup-ref teamName channel-view? now?))))
@@ -190,7 +196,7 @@
         user-lookup-ref [:user/email email]
         teamName (duser/u-eid->teamName db user-lookup-ref)
         channel-view? true
-        now? (nil? tx)]
+        now? (tx->now? db tx)]
     (if (duser/agency-channel? db user-lookup-ref)
       (if-let [v (pc/load-and-decode teamName tx* time-span channel-view? false)]
         v

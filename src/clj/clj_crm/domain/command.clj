@@ -197,16 +197,6 @@
          [?a :accounting/month ?t]]
        db a-t))
 
-(defn- order-lamp-eids-by
-  [db y-m-list]
-  (d/q '[:find [?e ...]
-         :in $ [?y-m ...]
-         :where
-         [?e :order/source :etl.source/lamp]
-         [?e :order/accounting-data ?a]
-         [?a :accounting/month ?y-m]]
-       db y-m-list))
-
 (defn- auxiliary-target-table-eids [db year-quarter]
   (d/q '[:find [?e ...]
          :in $ ?y-q
@@ -243,19 +233,6 @@
         eids (order-gui-eids-by db a-t)
         tx-data (mapv dcore/eid->retract-tx-v eids)]
     (log/info "at delete order gui, tx-data as" tx-data)
-    (do @(d/transact conn tx-data)
-        :cmd-success)))
-
-(defn delete-order-lamp
-  "year is of type string. example year is `2020`"
-  [year]
-  (log/info "at delete order lamp, target year is: " year)
-  (let [db (d/db conn)
-        m-list (map #(format "%02d" %) (range 1 13))
-        y-m-list (mapv #(str year "-" %) m-list)
-        eids (order-lamp-eids-by db y-m-list)
-        tx-data (mapv dcore/eid->retract-tx-v eids)]
-    (log/info "at delete order lamp, tx-data as" tx-data)
     (do @(d/transact conn tx-data)
         :cmd-success)))
 

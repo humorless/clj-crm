@@ -650,7 +650,8 @@
                :order/accounting-data
                :order/product-net-price
                :order/terms-start-date
-               :order/terms-end-date] eid))
+               :order/terms-end-date
+               :order/source] eid))
 
 (defn target-eids
   [db]

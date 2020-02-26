@@ -183,17 +183,6 @@
           (catch java.util.concurrent.ExecutionException e
             (bad-request {:reason (.getCause e)}))))
 
-   (POST "/api/delete-order-lamp" req
-     :body-params [accounting-year :- s/Str]
-     :summary "API used to delete the order table with etl-source lamp."
-     :description "possible accounting-year format is `2020`"
-     (try (if-let [r (dc/delete-order-lamp accounting-year)]
-            (ok {:result :order-delete-success}))
-          (catch clojure.lang.ExceptionInfo e
-            (bad-request {:reason (ex-data e)}))
-          (catch java.util.concurrent.ExecutionException e
-            (bad-request {:reason (.getCause e)}))))
-
    (POST "/api/delete-rev-stream" req
      :body-params [etl-source :- s/Str, accounting-time :- s/Str]
      :summary "API used to delete the rev-stream table."

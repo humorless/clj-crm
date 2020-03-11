@@ -32,6 +32,9 @@
 (spec/def ::10 (spec/or :revenue double? :none string?))
 (spec/def ::11 (spec/or :revenue double? :none string?))
 (spec/def ::12 (spec/or :revenue double? :none string?))
+(spec/def ::ad-unit string?)
+(spec/def ::sign-status string?)
+(spec/def ::sign-status-eio string?)
 
 (spec/def ::order
   (spec/*
@@ -41,7 +44,8 @@
                ::product-unique-id ::product-name ::service-category
                ::terms-start-date ::terms-end-date ::product-net-price
                ::1 ::2 ::3 ::4 ::5 ::6
-               ::7 ::8 ::9 ::10 ::11 ::12])))
+               ::7 ::8 ::9 ::10 ::11 ::12
+               ::ad-unit ::sign-status ::sign-status-eio])))
 
 (def ^:private columns-map
   {:B :campaign-no
@@ -55,7 +59,7 @@
    :V :service-category
    :AC :terms-start-date
    :AD :terms-end-date
-   :AG :product-net-price
+   :AF :product-net-price
    :AI :1
    :AJ :2
    :AK :3
@@ -67,7 +71,10 @@
    :AQ :9
    :AR :10
    :AS :11
-   :AT :12})
+   :AT :12
+   :W  :ad-unit
+   :AA :sign-status
+   :AB :sign-status-eio})
 
 (defn- compact
   "remove the nil value key from a hashmap
@@ -109,7 +116,8 @@
   [{c-no :campaign-no c-name :campaign-name c-status :campaign-status
     io-w-t :io-writing-time
     pui :product-unique-id p-name :product-name
-    start :terms-start-date end :terms-end-date np :product-net-price}]
+    start :terms-start-date end :terms-end-date np :product-net-price
+    ad-unit :ad-unit s-status :sign-status s-status-eio :sign-status-eio}]
   (let [t-inst (t-fmt->inst io-w-t)
         np-long (long np)
         c-no-long (long c-no)]
@@ -122,6 +130,9 @@
      :order/campaign-no  c-no-long
      :order/campaign-name c-name
      :order/campaign-status c-status
+     :order/ad-unit ad-unit
+     :order/sign-status s-status
+     :order/sign-status-eio s-status-eio
      :order/source :etl.source/lamp}))
 
 (defn- chan-mapping

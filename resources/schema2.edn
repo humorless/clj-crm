@@ -113,4 +113,25 @@
 :clj-crm/norm9-3 {:txes [
   [[:db/add #db/id [:db.part/user] :db/ident :user.roles/partner-manager]]
 ]}
+:clj-crm/norm9-4 {:txes [
+ [{:db/doc "order ad unit"
+   :db/ident :order/ad-unit
+   :db/valueType :db.type/string
+   :db/cardinality :db.cardinality/one}
+
+  {:db/doc "order sign status"
+   :db/ident :order/sign-status
+   :db/valueType :db.type/string
+   :db/cardinality :db.cardinality/one}
+
+  {:db/doc "order sign status EIO"
+   :db/ident :order/sign-status-eio
+   :db/valueType :db.type/string
+   :db/cardinality :db.cardinality/one}
+
+  {:db/doc "revenue stream ad unit"
+   :db/ident :rev-stream/ad-unit
+   :db/valueType :db.type/string
+   :db/cardinality :db.cardinality/one}]
+]}
 }

@@ -96,7 +96,10 @@
                      :rev-stream/source
                      :rev-stream/campaign-name
                      :rev-stream/customer-id
+                     :rev-stream/ad-unit
                      :rev-stream/service-category-enum] o)
+        (assoc :rev-stream/sign-status "0(0)/1")
+        (assoc :rev-stream/sign-status-eio "1/1")
         (update :rev-stream/source name)
         (update :rev-stream/service-category-enum #(sc-entity->product-id p-table %)))))
 
@@ -113,6 +116,9 @@
                      :order/product-net-price
                      :order/terms-start-date
                      :order/terms-end-date
+                     :order/ad-unit
+                     :order/sign-status
+                     :order/sign-status-eio
                      :order/service-category-enum] o)
         (update :order/source name)
         (update :order/service-category-enum #(sc-entity->product-id p-table %)))))

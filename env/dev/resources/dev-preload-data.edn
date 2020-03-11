@@ -308,6 +308,9 @@
     :order/service-category-enum :product.type/BC
     :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
+    :order/ad-unit "o-ad-unit-001"
+    :order/sign-status "o-sign-status-001"
+    :order/sign-status-eio "o-sign-status-eio-001"
     :order/accounting-data #{{:accounting/month "2019-02" :accounting/revenue 100}
                              {:accounting/month "2019-03" :accounting/revenue 200}}}]
   [{:order/product-unique-id "pui-002-direct-A2"
@@ -316,6 +319,9 @@
     :order/service-category-enum :product.type/BC
     :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
+    :order/ad-unit "o-ad-unit-002"
+    :order/sign-status "o-sign-status-002"
+    :order/sign-status-eio "o-sign-status-eio-002"
     :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue 300}
                              {:accounting/month "2019-06" :accounting/revenue 400}}}]
   [{:order/product-unique-id "pui-003-direct-A3"
@@ -324,6 +330,9 @@
     :order/service-category-enum :product.type/today
     :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
+    :order/ad-unit "o-ad-unit-003"
+    :order/sign-status "o-sign-status-003"
+    :order/sign-status-eio "o-sign-status-eio-003"
     :order/product-net-price 700
     :order/terms-start-date "2019-07-26"
     :order/terms-end-date "2019-08-05"
@@ -335,6 +344,9 @@
     :order/service-category-enum :product.type/BC
     :order/source :etl.source/lamp
     :order/io-writing-time #inst "2014-01-28"
+    :order/ad-unit "o-ad-unit-004"
+    :order/sign-status "o-sign-status-004"
+    :order/sign-status-eio "o-sign-status-eio-004"
     :order/accounting-data #{{:accounting/month "2019-09" :accounting/revenue 300}
                                {:accounting/month "2019-08" :accounting/revenue 400}}}]
   [{:order/product-unique-id "pui-005-direct-A3"
@@ -342,6 +354,9 @@
     :order/service-category-enum :product.type/SS
     :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
+    :order/ad-unit "o-ad-unit-005"
+    :order/sign-status "o-sign-status-005"
+    :order/sign-status-eio "o-sign-status-eio-005"
     :order/product-net-price 1950
     :order/terms-start-date "2019-02-26"
     :order/terms-end-date "2020-05-05"
@@ -355,6 +370,9 @@
     :order/service-category-enum :product.type/OA
     :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
+    :order/ad-unit "o-ad-unit-006"
+    :order/sign-status "o-sign-status-006"
+    :order/sign-status-eio "o-sign-status-eio-006"
     :order/accounting-data #{{:accounting/month "2020-02" :accounting/revenue -30}
                              {:accounting/month "2020-05" :accounting/revenue 1000}}}]
   [{:order/product-unique-id "pui-007-direct-A2||agency-B2"
@@ -363,6 +381,9 @@
     :order/service-category-enum :product.type/today
     :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
+    :order/ad-unit "o-ad-unit-007"
+    :order/sign-status "o-sign-status-007"
+    :order/sign-status-eio "o-sign-status-eio-007"
     :order/product-net-price 97000
     :order/terms-start-date "2019-03-26"
     :order/terms-end-date "2020-08-05"
@@ -405,6 +426,9 @@
     :order/service-category-enum :product.type/OA
     :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
+    :order/ad-unit "o-ad-unit-008"
+    :order/sign-status "o-sign-status-008"
+    :order/sign-status-eio "o-sign-status-eio-008"
     :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue -300}
                              {:accounting/month "2019-06" :accounting/revenue 400}}}]
   [{:order/product-unique-id "pui-009-agency-B2"
@@ -412,6 +436,9 @@
     :order/service-category-enum :product.type/SS
     :order/source :etl.source/lamp
     :order/io-writing-time #inst "2019-02-28"
+    :order/ad-unit "o-ad-unit-009"
+    :order/sign-status "o-sign-status-009"
+    :order/sign-status-eio "o-sign-status-eio-009"
     :order/product-net-price 700
     :order/terms-start-date "2019-02-26"
     :order/terms-end-date "2020-05-05"
@@ -422,6 +449,9 @@
     :order/service-category-enum :product.type/SS
     :order/source :etl.source/gui
     :order/io-writing-time #inst "2019-02-28"
+    :order/ad-unit "o-ad-unit-010"
+    :order/sign-status "o-sign-status-010"
+    :order/sign-status-eio "o-sign-status-eio-010"
     :order/accounting-data #{{:accounting/month "2019-05" :accounting/revenue 300}
                              {:accounting/month "2019-06" :accounting/revenue 400}}}]
 ]}
@@ -431,5 +461,8 @@
   [[:db/add #db/id [:db.part/user] :db/ident :product.type/in_store_sales_promotion]]
   [{:product/type :product.type/in_store_sales_promotion    :product/category :product.cat/all}
    {:product/type :product.type/in_store_sales_promotion    :product/type-id "In Store Sales Promotion"}]
+  [[:db/add #db/id [:db.part/user] :db/ident :product.type/line_ads_platform_tw]]
+  [{:product/type :product.type/line_ads_platform_tw    :product/category :product.cat/all}
+   {:product/type :product.type/line_ads_platform_tw    :product/type-id "LINE Ads Platform (TW)"}]
 ]}
 }

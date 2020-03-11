@@ -33,11 +33,12 @@
     {:rev-stream/stream-unique-id a-i
      :rev-stream/campaign-name a-c-n
      :rev-stream/customer-id a-i
-     :rev-stream/service-category-enum :product.type/timeline
+     :rev-stream/service-category-enum :product.type/line_ads_platform_tw
      :rev-stream/writing-time (utility/y-m->dt y-m-str)
      :rev-stream/accounting-time (utility/yearmonth->year-month y-m-str)
      :rev-stream/revenue (long r)
      :rev-stream/product-name "LAP"
+     :rev-stream/ad-unit "[TW] LADM"
      :rev-stream/source :etl.source/lap}))
 
 (defn- chan-mapping

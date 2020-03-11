@@ -65,4 +65,10 @@
   [[:db/add #db/id [:db.part/user] :db/ident :user.team/online]]
 ]}
 ;; to version 1.0.0
+:clj-crm/data4 {:txes [
+  [[:db/add #db/id [:db.part/user] :db/ident :product.type/line_ads_platform_tw]]
+  [{:product/type :product.type/line_ads_platform_tw    :product/category :product.cat/all}
+   {:product/type :product.type/line_ads_platform_tw    :product/type-id "LINE Ads Platform (TW)"}]
+]}
+;; to date 2020.03.15
 }

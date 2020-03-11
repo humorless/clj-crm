@@ -18,6 +18,9 @@
 (spec/def ::ad-item string?)
 (spec/def ::debtor-tax-id string?)
 (spec/def ::advertisor-tax-id string?)
+(spec/def ::ad-unit string?)
+(spec/def ::sign-status string?)
+(spec/def ::sign-status-eio string?)
 
 (spec/def ::order
   (spec/*
@@ -25,7 +28,8 @@
               [::month ::service-category ::gui-no
                ::item-seq ::net-amount
                ::campaign-no ::campaign-name ::ad-item
-               ::debtor-tax-id ::advertisor-tax-id])))
+               ::debtor-tax-id ::advertisor-tax-id
+               ::ad-unit ::sign-status ::sign-status-eio])))
 
 (def ^:private columns-map
   {:A :month
@@ -37,7 +41,10 @@
    :X :campaign-no
    :Z :ad-item
    :AB :campaign-name
-   :AC :advertisor-tax-id})
+   :AC :advertisor-tax-id
+   :I :ad-unit
+   :AK :sign-status
+   :AL :sign-status-eio})
 
 (defn- compact
   "remove the nil value key from a hashmap
@@ -51,7 +58,8 @@
   "`campaign-no`, `io-writing-time`, and `product-net-price` needs type transformation"
   [{y-m :month g-no :gui-no i-s :item-seq
     net-r :net-amount a-i :ad-item
-    c-no :campaign-no c-name :campaign-name}]
+    c-no :campaign-no c-name :campaign-name
+    ad-unit :ad-unit s-status :sign-status s-status-eio :sign-status-eio}]
   (let [y-m-str (str (int y-m))
         i-s-str (str (int i-s))
         t-inst (utility/y-m->dt y-m-str)
@@ -64,6 +72,9 @@
      :order/campaign-no  c-no-long
      :order/campaign-name c-name
      :order/campaign-status "Invoice Issued"
+     :order/ad-unit ad-unit
+     :order/sign-status s-status
+     :order/sign-status-eio s-status-eio
      :order/source :etl.source/gui}))
 
 (defn- chan-mapping

@@ -134,4 +134,10 @@
    :db/valueType :db.type/string
    :db/cardinality :db.cardinality/one}]
 ]}
+:clj-crm/norm9-5 {:txes [
+ [{:db/doc "The business-type of this pipeline entry. (string value)"
+   :db/ident :pipeline/business-type
+   :db/valueType :db.type/string
+   :db/cardinality :db.cardinality/one}]
+]}
 }

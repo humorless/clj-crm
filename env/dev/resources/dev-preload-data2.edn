@@ -84,6 +84,7 @@
     :pipeline/product :product.type/line_now
     :pipeline/status "good"
     :pipeline/customer-name "Q"
+    :pipeline/business-type "prostitution"
     :pipeline/prob 0.8
     :pipeline/revenue 600}
    {:pipeline/year-quarterly "2019-q3"

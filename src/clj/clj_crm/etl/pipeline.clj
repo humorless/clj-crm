@@ -17,25 +17,27 @@
 (spec/def ::prob (spec/nilable double?))
 (spec/def ::status (spec/nilable string?))
 (spec/def ::note (spec/nilable string?))
+(spec/def ::business-type (spec/nilable string?))
 
 (spec/def ::pipeline
   (spec/*
    (spec/keys :req-un [::time-period ::sales ::product]
               :opt-un
               [::channel ::client ::campaign-name
-               ::revenue ::prob ::status ::note])))
+               ::revenue ::prob ::status ::note ::business-type])))
 
 (def ^:private columns-map
-  {:G :time-period
+  {:H :time-period
    :B :sales
    :C :product
    :D :channel
    :E :client
-   :F :campaign-name
-   :H :revenue
-   :I :prob
-   :J :status
-   :L :note})
+   :G :campaign-name
+   :I :revenue
+   :J :prob
+   :K :status
+   :M :note
+   :F :business-type})
 
 (defn- u-mapping
   [table {u :sales}]
@@ -61,7 +63,7 @@
   ""
   [{t-p :time-period chan :channel c :client
     c-name :campaign-name r :revenue p :prob
-    s :status n :note}]
+    s :status n :note b-t :business-type}]
   (utility/compact
    {:pipeline/year-quarterly (excel-fmt->db-fmt t-p)
     :pipeline/sales-channel-name chan
@@ -70,7 +72,8 @@
     :pipeline/revenue (if (nil? r) 0 (long r))
     :pipeline/prob (if (nil? p) 0 p)
     :pipeline/status s
-    :pipeline/note n}))
+    :pipeline/note n
+    :pipeline/business-type b-t}))
 
 (defn- data->data-txes
   [data]

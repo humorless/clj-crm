@@ -38,13 +38,13 @@
    :C :item-seq
    :F :debtor-tax-id
    :K :net-amount
-   :X :campaign-no
-   :Z :ad-item
-   :AB :campaign-name
-   :AC :advertisor-tax-id
+   :Z :campaign-no
+   :AB :ad-item
+   :AD :campaign-name
+   :AE :advertisor-tax-id
    :I :ad-unit
-   :AK :sign-status
-   :AL :sign-status-eio})
+   :AN :sign-status
+   :AO :sign-status-eio})
 
 (defn- compact
   "remove the nil value key from a hashmap

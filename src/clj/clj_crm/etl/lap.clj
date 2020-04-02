@@ -38,7 +38,7 @@
      :rev-stream/accounting-time (utility/yearmonth->year-month y-m-str)
      :rev-stream/revenue (long r)
      :rev-stream/product-name "LAP"
-     :rev-stream/ad-unit "[TW] LADM"
+     :rev-stream/ad-unit "[TW] LINE Ads Platform"
      :rev-stream/source :etl.source/lap}))
 
 (defn- chan-mapping

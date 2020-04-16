@@ -106,6 +106,13 @@
   [columns-map]
   (comp rest (get-raw-from-excel-fn* columns-map)))
 
+(defn lazy-transact
+  [chunked-tx-data]
+  (log/info "first item of chunked-tx-data" (first chunked-tx-data))
+  (log/info "chunked-tx-data write into db, length: " (count chunked-tx-data))
+  @(d/transact conn chunked-tx-data)
+  (Thread/sleep 1000))
+
 (defn sync-data-fn
   "assemble get, validate, transform, push to db"
   [get-raw-from-excel check-raw data->tx-data]
@@ -114,11 +121,12 @@
     (log/info "sync-data triggered!")
     (let [raw (get-raw-from-excel url filename)
           _ (check-raw raw) ;; schema validation, but it may `rest` on raw
-          tx-data (data->tx-data raw)]
+          tx-data (data->tx-data raw)
+          batched-tx-data (partition-all 300 tx-data)]
       (do (log/info "tx-data write into db, length: " (count tx-data))
           (log/info "first item of tx-data" (first tx-data))
-          (when (seq tx-data)
-            @(d/transact conn tx-data))))))
+          (when (seq batched-tx-data)
+            (run! lazy-transact batched-tx-data))))))
 
 (defn fn-txes->pure-txes
   "Example of fn-k  :fn/upsert-target"

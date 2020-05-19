@@ -11,24 +11,26 @@
 (spec/def ::adaccount-id string?)
 (spec/def ::billing-tax-id string?)
 (spec/def ::revenue double?)
+(spec/def ::billing-account-id string?)
 
 (spec/def ::rev-stream
   (spec/*
    (spec/keys :req-un
               [::year-month ::adaccount-corporate-name ::adaccount-id
-               ::billing-tax-id ::revenue])))
+               ::billing-tax-id ::billing-account-id ::revenue])))
 
 (def ^:private columns-map
   {:A :year-month
    :B :adaccount-corporate-name
    :C :adaccount-id
+   :E :billing-account-id
    :F :billing-tax-id
    :H :revenue})
 
 (defn- basic-mapping
   "handle the mapping that does not need to lookup any tables in database"
   [{y-m :year-month a-c-n :adaccount-corporate-name
-    a-i :adaccount-id r :revenue}]
+    a-i :adaccount-id b-a-i :billing-account-id r :revenue}]
   (let [y-m-str (str (int y-m))]
     {:rev-stream/stream-unique-id a-i
      :rev-stream/campaign-name a-c-n
@@ -39,6 +41,7 @@
      :rev-stream/revenue (long r)
      :rev-stream/product-name "LAP"
      :rev-stream/ad-unit "[TW] LINE Ads Platform"
+     :rev-stream/billing-account-id b-a-i
      :rev-stream/source :etl.source/lap}))
 
 (defn- chan-mapping

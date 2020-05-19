@@ -3,6 +3,7 @@
    [chime :refer [chime-at]]
    [clj-time.core :as t]
    [clj-time.periodic :refer [periodic-seq]]
+   [clj-time.predicates :as t-pred]
    [clojure.tools.logging :as log]
    [clj-crm.domain.query :as query]
    [clj-crm.fjr.time :as fjr-time]
@@ -20,8 +21,9 @@
 (def t-seq
   (->> (periodic-seq (.. (t/now)
                          (withZone (DateTimeZone/forID "Asia/Taipei"))
-                         (withTime 17 0 0 0))
-                     (-> 1 t/days))))
+                         (withTime 16 0 0 0))
+                     (-> 1 t/days))
+       (filter #(t-pred/thursday? %))))
 
 ;; test-seq for only testing purpose
 (def test-seq

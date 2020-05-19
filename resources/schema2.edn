@@ -140,4 +140,10 @@
    :db/valueType :db.type/string
    :db/cardinality :db.cardinality/one}]
 ]}
+:clj-crm/norm9-6 {:txes [
+ [{:db/doc "The billing account id (string value)"
+   :db/ident :rev-stream/billing-account-id
+   :db/valueType :db.type/string
+   :db/cardinality :db.cardinality/one}]
+]}
 }

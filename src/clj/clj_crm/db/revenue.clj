@@ -636,6 +636,7 @@
                {:rev-stream/service-category-enum [:db/ident]}
                :rev-stream/writing-time
                :rev-stream/accounting-time
+               :rev-stream/billing-account-id
                :rev-stream/revenue
                :rev-stream/source] eid))
 

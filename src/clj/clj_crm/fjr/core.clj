@@ -97,7 +97,8 @@
                      :rev-stream/campaign-name
                      :rev-stream/customer-id
                      :rev-stream/ad-unit
-                     :rev-stream/service-category-enum] o)
+                     :rev-stream/service-category-enum
+                     :rev-stream/billing-account-id] o)
         (assoc :rev-stream/sign-status "0(0)/1")
         (assoc :rev-stream/sign-status-eio "1/1")
         (update :rev-stream/source name)
@@ -120,6 +121,7 @@
                      :order/sign-status
                      :order/sign-status-eio
                      :order/service-category-enum] o)
+        (assoc :order/billing-account-id "None")
         (update :order/source name)
         (update :order/service-category-enum #(sc-entity->product-id p-table %)))))
 

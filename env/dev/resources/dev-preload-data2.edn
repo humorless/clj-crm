@@ -18,6 +18,7 @@
     :rev-stream/writing-time #inst "2019-03-01"
     :rev-stream/ad-unit "sui-001-channel-ad-unit"
     :rev-stream/accounting-time "2019-02"
+    :rev-stream/billing-account-id "billing-account-id 001"
     :rev-stream/revenue 100
     :rev-stream/source :etl.source/lap}
    {:rev-stream/stream-unique-id "sui-001-direct-rule=customer"
@@ -26,6 +27,7 @@
     :rev-stream/writing-time #inst "2019-04-01"
     :rev-stream/ad-unit "sui-001-customer-ad-unit"
     :rev-stream/accounting-time "2019-03"
+    :rev-stream/billing-account-id "billing-account-id 001"
     :rev-stream/revenue 20
     :rev-stream/source :etl.source/lap}
    {:rev-stream/stream-unique-id "sui-002-direct-rule=customer-unmatch-of-time||agency"
@@ -35,6 +37,7 @@
     :rev-stream/writing-time #inst "2019-03-01"
     :rev-stream/ad-unit "sui-002-ad-unit"
     :rev-stream/accounting-time "2019-02"
+    :rev-stream/billing-account-id "billing-account-id 002"
     :rev-stream/revenue 5
     :rev-stream/source :etl.source/lap}
    {:rev-stream/stream-unique-id "sui-005-direct-rule=customer||agency"
@@ -44,6 +47,7 @@
     :rev-stream/writing-time #inst "2019-05-01"
     :rev-stream/ad-unit "sui-005-ad-unit"
     :rev-stream/accounting-time "2019-04"
+    :rev-stream/billing-account-id "billing-account-id 005"
     :rev-stream/revenue 5
     :rev-stream/source :etl.source/lap}
    {:rev-stream/stream-unique-id "sui-003-agency"
@@ -53,6 +57,7 @@
     :rev-stream/writing-time #inst "2019-04-01"
     :rev-stream/ad-unit "sui-003-ad-unit"
     :rev-stream/accounting-time "2019-03"
+    :rev-stream/billing-account-id "billing-account-id 003"
     :rev-stream/revenue 3000
     :rev-stream/source :etl.source/lap}
    {:rev-stream/stream-unique-id "sui-004-reseller"
@@ -62,6 +67,7 @@
     :rev-stream/writing-time #inst "2019-07-01"
     :rev-stream/ad-unit "sui-004-ad-unit"
     :rev-stream/accounting-time "2019-07"
+    :rev-stream/billing-account-id "billing-account-id 004"
     :rev-stream/revenue 40000
     :rev-stream/source :etl.source/lap}]
 ]}

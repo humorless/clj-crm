@@ -16,6 +16,7 @@
 (spec/def ::debtor-code string?)
 (spec/def ::revenue double?)
 (spec/def ::ad-unit string?)
+(spec/def ::billing-account-id string?)
 
 (spec/def ::rev-stream
   (spec/*
@@ -23,7 +24,7 @@
               [::service-category ::year-month ::invoice-details-id
                ::invoice-details ::basic-id
                ::customer-name ::debtor-code ::revenue
-               ::ad-unit])))
+               ::ad-unit ::billing-account-id])))
 
 (def ^:private columns-map
   {:A :service-category
@@ -34,12 +35,13 @@
    :M :basic-id
    :N :customer-name
    :Q :debtor-code
+   :R :billing-account-id
    :AF :revenue})
 
 (defn- basic-mapping
   "handle the mapping that does not need to lookup any tables in database"
   [{y-m :year-month ivo-i :invoice-details-id ivo :invoice-details
-    b-i :basic-id c-n :customer-name  r :revenue
+    b-i :basic-id c-n :customer-name b-a-i :billing-account-id r :revenue
     ad-unit :ad-unit}]
   (let [y-m-str (str (int y-m))]
     {:rev-stream/stream-unique-id (str b-i "_" ivo-i)
@@ -50,6 +52,7 @@
      :rev-stream/revenue (long r)
      :rev-stream/product-name ivo
      :rev-stream/ad-unit ad-unit
+     :rev-stream/billing-account-id b-a-i
      :rev-stream/source :etl.source/agp}))
 
 (defn- chan-mapping

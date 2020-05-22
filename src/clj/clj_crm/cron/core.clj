@@ -100,3 +100,8 @@
       (@cancel-atom) ;; cancel the last installed cronjobs
       (reset! cancel-atom
               (chime-at t-seq cache-calculator))))
+
+(defn rerun-frozen-cache
+  "rerun the frozen cache"
+  []
+  (cache-calculator (t/now)))

@@ -139,6 +139,15 @@
        (catch Exception e
          (bad-request {:reason (.getCause e)}))))
 
+   (POST "/api/rerun-frozen-cache" req
+     :summary "API used to rerun the frozen cache for now."
+     :description "After invoking this API, delete the frozen cache and rerun the now cache."
+     (try
+       (cron/rerun-frozen-cache)
+       (ok {:result :cache-deleted-and-rerun})
+       (catch Exception e
+         (bad-request {:reason (.getCause e)}))))
+
    (POST "/api/delete" req
      :body-params [table-name :- s/Keyword]
      :summary "API used to delete content of table."
